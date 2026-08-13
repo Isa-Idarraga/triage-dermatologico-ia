@@ -28,7 +28,7 @@ models/     -> (vacío hasta S04 — checkpoints del fine-tuning con LoRA)
 - **Modelo base elegido:** `dccuchile/bert-base-spanish-wwm-cased` (BETO).
   Justificación completa en `docs/M1_modelo_base_y_dataset.docx`.
 - **Dataset:** 136 ejemplos (10 reales verificados + 126 sintéticos
-  balanceados). Ver `data/README.md` para documentación completa.
+  balanceados). Ver `data/README.md` para documentación completa "los 10 casos reales están redactados en lenguaje de reporte clínico especialista, mientras que los 126 sintéticos imitan el lenguaje de un paciente describiendo sus síntomas — solo estos últimos representan el tipo de texto que el sistema recibirá en producción; los reales sirven principalmente para anclar los criterios clínicos de clasificación.".
 - **Pendiente:** fine-tuning con LoRA y reporte de métricas vs. baseline
   (se cubre en la próxima sesión).
 
