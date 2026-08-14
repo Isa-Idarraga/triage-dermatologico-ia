@@ -1,0 +1,13 @@
+{
+  "accuracy": 0.5769230769230769,
+  "f1_macro": 0.36585365853658536,
+  "recall_urgente": 0.0,
+  "matriz_confusion": {
+    "no_urgente_predicho_correctamente": 15,
+    "no_urgente_predicho_como_urgente": 0,
+    "urgente_predicho_como_no_urgente": 11,
+    "urgente_predicho_correctamente": 0
+  },
+  "tipo_baseline": "mayoria",
+  "clase_predicha_siempre": "no_urgente"
+}
