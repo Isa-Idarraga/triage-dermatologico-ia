@@ -1,0 +1,21 @@
+texto,n_palabras,n_tokens,tokens_por_palabra
+"Mujer, 44 años, con antecedentes de exéresis de melanoma cutáneo maligno nodular en hombro izquierdo (Breslow: 3,9 mm; nivel IV de Clark; pT3bN0M0) en 1998. Los controles cada 6 meses fueron negativos hasta que a los 5 años ingresó por oclusión intestinal, confirmándose metástasis de melanoma con positividad para HMB-45 y proteína S-100.",53,97,1.83
+"Tengo un lunar en la espalda que ha cambiado de color en desde la infancia, ahora con bordes irregulares y varios tonos de café y negro.",26,28,1.08
+"Tengo un lunar en el abdomen que ha cambiado de color en varios años, ahora con bordes irregulares y varios tonos de café y negro.",25,27,1.08
+"Lesión pigmentada de bordes ligeramente verrucosos en región perianal, resistente a tratamiento tópico con corticoides durante 9 meses. La biopsia informó hiperqueratosis y paraqueratosis compatibles con papilomatosis bowenoide (neoplasia intraepitelial).",30,64,2.13
+"Tengo una placa áspera y descamativa en la pierna desde hace medio año, no duele pero se siente rasposa al tacto.",21,28,1.33
+"Tengo una placa áspera y descamativa en el cuero cabelludo desde hace varios años, no duele pero se siente rasposa al tacto.",22,31,1.41
+"Nódulo indurado en párpado superior, inicialmente filiado como chalazión refractario, con adenopatía preauricular ipsilateral. La biopsia confirmó carcinoma sebáceo, requiriendo exéresis completa y vaciamiento cervical.",25,59,2.36
+Tengo una lesión rosada con bordes elevados en el cuero cabelludo que sangra un poco al rozarla y no cicatriza desde hace cerca de un año.,26,34,1.31
+Tengo una lesión rosada con bordes elevados en la espalda que sangra un poco al rozarla y no cicatriza desde hace cerca de un año.,25,31,1.24
+"Tengo varias manchas cafés con superficie rugosa como verruga en el cuero cabelludo, llevan medio año sin cambiar.",18,27,1.5
+"Me han salido manchas oscuras y ásperas en el cuello, parecen pegadas a la piel, no duelen ni pican desde hace unas pocas semanas.",24,31,1.29
+"Me han salido manchas oscuras y ásperas en la pantorrilla, parecen pegadas a la piel, no duelen ni pican desde hace unas pocas semanas.",24,33,1.38
+"Me han salido varios lunares redondos y de un solo color en la mano, no han cambiado en dos meses.",20,24,1.2
+"Tengo un lunar café parejo y pequeño en el brazo desde hace cerca de un año, siempre ha sido igual de tamaño y color.",24,27,1.12
+"Me han salido varios lunares redondos y de un solo color en el brazo, no han cambiado en unas pocas semanas.",21,25,1.19
+"Lesión pediculada de 1 cm en borde palpebral, de un año de evolución, sin dolor ni sangrado. El diagnóstico histopatológico fue pilomatricoma, una masa benigna encapsulada sin recidiva tras 4 años de seguimiento.",33,57,1.73
+"Me salió un bultico firme bajo la piel en el antebrazo, no crece ni duele, lleva ahí dos meses.",19,25,1.32
+"Me salió un bultico firme bajo la piel en el hombro, no crece ni duele, lleva ahí desde la infancia.",20,24,1.2
+"Mancha azulada congénita en región nasoorbitaria que creció rápidamente durante el primer mes de vida hasta formar una masa pedunculada de 4 cm. Se trató con corticoide intralesional y posterior exéresis del hemangioma fibrosado, con evolución postoperatoria satisfactoria.",38,65,1.71
+"Tengo unas manchitas rojo intenso en la espalda, parecen puntos de sangre bajo la piel, no duelen ni cambian desde hace varios años.",23,29,1.26
