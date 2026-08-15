@@ -16,21 +16,34 @@ si referir con prioridad a dermatología.
 ## Estructura del repo
 
 ```
-docs/       -> plantilla de definición del proyecto + documento de M1
+docs/       -> plantilla de definición del proyecto + documento de M1 + comparación de resultados
 data/       -> corpus final (real + sintético) y datos crudos intermedios
-scripts/    -> todo el código de construcción del dataset y comparación de modelos
-notebooks/  -> notebooks de Kaggle/Colab usados durante el proyecto
-models/     -> (vacío hasta S04 — checkpoints del fine-tuning con LoRA)
+scripts/    -> todo el código de construcción del dataset, fine-tuning y evaluación
+notebooks/  -> notebook de entrega de M1 y notebooks de Kaggle/Colab usados durante el proyecto
+models/     -> checkpoints del fine-tuning con LoRA (adaptador BETO)
+results/    -> métricas de baseline, LoRA e hiperparámetros registrados
 ```
 
-## Estado actual (M1 — Sesión 4)
+## Estado actual (M1 — completo)
 
 - **Modelo base elegido:** `dccuchile/bert-base-spanish-wwm-cased` (BETO).
-  Justificación completa en `docs/M1_modelo_base_y_dataset.docx`.
+  Justificación completa en `docs/M1_modelo_base_y_dataset.docx`, respaldada con
+  evidencia empírica del tokenizador en `results/tokenizacion_beto-español.csv` y
+  `results/tokenizacion_distilbert-multilingual.csv`.
 - **Dataset:** 136 ejemplos (10 reales verificados + 126 sintéticos
   balanceados). Ver `data/README.md` para documentación completa "los 10 casos reales están redactados en lenguaje de reporte clínico especialista, mientras que los 126 sintéticos imitan el lenguaje de un paciente describiendo sus síntomas — solo estos últimos representan el tipo de texto que el sistema recibirá en producción; los reales sirven principalmente para anclar los criterios clínicos de clasificación.".
-- **Pendiente:** fine-tuning con LoRA y reporte de métricas vs. baseline
-  (se cubre en la próxima sesión).
+- **Fine-tuning con LoRA:** completo. Adaptador entrenado en `models/lora-triage/`,
+  hiperparámetros registrados en `results/lora_config.json`.
+- **Baseline y métricas:** comparación honesta baseline vs. LoRA en
+  `docs/comparacion_resultados.md` — el modelo mejora sobre el baseline de mayoría
+  pero aún no alcanza la meta de recall ≥ 0.85 en "urgente" definida en la plantilla
+  del proyecto; el documento explica dónde y por qué, incluyendo un intento de
+  mejora que se descartó.
+- **Notebook de entrega:** `notebooks/M1_entrega.ipynb` reproduce el pipeline
+  completo (justificación del modelo, dataset, fine-tuning, evaluación) y recarga el
+  modelo guardado desde cero para verificar que produce salidas coherentes.
+- **Pendiente:** ampliar el corpus (más ejemplos reales y sintéticos con mayor
+  diversidad de redacción) para acercar el recall a la meta clínica.
 
 ## Cómo reproducir el dataset
 
