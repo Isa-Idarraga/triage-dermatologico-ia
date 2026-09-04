@@ -4,9 +4,9 @@
 juez de M2. Ningún número que dependa de recargar `models/lora-triage/` desde disco es
 confiable hasta que esto se corrija.
 
-**Orden de trabajo:** María Alejandra corrige y reentrena → Isabella re-valida D1/D3 y
-actualiza `data/README.md` → Juan Esteban re-corre el juez (D2) contra el checkpoint
-corregido.
+**Orden de trabajo:** María Alejandra corrige y reentrena → Isabella re-valida D1/D3 →
+Camilo revisa el párrafo de "sobreajuste" que escribió en `data/README.md` → Juan Esteban
+re-corre el juez (D2) contra el checkpoint corregido.
 
 ---
 
@@ -136,9 +136,11 @@ mide lo que se supone que debería medir.
   predice coherentemente fue, sin saberlo, una corrida con suerte. Hay que volver a
   correrla después del arreglo.
 - **`data/README.md`:** el hallazgo de "recall=1.0 en validación pero cayó a 0.45 en
-  test" (atribuido a sobreajuste a las plantillas sintéticas) probablemente **no es
-  sobreajuste real** — es la misma inestabilidad del pooler. Isabella debería revisar esa
-  sección después del reentrenamiento.
+  test" (commit `d83ad74`, escrito por Camilo como parte de la Tarea 1.2 de M1),
+  atribuido a sobreajuste a las plantillas sintéticas, probablemente **no es sobreajuste
+  real** — es la misma inestabilidad del pooler. Camilo debería revisar ese párrafo
+  después del reentrenamiento, no Isabella (la construcción del dataset en sí no tiene
+  nada que ver con este bug).
 - **M2 — `results/resultados_juez_m2.csv`:** no vale nada todavía. El juez evaluó un
   modelo esencialmente aleatorio.
 - **`docs/comparacion_resultados.md`, sección "Intento de mejora (descartado)":** la
@@ -180,9 +182,19 @@ Después de agregar la línea:
 
 1. Confirmar que `scripts/metricas_m2.py` (D1, D3) da resultados estables cargando el
    modelo dos veces seguidas (mismo chequeo del punto 3 de arriba).
-2. Revisar la sección de limitaciones de `data/README.md`: el hallazgo de sobreajuste
-   (val=1.0 → test=0.45) probablemente hay que reescribirlo o quitarlo, ya que el
-   diagnóstico real era este bug, no sobreajuste a las plantillas sintéticas.
+
+## 7.1 · Después del arreglo — Camilo
+
+El párrafo de "sobreajuste" en `data/README.md` (sección de limitaciones) no lo escribió
+Isabella al construir el dataset — lo agregó Camilo en el commit `d83ad74`, como parte de
+la Tarea 1.2 de M1 (Bloque 1), citando el salto de recall=1.0 en validación a 0.45 en
+test como evidencia de que el modelo memorizó la forma de las plantillas sintéticas.
+
+Con este bug confirmado, ese salto probablemente **no era sobreajuste** — era la misma
+inestabilidad del pooler (la carga usada para "documentar" ese hallazgo pudo, sin más,
+haber tocado un pooler distinto al de la carga de validación durante el entrenamiento).
+Camilo debería revisar ese párrafo después del reentrenamiento de María y, si el nuevo
+resultado es estable entre corridas, reescribirlo o quitarlo.
 
 ## 8 · Después de eso — Juan Esteban
 
