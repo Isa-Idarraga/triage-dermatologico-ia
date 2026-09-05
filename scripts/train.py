@@ -129,6 +129,7 @@ def main():
         target_modules=LORA_TARGET_MODULES,
         lora_dropout=LORA_DROPOUT,
         task_type=TaskType.SEQ_CLS,
+        modules_to_save=["classifier", "score", "pooler"]
     )
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()

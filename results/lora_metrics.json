@@ -1,12 +1,12 @@
 {
-  "accuracy": 0.6923076923076923,
-  "f1_macro": 0.6601307189542484,
-  "recall_urgente": 0.45454545454545453,
+  "accuracy": 1.0,
+  "f1_macro": 1.0,
+  "recall_urgente": 1.0,
   "matriz_confusion": {
-    "no_urgente_predicho_correctamente": 13,
-    "no_urgente_predicho_como_urgente": 2,
-    "urgente_predicho_como_no_urgente": 6,
-    "urgente_predicho_correctamente": 5
+    "no_urgente_predicho_correctamente": 15,
+    "no_urgente_predicho_como_urgente": 0,
+    "urgente_predicho_como_no_urgente": 0,
+    "urgente_predicho_correctamente": 11
   },
   "tipo_baseline": "lora"
 }
