@@ -24,6 +24,9 @@
   "megatron_core": "megatron.core",
   "modules_to_save": [
     "classifier",
+    "score",
+    "pooler",
+    "classifier",
     "score"
   ],
   "monteclora_config": null,
