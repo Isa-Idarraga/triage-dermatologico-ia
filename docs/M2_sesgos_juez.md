@@ -202,6 +202,27 @@ scorecard (ver `eval/scorecard_baseline.csv`).
 
 ---
 
+## Verificación de reproducibilidad del harness completo
+
+Se corrió `python scripts/harness_m2.py` dos veces seguidas, en procesos
+separados (Colab, GPU), y se compararon los dos `scorecard_baseline.csv`
+resultantes con `df1.equals(df2)`:
+
+Shape corrida 1: (30, 12)
+Shape corrida 2: (30, 12)
+Iguales: True
+
+Los dos scorecards son **idénticos en las 30 filas y las 12 columnas**,
+incluyendo los puntajes de D2 (`puntaje_juez_d2`, `puntaje_d2_orden_normal`,
+`puntaje_d2_orden_invertido`), que son la parte del pipeline con mayor
+riesgo de no-determinismo (generación de texto con un LLM). Esto confirma
+que la semilla fija, `do_sample=False` (greedy decoding) en el juez, y la
+versión fijada del modelo (`MODEL_REVISION_JUEZ`) producen resultados
+reproducibles de punta a punta — no solo en componentes aislados, sino en
+todo el harness junto.
+
+---
+
 ## Resumen
 
 | Sesgo | ¿Se encontró evidencia? | Mitigación |
