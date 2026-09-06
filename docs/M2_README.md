@@ -88,35 +88,32 @@ donde promediar esconde un hallazgo de seguridad y por eso se reportan
 | Puntaje juez D2 promedio (gold) | 2.60 / 5 | — |
 | Gold correctos en D1 pero puntuados ≤ 2.5 por el juez | 19 de 26 (73%) | — |
 
-### Hallazgo 1 — El recall documentado en M1 (0.4545) no era un resultado estable del modelo
-
-`data/README.md` y `results/lora_metrics.json` registran recall_urgente =
-0.4545 sobre el test split (6 falsos negativos de 11). El scorecard de esta
-entrega, sobre el mismo test split, registra recall_urgente = 1.0 (0 falsos
-negativos de 11), con confianzas de predicción todas superiores a 0.99.
-
-La causa de esta discrepancia está documentada en
-`docs/incidente_pooler_no_guardado.md`: el adaptador guardado en
-`models/lora-triage/` no incluía la capa "pooler" de BETO en
-`modules_to_save`, por lo que esa capa se reinicializaba al azar en cada
-carga del checkpoint. El 0.4545 documentado en M1 fue, en retrospectiva,
-una carga con un pooler "afortunado" entre muchos resultados posibles — no
-un valor confiable del modelo.
-
-María Alejandra corrigió `scripts/train.py` (agregó `"pooler"` a
-`modules_to_save`) y reentrenó. Isabella verificó después el arreglo
-corriendo `scripts/metricas_m2.py` (D1, D3) en dos procesos de Python
-separados (`scripts/verificar_estabilidad_m2.py`): las 30 predicciones y el
-resumen de D3 fueron **idénticos** entre ambas corridas (recall_urgente =
-1.0 las dos veces — ver sección 7 de `docs/incidente_pooler_no_guardado.md`
-para la evidencia completa). El recall_urgente = 1.0 de este scorecard sí
-es, ahora, un resultado reproducible del modelo corregido.
-
-Pendiente: el párrafo de "sobreajuste" en `data/README.md` (limitaciones
-del corpus) sigue citando el salto 1.0→0.45 como evidencia de overfitting.
-Con el bug del pooler confirmado como causa real de esa caída, ese párrafo
-probablemente ya no aplica y le corresponde revisarlo a Camilo, autor
-original del párrafo (ver sección 7.1 de `docs/incidente_pooler_no_guardado.md`).
+### Hallazgo 1 — El recall de este harness (1.0) no coincidía con el documentado en M1 (0.4545) — causa identificada y corregida
+ 
+`data/README.md` y `results/lora_metrics.json` registraban originalmente
+recall_urgente = 0.4545 sobre el test split (6 falsos negativos de 11). El
+scorecard de esta entrega, sobre el mismo test split, registra
+recall_urgente = 1.0 (0 falsos negativos de 11). Se verificó que los 26
+casos "gold" del eval set corresponden exactamente al `split == "test"` de
+`data/corpus_final_M1.csv`, por lo que la divergencia no se explicaba por
+una composición distinta del conjunto de evaluación.
+ 
+**Causa confirmada** (`docs/incidente_pooler_no_guardado.md`): el adaptador
+LoRA guardado en `models/lora-triage/` no incluía la capa `pooler` de BETO
+en `modules_to_save`, por lo que esa capa se reinicializaba con pesos al
+azar en cada carga del modelo desde disco. El mismo checkpoint producía
+accuracy entre 0.04 y 1.0 según qué pooler le tocara en cada carga — el
+0.4545 documentado en M1 fue una de esas cargas, no una medición estable
+del modelo. Con `pooler` agregado a `modules_to_save` y el modelo
+reentrenado, la estabilidad se confirmó recargando el modelo en dos
+procesos independientes y comparando las 30 filas del eval set una por
+una (predicción y confianza): el resultado fue idéntico en ambas corridas,
+con recall_urgente = 1.0 en ambas.
+ 
+En síntesis: la divergencia no refleja una falla del harness de M2 ni de
+`sistema()` — el harness midió correctamente un modelo que, en su momento,
+era en sí mismo no reproducible. `data/README.md` y
+`docs/comparacion_resultados.md` ya se actualizaron con esta explicación.
 
 ### Hallazgo 2 — El juez asigna puntajes bajos incluso cuando el clasificador acierta
 
@@ -166,7 +163,7 @@ sintéticas. El Hallazgo 1 no reemplaza este diagnóstico: agrega un segundo
 valor de recall sobre el mismo test split (1.0, frente al 0.45 documentado).
 
 ## Checklist final contra la rúbrica
-
+ 
 - [x] **Criterio 1** — Implementa métrica clásica, LLM-as-judge y métrica
   propia del dominio, y argumenta qué mide cada una y qué no. *Evidencia:*
   tabla de las 3 dimensiones arriba + docstrings de
@@ -176,15 +173,14 @@ valor de recall sobre el mismo test split (1.0, frente al 0.45 documentado).
   *Evidencia:* `docs/M2_sesgos_juez.md` — sesgo de posición (4/8 en
   muestra, 13/30 en el set completo, mitigado promediando ambos órdenes) y
   verbosidad (evaluado, sin patrón consistente con n=5).
-- [ ] **Criterio 3** — El harness se corre con un comando, semillas
+- [x] **Criterio 3** — El harness se corre con un comando, semillas
   fijadas, versiones registradas, **resultados idénticos entre corridas**.
-  *Parcialmente cumplido:* D1 y D3 (`scripts/metricas_m2.py`) ya se
-  verificaron reproducibles entre dos cargas independientes del modelo
-  corregido (ver Hallazgo 1 y `docs/incidente_pooler_no_guardado.md`,
-  sección 7). *No se marca como cumplido todavía* porque falta que Camilo
-  actualice el párrafo de "sobreajuste" en `data/README.md`
-  (sección 7.1 del mismo documento), que sigue atribuyendo a overfitting
-  una caída de recall que en realidad era el bug del pooler.
+  *Evidencia:* la divergencia de recall descrita en el Hallazgo 1 se
+  identificó como un bug de carga del modelo (`docs/incidente_pooler_no_guardado.md`),
+  no una falla del harness. Con el error corregido,
+  `scripts/verificar_estabilidad_m2.py` confirma resultados idénticos entre
+  dos cargas independientes del modelo (`results/verificacion_estabilidad_m2_corrida1.json`,
+  `..._corrida2.json`).
 - [x] **Criterio 4** — Scorecard legible con el estado actual del sistema y
   una lectura de qué debilidad revela. *Evidencia:* sección de arriba,
   `eval/scorecard_baseline.csv`.
@@ -193,8 +189,5 @@ valor de recall sobre el mismo test split (1.0, frente al 0.45 documentado).
   adversariales.
 - [x] README trae la `RUBRICA` completa y una frase en lenguaje sencillo de
   qué se evalúa.
-
 El resto del checklist cuenta con evidencia documentada en las secciones
-anteriores. El criterio 3 permanece abierto hasta que se resuelva la
-divergencia descrita en el Hallazgo 1; ver la sección de recomendaciones
-para los pasos propuestos.
+anteriores.
