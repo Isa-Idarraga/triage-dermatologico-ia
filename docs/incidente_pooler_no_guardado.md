@@ -183,6 +183,30 @@ Después de agregar la línea:
 1. Confirmar que `scripts/metricas_m2.py` (D1, D3) da resultados estables cargando el
    modelo dos veces seguidas (mismo chequeo del punto 3 de arriba).
 
+**Estado: resuelto (2026-09-06).** Se creó `scripts/verificar_estabilidad_m2.py`, que
+corre `sistema()` + `metrica_clasica()` (D1) + `metrica_dominio()` (D3) sobre los 30
+ejemplos de `eval/eval_set.json` en dos procesos de Python separados y compara ambas
+corridas ejemplo por ejemplo (etiqueta predicha + confianza redondeada a 4 decimales),
+no solo el resumen agregado.
+
+Resultado: **las 30 filas son idénticas entre las dos corridas**, y D3 coincide
+exactamente:
+
+```
+D3 corrida 1: {"recall_urgente": 1.0, "n_falsos_negativos": 0, "falsos_negativos_por_categoria": {}}
+D3 corrida 2: {"recall_urgente": 1.0, "n_falsos_negativos": 0, "falsos_negativos_por_categoria": {}}
+```
+
+Evidencia guardada en `results/verificacion_estabilidad_m2_corrida1.json`,
+`..._corrida2.json` y `..._resumen.json`. Esto confirma que el arreglo del pooler
+(sección 6) sí resuelve la inestabilidad para D1/D3: el recall_urgente = 1.0 reportado
+en el scorecard de M2 (`eval/scorecard_baseline.csv`, Hallazgo 1 de
+`docs/M2_README.md`) no es una carga con suerte — es el resultado estable del modelo ya
+corregido, reproducido en dos cargas independientes.
+
+Esto NO cierra el criterio 3 por sí solo: sigue pendiente el punto 7.1 (Camilo revisa el
+párrafo de "sobreajuste" en `data/README.md`, que todavía no se ha actualizado).
+
 ## 7.1 · Después del arreglo — Camilo
 
 El párrafo de "sobreajuste" en `data/README.md` (sección de limitaciones) no lo escribió

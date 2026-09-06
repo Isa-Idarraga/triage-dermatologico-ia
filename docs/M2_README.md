@@ -88,22 +88,35 @@ donde promediar esconde un hallazgo de seguridad y por eso se reportan
 | Puntaje juez D2 promedio (gold) | 2.60 / 5 | — |
 | Gold correctos en D1 pero puntuados ≤ 2.5 por el juez | 19 de 26 (73%) | — |
 
-### Hallazgo 1 — El recall obtenido en este harness no coincide con el documentado en M1
+### Hallazgo 1 — El recall documentado en M1 (0.4545) no era un resultado estable del modelo
 
 `data/README.md` y `results/lora_metrics.json` registran recall_urgente =
-0.4545 sobre el test split (6 falsos negativos de 11), valor reproducido
-tanto en CPU como en GPU. El scorecard de esta entrega, sobre el mismo test
-split, registra recall_urgente = 1.0 (0 falsos negativos de 11), con
-confianzas de predicción todas superiores a 0.99. Esto contrasta con el
-patrón de confianzas entre 0.5 y 0.6 documentado en la evaluación de M1.
+0.4545 sobre el test split (6 falsos negativos de 11). El scorecard de esta
+entrega, sobre el mismo test split, registra recall_urgente = 1.0 (0 falsos
+negativos de 11), con confianzas de predicción todas superiores a 0.99.
 
-Se verificó que los 26 casos "gold" del eval set corresponden exactamente
-al `split == "test"` de `data/corpus_final_M1.csv` (verificación por
-coincidencia exacta de texto), por lo que la divergencia no se explica por
-una composición distinta del conjunto de evaluación.
+La causa de esta discrepancia está documentada en
+`docs/incidente_pooler_no_guardado.md`: el adaptador guardado en
+`models/lora-triage/` no incluía la capa "pooler" de BETO en
+`modules_to_save`, por lo que esa capa se reinicializaba al azar en cada
+carga del checkpoint. El 0.4545 documentado en M1 fue, en retrospectiva,
+una carga con un pooler "afortunado" entre muchos resultados posibles — no
+un valor confiable del modelo.
 
-En síntesis: existen dos mediciones de recall_urgente sobre el mismo
-conjunto de test (0.4545 y 1.0).
+María Alejandra corrigió `scripts/train.py` (agregó `"pooler"` a
+`modules_to_save`) y reentrenó. Isabella verificó después el arreglo
+corriendo `scripts/metricas_m2.py` (D1, D3) en dos procesos de Python
+separados (`scripts/verificar_estabilidad_m2.py`): las 30 predicciones y el
+resumen de D3 fueron **idénticos** entre ambas corridas (recall_urgente =
+1.0 las dos veces — ver sección 7 de `docs/incidente_pooler_no_guardado.md`
+para la evidencia completa). El recall_urgente = 1.0 de este scorecard sí
+es, ahora, un resultado reproducible del modelo corregido.
+
+Pendiente: el párrafo de "sobreajuste" en `data/README.md` (limitaciones
+del corpus) sigue citando el salto 1.0→0.45 como evidencia de overfitting.
+Con el bug del pooler confirmado como causa real de esa caída, ese párrafo
+probablemente ya no aplica y le corresponde revisarlo a Camilo, autor
+original del párrafo (ver sección 7.1 de `docs/incidente_pooler_no_guardado.md`).
 
 ### Hallazgo 2 — El juez asigna puntajes bajos incluso cuando el clasificador acierta
 
@@ -165,10 +178,13 @@ valor de recall sobre el mismo test split (1.0, frente al 0.45 documentado).
   verbosidad (evaluado, sin patrón consistente con n=5).
 - [ ] **Criterio 3** — El harness se corre con un comando, semillas
   fijadas, versiones registradas, **resultados idénticos entre corridas**.
-  *No se marca como cumplido:* el Hallazgo 1 documenta dos valores de
-  recall_urgente distintos (0.45 y 1.0) sobre el mismo test split, lo cual
-  contradice directamente la condición de "resultados idénticos entre
-  corridas" exigida por este criterio.
+  *Parcialmente cumplido:* D1 y D3 (`scripts/metricas_m2.py`) ya se
+  verificaron reproducibles entre dos cargas independientes del modelo
+  corregido (ver Hallazgo 1 y `docs/incidente_pooler_no_guardado.md`,
+  sección 7). *No se marca como cumplido todavía* porque falta que Camilo
+  actualice el párrafo de "sobreajuste" en `data/README.md`
+  (sección 7.1 del mismo documento), que sigue atribuyendo a overfitting
+  una caída de recall que en realidad era el bug del pooler.
 - [x] **Criterio 4** — Scorecard legible con el estado actual del sistema y
   una lectura de qué debilidad revela. *Evidencia:* sección de arriba,
   `eval/scorecard_baseline.csv`.
