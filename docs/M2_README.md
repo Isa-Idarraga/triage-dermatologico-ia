@@ -103,9 +103,7 @@ coincidencia exacta de texto), por lo que la divergencia no se explica por
 una composición distinta del conjunto de evaluación.
 
 En síntesis: existen dos mediciones de recall_urgente sobre el mismo
-conjunto de test (0.4545 y 1.0) y no hay, a la fecha de este documento,
-evidencia suficiente para determinar cuál refleja el comportamiento real
-del sistema en producción.
+conjunto de test (0.4545 y 1.0).
 
 ### Hallazgo 2 — El juez asigna puntajes bajos incluso cuando el clasificador acierta
 
@@ -152,9 +150,7 @@ estrecha.
 `data/README.md` documenta recall = 1.0 en validación y 0.45 en test,
 atribuido a sobreajuste sobre la estructura repetitiva de las plantillas
 sintéticas. El Hallazgo 1 no reemplaza este diagnóstico: agrega un segundo
-valor de recall sobre el mismo test split (1.0, frente al 0.45 documentado),
-sin que a la fecha exista evidencia suficiente para establecer cuál de los
-dos describe el comportamiento del sistema en producción.
+valor de recall sobre el mismo test split (1.0, frente al 0.45 documentado).
 
 ## Checklist final contra la rúbrica
 
