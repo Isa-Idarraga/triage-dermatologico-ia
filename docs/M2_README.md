@@ -85,7 +85,6 @@ donde promediar esconde un hallazgo de seguridad y por eso se reportan
 |---|---|---|
 | Accuracy D1 (gold) | 26/26 = 100% | — |
 | Recall urgente (D3, gold) | 11/11 = **1.0** | ≥ 0.85 |
-| Falsos negativos urgente (gold) | 0 de 11 | — |
 | Puntaje juez D2 promedio (gold) | 2.60 / 5 | — |
 | Gold correctos en D1 pero puntuados ≤ 2.5 por el juez | 19 de 26 (73%) | — |
 
