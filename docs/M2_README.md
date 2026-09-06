@@ -66,7 +66,7 @@ donde promediar esconde un hallazgo de seguridad y por eso se reportan
 | [`scripts/juez_m2.py`](../scripts/juez_m2.py) | Modelo juez, `RUBRICA`, `metrica_juez()` (D2), defensa anti-inyección | Juan Esteban |
 | [`scripts/harness_m2.py`](../scripts/harness_m2.py) | Orquestador de las 3 dimensiones + `metrica_juez_mitigada()` | María Alejandra |
 | [`docs/M2_sesgos_juez.md`](./M2_sesgos_juez.md) | Evidencia de mitigación de sesgos del juez (posición, verbosidad, auto-preferencia) | María Alejandra |
-| [`eval/scorecard_baseline.csv`](../eval/scorecard_baseline.csv) | Scorecard fila-por-ejemplo con las 3 dimensiones | Camilo |
+| [`eval/scorecard_baseline.csv`](../eval/scorecard_baseline.csv) | Scorecard fila-por-ejemplo con las 3 dimensiones | Camilo/ María Alejandra |
 | Este archivo | Rúbrica, frase sencilla, enlaces | Camilo |
 
 ## Scorecard del baseline — lectura honesta
