@@ -1,0 +1,13 @@
+{
+  "identicas": true,
+  "d3_corrida_1": {
+    "recall_urgente": 1.0,
+    "n_falsos_negativos": 0,
+    "falsos_negativos_por_categoria": {}
+  },
+  "d3_corrida_2": {
+    "recall_urgente": 1.0,
+    "n_falsos_negativos": 0,
+    "falsos_negativos_por_categoria": {}
+  }
+}

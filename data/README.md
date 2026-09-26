@@ -71,4 +71,21 @@ fila — nunca presentados como reales.
   preentrenado en español general y solo necesita afinar una frontera de
   decisión binaria.
 - Los 10 casos reales (SPACCC/CodiEsp) están redactados en lenguaje de reporte clínico —con terminología médica, abreviaturas y estructura de historia clínica—, mientras que los 126 casos sintéticos imitan el lenguaje coloquial con el que un paciente describiría su lesión. Esta diferencia es relevante porque en producción el sistema va a recibir consultas escritas por pacientes, no reportes clínicos: son los casos sintéticos, y no los reales, los que realmente representan la distribución de entrada esperada del modelo.
-- Además, las plantillas usadas para generar los casos sintéticos repiten en gran medida la misma estructura de oración, variando principalmente la ubicación anatómica y el tiempo de evolución de la lesión. Esta baja variabilidad lingüística puede favorecer el sobreajuste a patrones superficiales de la plantilla en lugar de al contenido clínico real. De hecho, esto se observó empíricamente en la evaluación del modelo: el recall llegó a 1.0 en el conjunto de validación pero cayó a 0.45 en el conjunto de test, una caída consistente con que el modelo aprendió la forma de las plantillas más que el criterio clínico subyacente.
+- Además, las plantillas usadas para generar los casos sintéticos repiten en gran medida la misma estructura de oración, variando principalmente la ubicación anatómica y el tiempo de evolución de la lesión. Esta baja variabilidad lingüística sigue siendo, en principio, un riesgo de que el modelo aprenda patrones superficiales de la plantilla en lugar del contenido clínico real.
+
+  **Corrección (2026-09-06):** una versión anterior de este párrafo citaba como evidencia
+  de ese sobreajuste la caída de recall de 1.0 en validación a 0.45 en test. Esa cifra ya
+  no se sostiene como evidencia de sobreajuste: se identificó y corrigió un error en
+  `scripts/train.py` (la capa `pooler` de BETO no quedaba incluida en `modules_to_save`
+  del adaptador LoRA, por lo que se reinicializaba al azar en cada carga del modelo desde
+  disco — ver `docs/incidente_pooler_no_guardado.md`). Esto hacía que el mismo checkpoint
+  diera resultados distintos en cada carga (accuracy observada entre 0.04 y 1.0 según la
+  corrida), por lo que el 0.45 documentado originalmente no medía la capacidad de
+  generalización del modelo, sino en qué carga particular se calculó la métrica. Con el
+  error corregido, el modelo da recall_urgente = 1.0 de forma estable en el conjunto de
+  test (confirmado recargándolo en procesos independientes — ver
+  `docs/comparacion_resultados.md`). El split de validación no se ha vuelto a evaluar
+  después de la corrección, así que no hay evidencia, a la fecha, de si sigue existiendo
+  una brecha real entre validación y test. El riesgo estructural de las plantillas
+  (primer párrafo de este punto) sigue siendo válido como consideración de diseño; lo que
+  se retira es la evidencia numérica específica que se usaba para respaldarlo.

@@ -1,0 +1,220 @@
+{
+  "corrida": "2",
+  "filas": [
+    {
+      "id": "gold_01",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9998,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_02",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9991,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_03",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_04",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_05",
+      "etiqueta_predicha": "urgente",
+      "confianza": 1.0,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_06",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_07",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9998,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_08",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9998,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_09",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 1.0,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_10",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_11",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9977,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_12",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_13",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_14",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9985,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_15",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_16",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 1.0,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_17",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9994,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_18",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9992,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_19",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9998,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_20",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_21",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9998,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_22",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_23",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9996,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_24",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_25",
+      "etiqueta_predicha": "no_urgente",
+      "confianza": 0.9999,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "gold_26",
+      "etiqueta_predicha": "urgente",
+      "confianza": 1.0,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "adv_01",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.8624,
+      "d1_aplica": false,
+      "d1_acierto": null
+    },
+    {
+      "id": "adv_02",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.8911,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "adv_03",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.5956,
+      "d1_aplica": true,
+      "d1_acierto": true
+    },
+    {
+      "id": "adv_04",
+      "etiqueta_predicha": "urgente",
+      "confianza": 0.9975,
+      "d1_aplica": false,
+      "d1_acierto": null
+    }
+  ],
+  "d3_resumen": {
+    "recall_urgente": 1.0,
+    "n_falsos_negativos": 0,
+    "falsos_negativos_por_categoria": {}
+  }
+}
