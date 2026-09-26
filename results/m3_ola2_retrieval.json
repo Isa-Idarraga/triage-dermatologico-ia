@@ -1,0 +1,1409 @@
+{
+  "fecha": "2026-09-26T07:38:45",
+  "chunking": "A_fijo_400c_60",
+  "K": 3,
+  "configs": {
+    "ingenuo": "Denso top-K (Ola 1, sin cambios)",
+    "hybrid": "BM25 + denso, top-20 de cada uno, fusionados con RRF (k=60)",
+    "rerank": "Denso top-20 -> cross-encoder -> top-K",
+    "hybrid_rerank": "Hybrid top-20 -> cross-encoder -> top-K"
+  },
+  "resultados": {
+    "ingenuo": {
+      "n_casos": 34,
+      "hit@1": 0.441,
+      "hit@3": 0.529,
+      "mrr@10": 0.552,
+      "latencia_retrieval_ms_prom": 38.4,
+      "detalle": [
+        {
+          "id": "m3_g01",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "wiki_03_dermatofibroma",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.028557299985550344
+        },
+        {
+          "id": "m3_g02",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_03_lunares_nevos_displasicos",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.02319739991798997
+        },
+        {
+          "id": "m3_g03",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.028558699996210635
+        },
+        {
+          "id": "m3_g04",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "wiki_04_angioma_en_cereza",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.02443879994098097
+        },
+        {
+          "id": "m3_g05",
+          "rango": 9,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.031246499973349273
+        },
+        {
+          "id": "m3_g06",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.03017859999090433
+        },
+        {
+          "id": "m3_g07",
+          "rango": 5,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "cdc_01_sintomas_cancer_piel",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.032130900071933866
+        },
+        {
+          "id": "m3_g08",
+          "rango": 7,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_03_dermatofibroma",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.03545890003442764
+        },
+        {
+          "id": "m3_g09",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_01_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.05298390006646514
+        },
+        {
+          "id": "m3_g10",
+          "rango": 5,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "nci_01_melanoma_pdq",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.03807090001646429
+        },
+        {
+          "id": "m3_g11",
+          "rango": 5,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.04368820006493479
+        },
+        {
+          "id": "m3_g12",
+          "rango": null,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza",
+            "wiki_05_granuloma_piogeno"
+          ],
+          "latencia_s": 0.03326079994440079
+        },
+        {
+          "id": "m3_g13",
+          "rango": 8,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.033111800090409815
+        },
+        {
+          "id": "m3_g14",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.04094560001976788
+        },
+        {
+          "id": "m3_g15",
+          "rango": 8,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.032616600045003
+        },
+        {
+          "id": "m3_g16",
+          "rango": null,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.03416439995635301
+        },
+        {
+          "id": "m3_g17",
+          "rango": 4,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.03494939999654889
+        },
+        {
+          "id": "m3_g18",
+          "rango": 4,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.045072800014168024
+        },
+        {
+          "id": "m3_g19",
+          "rango": null,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.03563399997074157
+        },
+        {
+          "id": "m3_g20",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "wiki_02_lentigo_solar",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.034591700066812336
+        },
+        {
+          "id": "m3_g21",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.03409520001150668
+        },
+        {
+          "id": "m3_g22",
+          "rango": 5,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "wiki_05_granuloma_piogeno",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.03829969989601523
+        },
+        {
+          "id": "m3_g23",
+          "rango": 5,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "cdc_01_sintomas_cancer_piel",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.04016069998033345
+        },
+        {
+          "id": "m3_g24",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.04097730002831668
+        },
+        {
+          "id": "m3_g25",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.040691499947570264
+        },
+        {
+          "id": "m3_g26",
+          "rango": 4,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "nci_01_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.03903340001124889
+        },
+        {
+          "id": "m3_g27",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.05332399997860193
+        },
+        {
+          "id": "m3_i01",
+          "rango": 1,
+          "top_k_docs": [
+            "col_01_cancer_piel_colombia_inc",
+            "nci_01_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.05009470006916672
+        },
+        {
+          "id": "m3_i02",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_04_deteccion_cancer_piel_pdq"
+          ],
+          "latencia_s": 0.061135899974033237
+        },
+        {
+          "id": "m3_a03",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.04322290001437068
+        },
+        {
+          "id": "m3_a04",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.04198750003706664
+        },
+        {
+          "id": "m3_a05",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.05094099999405444
+        },
+        {
+          "id": "m3_a06",
+          "rango": 2,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.044899199972860515
+        },
+        {
+          "id": "m3_a08",
+          "rango": null,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.034409599960781634
+        }
+      ]
+    },
+    "hybrid": {
+      "n_casos": 34,
+      "hit@1": 0.5,
+      "hit@3": 0.794,
+      "mrr@10": 0.647,
+      "latencia_retrieval_ms_prom": 47.7,
+      "detalle": [
+        {
+          "id": "m3_g01",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.05751559999771416
+        },
+        {
+          "id": "m3_g02",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "cdc_01_sintomas_cancer_piel",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.055286800023168325
+        },
+        {
+          "id": "m3_g03",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.0970585000468418
+        },
+        {
+          "id": "m3_g04",
+          "rango": 3,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "eq_01_protocolo_urgencia_equipo",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.043106500059366226
+        },
+        {
+          "id": "m3_g05",
+          "rango": 7,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.028353700065054
+        },
+        {
+          "id": "m3_g06",
+          "rango": 3,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.03400870005134493
+        },
+        {
+          "id": "m3_g07",
+          "rango": 3,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "cdc_01_sintomas_cancer_piel",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.05878259998280555
+        },
+        {
+          "id": "m3_g08",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_05_granuloma_piogeno"
+          ],
+          "latencia_s": 0.05511610000394285
+        },
+        {
+          "id": "m3_g09",
+          "rango": 3,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "eq_01_protocolo_urgencia_equipo",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.05001429992262274
+        },
+        {
+          "id": "m3_g10",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.03547189990058541
+        },
+        {
+          "id": "m3_g11",
+          "rango": 1,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "cdc_01_sintomas_cancer_piel",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.04186130000744015
+        },
+        {
+          "id": "m3_g12",
+          "rango": 3,
+          "top_k_docs": [
+            "nci_05_carcinoma_celulas_merkel_pdq",
+            "nci_01_melanoma_pdq",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.03941159998066723
+        },
+        {
+          "id": "m3_g13",
+          "rango": 4,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "cdc_01_sintomas_cancer_piel",
+            "eq_01_protocolo_urgencia_equipo"
+          ],
+          "latencia_s": 0.040812799939885736
+        },
+        {
+          "id": "m3_g14",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.04333390004467219
+        },
+        {
+          "id": "m3_g15",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_02_lentigo_solar",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.04907350009307265
+        },
+        {
+          "id": "m3_g16",
+          "rango": 2,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "nci_05_carcinoma_celulas_merkel_pdq",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.04993159999139607
+        },
+        {
+          "id": "m3_g17",
+          "rango": 5,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_01_queratosis_seborreica",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.0476687999907881
+        },
+        {
+          "id": "m3_g18",
+          "rango": 9,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_05_carcinoma_celulas_merkel_pdq"
+          ],
+          "latencia_s": 0.05430969991721213
+        },
+        {
+          "id": "m3_g19",
+          "rango": 10,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.03927159996237606
+        },
+        {
+          "id": "m3_g20",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "wiki_02_lentigo_solar",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.04442910000216216
+        },
+        {
+          "id": "m3_g21",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.040260199923068285
+        },
+        {
+          "id": "m3_g22",
+          "rango": 3,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_01_melanoma_pdq",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.045262099942192435
+        },
+        {
+          "id": "m3_g23",
+          "rango": 8,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.05068530002608895
+        },
+        {
+          "id": "m3_g24",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.0550844999961555
+        },
+        {
+          "id": "m3_g25",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.038581599947065115
+        },
+        {
+          "id": "m3_g26",
+          "rango": 3,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_03_dermatofibroma",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.04427929990924895
+        },
+        {
+          "id": "m3_g27",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.05227069999091327
+        },
+        {
+          "id": "m3_i01",
+          "rango": 1,
+          "top_k_docs": [
+            "col_01_cancer_piel_colombia_inc",
+            "col_01_cancer_piel_colombia_inc",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.038526999996975064
+        },
+        {
+          "id": "m3_i02",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.04224879993125796
+        },
+        {
+          "id": "m3_a03",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.045229599927552044
+        },
+        {
+          "id": "m3_a04",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.058464700006879866
+        },
+        {
+          "id": "m3_a05",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.06516610004473478
+        },
+        {
+          "id": "m3_a06",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_04_deteccion_cancer_piel_pdq"
+          ],
+          "latencia_s": 0.04744860006030649
+        },
+        {
+          "id": "m3_a08",
+          "rango": 4,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "col_01_cancer_piel_colombia_inc",
+            "nci_05_carcinoma_celulas_merkel_pdq"
+          ],
+          "latencia_s": 0.03333160001784563
+        }
+      ]
+    },
+    "rerank": {
+      "n_casos": 34,
+      "hit@1": 0.529,
+      "hit@3": 0.706,
+      "mrr@10": 0.651,
+      "latencia_retrieval_ms_prom": 722.9,
+      "detalle": [
+        {
+          "id": "m3_g01",
+          "rango": 6,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "wiki_04_angioma_en_cereza",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7590685000177473
+        },
+        {
+          "id": "m3_g02",
+          "rango": 4,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.6860927999950945
+        },
+        {
+          "id": "m3_g03",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.8174935999559239
+        },
+        {
+          "id": "m3_g04",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.7256726999767125
+        },
+        {
+          "id": "m3_g05",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.5895332000218332
+        },
+        {
+          "id": "m3_g06",
+          "rango": null,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_02_lentigo_solar",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.7183760000625625
+        },
+        {
+          "id": "m3_g07",
+          "rango": 2,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_02_lentigo_solar",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.6586556000402197
+        },
+        {
+          "id": "m3_g08",
+          "rango": 1,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.6454449000302702
+        },
+        {
+          "id": "m3_g09",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_04_angioma_en_cereza",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.7222800999879837
+        },
+        {
+          "id": "m3_g10",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.6940369999501854
+        },
+        {
+          "id": "m3_g11",
+          "rango": 1,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.7115986000280827
+        },
+        {
+          "id": "m3_g12",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.6552449999144301
+        },
+        {
+          "id": "m3_g13",
+          "rango": 7,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "wiki_04_angioma_en_cereza",
+            "cdc_01_sintomas_cancer_piel"
+          ],
+          "latencia_s": 0.6777133999858052
+        },
+        {
+          "id": "m3_g14",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_01_queratosis_seborreica",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7110556999687105
+        },
+        {
+          "id": "m3_g15",
+          "rango": null,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.7399096000008285
+        },
+        {
+          "id": "m3_g16",
+          "rango": null,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_03_dermatofibroma",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.734499100013636
+        },
+        {
+          "id": "m3_g17",
+          "rango": 7,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.711425399989821
+        },
+        {
+          "id": "m3_g18",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "eq_01_protocolo_urgencia_equipo",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.780866099987179
+        },
+        {
+          "id": "m3_g19",
+          "rango": null,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "wiki_03_dermatofibroma",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.6736788999987766
+        },
+        {
+          "id": "m3_g20",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7629414999391884
+        },
+        {
+          "id": "m3_g21",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.7441740999929607
+        },
+        {
+          "id": "m3_g22",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "eq_01_protocolo_urgencia_equipo",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.6962079000659287
+        },
+        {
+          "id": "m3_g23",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_02_lentigo_solar",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.75891979993321
+        },
+        {
+          "id": "m3_g24",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7385156999807805
+        },
+        {
+          "id": "m3_g25",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.6964988000690937
+        },
+        {
+          "id": "m3_g26",
+          "rango": 4,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.7521620000479743
+        },
+        {
+          "id": "m3_g27",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7773012999678031
+        },
+        {
+          "id": "m3_i01",
+          "rango": 1,
+          "top_k_docs": [
+            "col_01_cancer_piel_colombia_inc",
+            "col_01_cancer_piel_colombia_inc",
+            "col_01_cancer_piel_colombia_inc"
+          ],
+          "latencia_s": 0.7381188999861479
+        },
+        {
+          "id": "m3_i02",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.738070199964568
+        },
+        {
+          "id": "m3_a03",
+          "rango": 6,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.8200726000359282
+        },
+        {
+          "id": "m3_a04",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.7570281999651343
+        },
+        {
+          "id": "m3_a05",
+          "rango": 2,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7300192998955026
+        },
+        {
+          "id": "m3_a06",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.7627340999897569
+        },
+        {
+          "id": "m3_a08",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_02_lentigo_solar",
+            "col_01_cancer_piel_colombia_inc"
+          ],
+          "latencia_s": 0.694433500058949
+        }
+      ]
+    },
+    "hybrid_rerank": {
+      "n_casos": 34,
+      "hit@1": 0.5,
+      "hit@3": 0.794,
+      "mrr@10": 0.654,
+      "latencia_retrieval_ms_prom": 719.8,
+      "detalle": [
+        {
+          "id": "m3_g01",
+          "rango": 6,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "wiki_04_angioma_en_cereza",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7663939000340179
+        },
+        {
+          "id": "m3_g02",
+          "rango": 3,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "cdc_01_sintomas_cancer_piel",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7370059000095353
+        },
+        {
+          "id": "m3_g03",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7571655999636278
+        },
+        {
+          "id": "m3_g04",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "wiki_03_dermatofibroma",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.6786607999820262
+        },
+        {
+          "id": "m3_g05",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.659391300054267
+        },
+        {
+          "id": "m3_g06",
+          "rango": 9,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_02_lentigo_solar",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.7158482000231743
+        },
+        {
+          "id": "m3_g07",
+          "rango": 2,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_02_lentigo_solar",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7060975000495091
+        },
+        {
+          "id": "m3_g08",
+          "rango": 1,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.6986591001041234
+        },
+        {
+          "id": "m3_g09",
+          "rango": 3,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_05_carcinoma_celulas_merkel_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.7316569000249729
+        },
+        {
+          "id": "m3_g10",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.6808664000127465
+        },
+        {
+          "id": "m3_g11",
+          "rango": 1,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.6298061000416055
+        },
+        {
+          "id": "m3_g12",
+          "rango": null,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_04_angioma_en_cereza",
+            "wiki_03_dermatofibroma"
+          ],
+          "latencia_s": 0.6462123000528663
+        },
+        {
+          "id": "m3_g13",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_03_dermatofibroma",
+            "nci_02_cancer_piel_no_melanoma_pdq"
+          ],
+          "latencia_s": 0.644868899951689
+        },
+        {
+          "id": "m3_g14",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7502131999935955
+        },
+        {
+          "id": "m3_g15",
+          "rango": 10,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "wiki_04_angioma_en_cereza",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.6748177000554278
+        },
+        {
+          "id": "m3_g16",
+          "rango": 6,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_03_dermatofibroma",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.736876199953258
+        },
+        {
+          "id": "m3_g17",
+          "rango": 6,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_01_queratosis_seborreica",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.7443983999546617
+        },
+        {
+          "id": "m3_g18",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_01_queratosis_seborreica",
+            "wiki_01_queratosis_seborreica"
+          ],
+          "latencia_s": 0.7838992000324652
+        },
+        {
+          "id": "m3_g19",
+          "rango": 2,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "eq_01_protocolo_urgencia_equipo",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.75218070007395
+        },
+        {
+          "id": "m3_g20",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_02_lentigo_solar",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7764632999897003
+        },
+        {
+          "id": "m3_g21",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.7909401999786496
+        },
+        {
+          "id": "m3_g22",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "eq_01_protocolo_urgencia_equipo",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7055298000341281
+        },
+        {
+          "id": "m3_g23",
+          "rango": 1,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_04_angioma_en_cereza",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.733698199968785
+        },
+        {
+          "id": "m3_g24",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "eq_01_protocolo_urgencia_equipo",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.7832856000168249
+        },
+        {
+          "id": "m3_g25",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.6387008000165224
+        },
+        {
+          "id": "m3_g26",
+          "rango": 3,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.6996835999889299
+        },
+        {
+          "id": "m3_g27",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_02_cancer_piel_no_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.8354401999386027
+        },
+        {
+          "id": "m3_i01",
+          "rango": 1,
+          "top_k_docs": [
+            "col_01_cancer_piel_colombia_inc",
+            "col_01_cancer_piel_colombia_inc",
+            "col_01_cancer_piel_colombia_inc"
+          ],
+          "latencia_s": 0.62349299993366
+        },
+        {
+          "id": "m3_i02",
+          "rango": 1,
+          "top_k_docs": [
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.644073500065133
+        },
+        {
+          "id": "m3_a03",
+          "rango": 5,
+          "top_k_docs": [
+            "wiki_01_queratosis_seborreica",
+            "cdc_01_sintomas_cancer_piel",
+            "wiki_04_angioma_en_cereza"
+          ],
+          "latencia_s": 0.740712400060147
+        },
+        {
+          "id": "m3_a04",
+          "rango": 2,
+          "top_k_docs": [
+            "wiki_03_dermatofibroma",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_01_melanoma_pdq"
+          ],
+          "latencia_s": 0.7065024999901652
+        },
+        {
+          "id": "m3_a05",
+          "rango": 2,
+          "top_k_docs": [
+            "cdc_01_sintomas_cancer_piel",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.8512245999881998
+        },
+        {
+          "id": "m3_a06",
+          "rango": 2,
+          "top_k_docs": [
+            "nci_01_melanoma_pdq",
+            "nci_03_lunares_nevos_displasicos",
+            "nci_03_lunares_nevos_displasicos"
+          ],
+          "latencia_s": 0.6949301999993622
+        },
+        {
+          "id": "m3_a08",
+          "rango": 3,
+          "top_k_docs": [
+            "wiki_04_angioma_en_cereza",
+            "wiki_03_dermatofibroma",
+            "wiki_02_lentigo_solar"
+          ],
+          "latencia_s": 0.7527651999844238
+        }
+      ]
+    }
+  }
+}
