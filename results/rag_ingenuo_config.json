@@ -1,0 +1,28 @@
+{
+  "fecha": "2026-09-26T04:53:02",
+  "seed": 42,
+  "K": 3,
+  "chunking": "B_seccion_900c",
+  "politica_valvula": "urgente",
+  "system_prompt_sha1": "10868d1f8def",
+  "generador": {
+    "id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "revision_fijada": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "commit_cargado": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "dtype": "torch.float16",
+    "max_new_tokens": 200,
+    "do_sample": false
+  },
+  "embeddings": {
+    "id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "revision_fijada": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "commit_cargado": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+  },
+  "librerias": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "sentence_transformers": "5.7.0",
+    "chromadb": "1.5.9",
+    "peft": "0.20.0"
+  }
+}
