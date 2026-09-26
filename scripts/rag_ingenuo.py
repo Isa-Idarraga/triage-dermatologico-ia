@@ -632,7 +632,8 @@ def evaluar_sistema(eval_set, sistema_fn, salida_csv, usar_juez=True):
     # Columnas propias de M3 (retrieval, válvula, latencia, texto de la respuesta)
     por_id = {e["id"]: e for e in eval_set}
     extra = {k: [] for k in ("etiqueta_rag", "valvula", "formato_valido", "fuentes", "chunk_ids",
-                             "rango_doc_relevante", "hit_at_k", "latencia_total_s", "respuesta")}
+                             "rango_doc_relevante", "hit_at_k", "evidencia_en_contexto",
+                             "cita_doc_relevante", "latencia_total_s", "respuesta")}
     for _, fila in df.iterrows():
         e = por_id[fila["id"]]
         s = salidas[e["input"]]
@@ -645,6 +646,9 @@ def evaluar_sistema(eval_set, sistema_fn, salida_csv, usar_juez=True):
         extra["chunk_ids"].append("|".join(s.get("chunk_ids", [])))
         extra["rango_doc_relevante"].append(rango)
         extra["hit_at_k"].append(None if not e.get("docs_relevantes") or not s.get("chunk_ids") else rango is not None)
+        ev, cita = fundamentacion(e, s)
+        extra["evidencia_en_contexto"].append(ev)
+        extra["cita_doc_relevante"].append(cita)
         extra["latencia_total_s"].append(s.get("latencia_s", {}).get("total"))
         extra["respuesta"].append(s.get("respuesta"))
     for k, v in extra.items():
@@ -654,6 +658,35 @@ def evaluar_sistema(eval_set, sistema_fn, salida_csv, usar_juez=True):
     os.makedirs(os.path.dirname(salida_csv), exist_ok=True)
     df.to_csv(salida_csv, index=False)
     return df, resumen
+
+
+def _norm(t):
+    return re.sub(r"\s+", " ", str(t)).strip().lower()
+
+
+def fundamentacion(ejemplo, salida):
+    """Métrica de dominio que LEE el criterio clínico de cada caso (respuesta al
+    comentario de M2: "el campo criterio no lo lee nadie"). Determinista, sin LLM:
+
+    - evidencia_en_contexto: fracción de las citas de `evidencia` del eval set
+      (las frases del corpus que justifican la etiqueta) que llegaron TEXTUALES
+      al contexto recuperado. Es un context recall exacto a nivel de criterio
+      clínico: si la frase "Llaga que no cicatriza." no llegó al prompt, el
+      generador no tenía con qué justificar "urgente".
+    - cita_doc_relevante: ¿la respuesta nombra al menos uno de los documentos
+      que respaldan la etiqueta? Mide si el sistema se apoyó en la fuente
+      correcta, no solo si acertó la etiqueta.
+    Ambas son None cuando el caso no tiene evidencia (adversariales sin
+    respuesta en el corpus) o el sistema no recupera contexto (BETO)."""
+    citas = [c["cita"] for c in ejemplo.get("evidencia", [])]
+    contexto = salida.get("contexto")
+    if not citas or not contexto:
+        return None, None
+    ctx = _norm(" ".join(contexto))
+    ev = round(sum(1 for c in citas if _norm(c) in ctx) / len(citas), 3)
+    resp = str(salida.get("respuesta", ""))
+    cita = any(d in resp for d in ejemplo.get("docs_relevantes", []))
+    return ev, cita
 
 
 def resumir(df, eval_set):
@@ -684,6 +717,10 @@ def resumir(df, eval_set):
         r["formato_invalido"] = int((~df["formato_valido"].astype(bool)).sum())
         con_docs = df[df["hit_at_k"].notna()]
         r[f"retrieval_hit@{K}"] = round(float(con_docs["hit_at_k"].astype(float).mean()), 3) if len(con_docs) else None
+        ev = df["evidencia_en_contexto"].dropna().astype(float)
+        r["evidencia_en_contexto_prom"] = round(float(ev.mean()), 3) if len(ev) else None
+        ci = df["cita_doc_relevante"].dropna().astype(float)
+        r["cita_doc_relevante"] = round(float(ci.mean()), 3) if len(ci) else None
         adv_sin_docs = df[df["esperado"] == "no_aplica"]
         r["no_aplica_con_valvula_o_no_aplica"] = (
             f"{int(adv_sin_docs['etiqueta_rag'].isin(['no_determinable', 'no_aplica']).sum())}/{len(adv_sin_docs)}")
@@ -772,7 +809,7 @@ def escribir_consultas_fallidas(eval_set, df_rag, resumen_rag, df_beto, chunking
 
     L = []
     L.append("# M3 · Consultas fallidas del RAG ingenuo (Ola 1)\n")
-    L.append("> Tablas generadas automáticamente por `python scripts/rag_ingenuo.py evaluar` "
+    L.append("> Tablas generadas automáticamente por `python scripts/rag_ingenuo.py evaluar` (o `recalcular`, que las rehace desde los scorecards sin volver a correr los modelos) "
              f"({datetime.now().strftime('%Y-%m-%d %H:%M')}), a partir de `eval/scorecard_rag_ingenuo.csv`. "
              "No se editan a mano: si cambia el sistema, se vuelven a generar.\n")
     L.append(f"Configuración: chunking `{chunking_info}`, K = {K}, embeddings `{EMB_MODEL}`, generador `{GEN_MODEL}`.\n")
@@ -786,6 +823,8 @@ def escribir_consultas_fallidas(eval_set, df_rag, resumen_rag, df_beto, chunking
                           ("d3_recall_urgente", "D3 recall urgente (válvula = remitir)"),
                           ("d3_recall_urgente_estricto", "D3 recall urgente estricto (válvula = fallo)"),
                           (f"retrieval_hit@{K}", f"Retrieval hit@{K} (nivel documento)"),
+                          ("evidencia_en_contexto_prom", "Evidencia clínica del caso presente en el contexto (prom.)"),
+                          ("cita_doc_relevante", "Respuestas que citan un documento que respalda la etiqueta"),
                           ("valvulas_activadas", "Válvulas activadas"),
                           ("no_aplica_con_valvula_o_no_aplica", "Casos sin etiqueta resueltos con válvula"),
                           ("latencia_s_promedio", "Latencia promedio (s)"),
@@ -834,10 +873,10 @@ def escribir_consultas_fallidas(eval_set, df_rag, resumen_rag, df_beto, chunking
             L.append(f"| {e['id']} | {e['esperado']} | {beto.loc[e['id'], 'etiqueta_predicha']} | "
                      f"{rag.loc[e['id'], 'etiqueta_rag']} | {corta(e['dificultad'], 90)} |")
     L.append("")
-    L.append("## 5 · Lectura (se completa a mano después de mirar las tablas)\n")
-    L.append("- Qué tienen en común los fallos de retrieval (vocabulario del paciente vs. vocabulario de la fuente, documento corto vs. largos, etc.):")
-    L.append("- Qué técnica de S08 ataca cada uno (hybrid → términos exactos; reranking → ruido en el top-k; query transformation → consulta coloquial):")
-    L.append("- Fallos de generación que ninguna técnica de retrieval va a arreglar:")
+    L.append("## 5 · Lectura\n")
+    L.append("La lectura de estas tablas (qué tienen en común los fallos, qué técnica de S08 ataca cada uno y qué "
+             "fallos no se arreglan con retrieval) está escrita a mano en `docs/M3_rag_ingenuo.md`, sección 12, "
+             "para que no se borre cuando se regeneren las tablas.")
     L.append("")
     ruta = ruta or SALIDAS["consultas_fallidas"]
     os.makedirs(os.path.dirname(ruta), exist_ok=True)
@@ -885,6 +924,59 @@ def evaluar(usar_juez=True, ambos_chunking=True):
     return resumen
 
 
+def recalcular_desde_scorecards():
+    """Recalcula las métricas deterministas (fundamentación clínica, D1, D3,
+    retrieval, válvula) y vuelve a escribir el resumen y
+    docs/M3_consultas_fallidas.md a partir de los scorecards YA generados, sin
+    volver a cargar ningún modelo. El contexto de cada caso se reconstruye a
+    partir de sus chunk_ids (el chunking es determinista). D2 (juez) no se
+    toca: se conserva lo que salió en la corrida."""
+    import pandas as pd
+    from metricas_m2 import metrica_dominio
+    eval_set = _cargar_eval_set()
+    por_id = {e["id"]: e for e in eval_set}
+    docs = cargar_corpus()
+
+    def cargar(ruta, cfg=None):
+        df = pd.read_csv(ruta)
+        if cfg:
+            textos = {c["id"]: c["texto"] for c in partir_documentos(docs, cfg)}
+            ev, ci = [], []
+            for _, f in df.iterrows():
+                ids = [] if pd.isna(f["chunk_ids"]) else str(f["chunk_ids"]).split("|")
+                salida = {"contexto": [textos[i] for i in ids], "respuesta": f["respuesta"]}
+                a, b = fundamentacion(por_id[f["id"]], salida)
+                ev.append(a)
+                ci.append(b)
+            df["evidencia_en_contexto"] = ev
+            df["cita_doc_relevante"] = ci
+            df["etiqueta_rag"] = df["etiqueta_rag"].where(df["etiqueta_rag"].notna(), None)
+        orden = df.set_index("id").loc[[e["id"] for e in eval_set]]
+        d3 = metrica_dominio(eval_set, [{"etiqueta_predicha": x} for x in orden["etiqueta_predicha"]])
+        df.attrs.update({"d3_recall_urgente": d3["recall_urgente"], "d3_falsos_negativos": d3["n_falsos_negativos"],
+                         "d3_falsos_negativos_por_categoria": d3["falsos_negativos_por_categoria"]})
+        return df
+
+    df_beto = cargar(SALIDAS["scorecard_beto"])
+    with open(SALIDAS["resumen"], encoding="utf-8") as f:
+        resumen = json.load(f)
+    elegida = resumen["chunking_elegido"]
+    df_rag = None
+    for cfg in resumen["rag_ingenuo"]:
+        ruta = SALIDAS["scorecard_rag_por_chunking"].format(cfg=cfg)
+        df = cargar(ruta, cfg)
+        df.to_csv(ruta, index=False)
+        resumen["rag_ingenuo"][cfg] = resumir(df, eval_set)
+        if cfg == elegida:
+            df_rag = df
+            df.to_csv(SALIDAS["scorecard_rag"], index=False)
+    resumen["beto_m1"] = resumir(df_beto, eval_set)
+    with open(SALIDAS["resumen"], "w", encoding="utf-8") as f:
+        json.dump(resumen, f, ensure_ascii=False, indent=2, default=str)
+    escribir_consultas_fallidas(eval_set, df_rag, resumen["rag_ingenuo"][elegida], df_beto, elegida)
+    return resumen
+
+
 # ===========================================================================
 # CLI
 # ===========================================================================
@@ -909,9 +1001,12 @@ def main():
     ev = sub.add_parser("evaluar")
     ev.add_argument("--sin-juez", action="store_true", help="solo D1/D3 (no carga el juez de 3B)")
     ev.add_argument("--solo-elegida", action="store_true", help="corre el RAG solo con el chunking elegido")
+    sub.add_parser("recalcular", help="métricas deterministas desde los scorecards ya generados (sin modelos)")
     a = p.parse_args()
     if a.cmd == "chunking":
         comparar_chunking()
+    elif a.cmd == "recalcular":
+        print(json.dumps(recalcular_desde_scorecards()["rag_ingenuo"], ensure_ascii=False, indent=1))
     elif a.cmd == "preguntar":
         _preguntar(a.texto)
     else:
