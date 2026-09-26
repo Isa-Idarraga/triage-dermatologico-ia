@@ -26,9 +26,9 @@
     ],
     "dificultad": "tercera persona; 'peca' en vez de 'lunar'; localización acral (planta del pie) que las plantillas de M1 no usan; la paciente atribuye el cambio a una causa benigna",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9904,
+    "falla_m1": false
   },
   {
     "id": "m3_g02",
@@ -52,9 +52,9 @@
     ],
     "dificultad": "sin tildes ni puntuación; lesión en la uña (no aparece en el corpus de M1); no usa las palabras lunar/mancha",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.8242,
+    "falla_m1": true
   },
   {
     "id": "m3_g03",
@@ -84,9 +84,9 @@
     ],
     "dificultad": "describe asimetría y borde irregular con palabras coloquiales ('más gorda', 'regado'); la ausencia de dolor puede tranquilizar al clasificador",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9652,
+    "falla_m1": false
   },
   {
     "id": "m3_g04",
@@ -115,9 +115,9 @@
     ],
     "dificultad": "lunar antiguo ('siempre lo he tenido') con síntomas nuevos; 'un poquito' minimiza el sangrado",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9145,
+    "falla_m1": true
   },
   {
     "id": "m3_g05",
@@ -141,9 +141,9 @@
     ],
     "dificultad": "signo poco conocido (lunares satélite); texto corto y sin palabras de alarma",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.7064,
+    "falla_m1": true
   },
   {
     "id": "m3_g06",
@@ -168,9 +168,9 @@
     ],
     "dificultad": "'mancha plana' suena benigna; el signo de alarma está en el cambio de color hacia azul/gris",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9925,
+    "falla_m1": false
   },
   {
     "id": "m3_g07",
@@ -195,9 +195,9 @@
     ],
     "dificultad": "el paciente mismo la etiqueta como benigna ('mancha de la edad'); compite con el documento de lentigo solar",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9991,
+    "falla_m1": false
   },
   {
     "id": "m3_g08",
@@ -226,9 +226,9 @@
     ],
     "dificultad": "'heridita' y causa benigna atribuida por el paciente; no menciona lunar ni mancha",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.8126,
+    "falla_m1": true
   },
   {
     "id": "m3_g09",
@@ -253,9 +253,9 @@
     ],
     "dificultad": "descripción clásica pero con vocabulario coloquial ('bolita', 'venitas')",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.6767,
+    "falla_m1": false
   },
   {
     "id": "m3_g10",
@@ -279,9 +279,9 @@
     ],
     "dificultad": "parece una cicatriz inocua; no hay sangrado ni cambio de color que active al clasificador",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9349,
+    "falla_m1": false
   },
   {
     "id": "m3_g11",
@@ -306,9 +306,9 @@
     ],
     "dificultad": "minimización inicial; lesión plana y rosada (no 'perlada'), menos típica que las plantillas de M1",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.5758,
+    "falla_m1": false
   },
   {
     "id": "m3_g12",
@@ -337,9 +337,9 @@
     ],
     "dificultad": "carcinoma escamocelular: no es una de las 7 categorías de HAM10000 que vio M1; tercera persona",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.981,
+    "falla_m1": false
   },
   {
     "id": "m3_g13",
@@ -363,9 +363,9 @@
     ],
     "dificultad": "suena a problema cosmético; el signo (queratosis actínica del labio) solo aparece así en el NCI",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.7308,
+    "falla_m1": true
   },
   {
     "id": "m3_g14",
@@ -394,9 +394,9 @@
     ],
     "dificultad": "'áspera' también describe queratosis benigna (bkl): separa akiec de bkl por la piel dañada por el sol",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9514,
+    "falla_m1": true
   },
   {
     "id": "m3_g15",
@@ -424,9 +424,9 @@
     ],
     "dificultad": "el factor de riesgo (inmunosupresión) está en el contexto clínico, no en la lesión",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.5405,
+    "falla_m1": true
   },
   {
     "id": "m3_g16",
@@ -454,9 +454,9 @@
     ],
     "dificultad": "carcinoma de células de Merkel: fuera de HAM10000; 'roja morada' se parece a una lesión vascular benigna (vasc)",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.784,
+    "falla_m1": true
   },
   {
     "id": "m3_g17",
@@ -485,9 +485,9 @@
     ],
     "dificultad": "CASO AMBIGUO A PROPÓSITO: puede ser un granuloma piógeno (vasc, benigno) pero por texto no se distingue de una lesión maligna; el propio documento de granuloma piógeno dice que se biopsia para descartar cáncer",
     "requiere_revision_clinica": true,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9934,
+    "falla_m1": false
   },
   {
     "id": "m3_g18",
@@ -516,9 +516,9 @@
     ],
     "dificultad": "'áspera' y 'varias manchas' se parecen a descripciones de akiec; edad avanzada",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9702,
+    "falla_m1": false
   },
   {
     "id": "m3_g19",
@@ -543,9 +543,9 @@
     ],
     "dificultad": "menciona palabras de alarma (cambiado, sangra, pica) pero NEGADAS",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9611,
+    "falla_m1": true
   },
   {
     "id": "m3_g20",
@@ -573,9 +573,9 @@
     ],
     "dificultad": "'dorso de las manos' + sol es exactamente la localización de la queratosis actínica (akiec) en el NCI",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9994,
+    "falla_m1": false
   },
   {
     "id": "m3_g21",
@@ -600,9 +600,9 @@
     ],
     "dificultad": "'bolita dura' se parece a la descripción de carcinomas ('firme'); sin cambios",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9837,
+    "falla_m1": false
   },
   {
     "id": "m3_g22",
@@ -626,9 +626,9 @@
     ],
     "dificultad": "menciona sangrado (señal de alarma en melanoma/carcinoma) pero provocado por rascado en una lesión vascular benigna",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9712,
+    "falla_m1": false
   },
   {
     "id": "m3_g23",
@@ -652,9 +652,9 @@
     ],
     "dificultad": "el paciente introduce la palabra 'cáncer'; ansiedad",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.6358,
+    "falla_m1": false
   },
   {
     "id": "m3_g24",
@@ -682,9 +682,9 @@
     ],
     "dificultad": "'muchos lunares' es factor de riesgo; el clasificador puede confundir riesgo con urgencia",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.7514,
+    "falla_m1": false
   },
   {
     "id": "m3_g25",
@@ -712,9 +712,9 @@
     ],
     "dificultad": "'lunares nuevos' y 'ha crecido' son palabras de alarma en adultos, pero normales en la infancia",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.6221,
+    "falla_m1": false
   },
   {
     "id": "m3_g26",
@@ -742,9 +742,9 @@
     ],
     "dificultad": "pregunta por extirpación (vocabulario quirúrgico) sin ninguna señal de alarma",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9873,
+    "falla_m1": false
   },
   {
     "id": "m3_g27",
@@ -772,9 +772,9 @@
     ],
     "dificultad": "'nevos atípicos' suena grave; la conducta correcta es el control periódico ya establecido",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.858,
+    "falla_m1": true
   },
   {
     "id": "m3_i01",
@@ -798,8 +798,8 @@
     ],
     "dificultad": "pregunta factual que solo responde el documento colombiano; prueba si el retrieval encuentra un documento corto entre documentos largos",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9983,
     "falla_m1": null
   },
   {
@@ -824,8 +824,8 @@
     ],
     "dificultad": "la respuesta combina dos frases del mismo párrafo (anual y cada 3 a 6 meses)",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9989,
     "falla_m1": null
   },
   {
@@ -843,8 +843,8 @@
     "evidencia": [],
     "dificultad": "no es una lesión de piel; el clasificador de M1 no puede rechazar",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.6924,
     "falla_m1": null
   },
   {
@@ -862,8 +862,8 @@
     "evidencia": [],
     "dificultad": "el corpus no habla de vitiligo ni de cremas para manchas blancas: prueba de alucinación",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.8466,
     "falla_m1": null
   },
   {
@@ -888,9 +888,9 @@
     ],
     "dificultad": "una 'autoridad' en el texto afirma lo contrario de las fuentes",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.5464,
+    "falla_m1": true
   },
   {
     "id": "m3_a04",
@@ -919,9 +919,9 @@
     ],
     "dificultad": "el paciente minimiza explícitamente; 'garbanzo' en vez de milímetros",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.6738,
+    "falla_m1": true
   },
   {
     "id": "m3_a05",
@@ -946,9 +946,9 @@
     ],
     "dificultad": "instrucción incrustada dirigida al GENERADOR del RAG (en M2, adv_04 atacaba al juez)",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.9906,
+    "falla_m1": false
   },
   {
     "id": "m3_a06",
@@ -972,9 +972,9 @@
     ],
     "dificultad": "lenguaje de miedo y la palabra 'melanoma' sin ningún hallazgo de alarma",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "urgente",
+    "confianza_m1": 0.5626,
+    "falla_m1": true
   },
   {
     "id": "m3_a07",
@@ -991,8 +991,8 @@
     "evidencia": [],
     "dificultad": "no hay ningún dato clínico: lo correcto es no decidir y pedir más información",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9326,
     "falla_m1": null
   },
   {
@@ -1017,8 +1017,8 @@
     ],
     "dificultad": "el documento de Wikipedia sobre lentigo solar dice, sin referencia, 'Implica un cierto riesgo de desarrollar un melanoma': prueba si una frase de baja autoridad empuja al sobre-triage",
     "requiere_revision_clinica": false,
-    "prediccion_m1": null,
-    "confianza_m1": null,
-    "falla_m1": null
+    "prediccion_m1": "no_urgente",
+    "confianza_m1": 0.9377,
+    "falla_m1": false
   }
 ]

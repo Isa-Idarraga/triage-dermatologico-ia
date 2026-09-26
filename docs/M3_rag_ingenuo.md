@@ -63,7 +63,9 @@ El prompt tiene las cuatro partes de S07, más dos protecciones que el equipo ya
 2. **Contexto con fuente:** cada fragmento entra como `[doc_id] (institución, fecha, autoridad)` + texto.
 3. **Válvula de escape:** si la consulta no es sobre la piel, no trae datos o el contexto no alcanza, responde `URGENCIA: no_determinable` y "No tengo esa información en mis fuentes."
 4. **Pregunta** al final, **delimitada** entre `<consulta>` y `</consulta>` y declarada como dato, nunca como instrucción. Es la misma defensa anti-inyección del juez de M2, ahora aplicada al generador (caso adversarial `m3_a05`).
-5. **Formato fijo** de tres líneas (`URGENCIA`, `JUSTIFICACIÓN`, `FUENTES`) para poder leer la etiqueta. Si el modelo no respeta el formato, se marca `formato_valido = False` y se cuenta aparte.
+5. **Formato fijo** de tres líneas (`URGENCIA`, `JUSTIFICACIÓN`, `FUENTES`).
+
+**Cómo se elige la etiqueta (desde la corrida 2).** No se deja a la generación libre. La respuesta del asistente arranca con `URGENCIA:` y el mismo generador calcula la probabilidad de cada una de las 4 continuaciones posibles (`urgente`, `no_urgente`, `no_determinable`, `no_aplica`). Gana la más probable y después el modelo escribe la justificación a partir de esa etiqueta. La decisión sigue siendo del modelo, leyendo el mismo prompt, pero ya no puede quedarse en bucle ni inventar una etiqueta, y la probabilidad de la etiqueta elegida queda registrada como `confianza`, igual que con BETO. Si la tokenización no permite hacerlo, el sistema vuelve a generación libre + parser y lo marca en `formato_valido`. El porqué del cambio está en la sección 10.
 
 **De la válvula al harness.** El harness de M2 necesita una etiqueta binaria para D1 y D3. Cuando el RAG no decide (`no_determinable`, `no_aplica` o formato inválido), el caso no se puede quedar en la fila de rutina: se escala a revisión humana prioritaria, así que para el harness cuenta como `urgente` (`POLITICA_VALVULA`). Esto podría inflar el recall sin que se note, y por eso el resumen reporta dos recalls: el **conservador** (válvula = remitir) y el **estricto** (válvula = fallo), más el número de válvulas activadas.
 
@@ -75,6 +77,12 @@ El prompt tiene las cuatro partes de S07, más dos protecciones que el equipo ya
 2. **Baseline con el eval set nuevo:** corre el harness de M2 completo (D1, D2 con mitigación de sesgo de posición, D3) sobre BETO+LoRA de M1, y escribe su predicción en cada caso del eval set (`prediccion_m1`, `falla_m1`). Esa es la evidencia de qué casos falla el sistema actual.
 3. **RAG ingenuo:** el mismo harness, sobre el mismo eval set, con cada configuración de chunking. El scorecard agrega columnas de M3: etiqueta cruda del RAG, válvula, formato, fuentes citadas, chunk_ids, rango del primer documento relevante, hit@3, latencia y la respuesta completa.
 4. **Resumen, versiones y consultas fallidas:** `results/m3_ola1_resumen.json`, `results/rag_ingenuo_config.json` (commit de cada modelo cargado, versiones de las librerías, hash del prompt) y `docs/M3_consultas_fallidas.md`. Este último clasifica cada fallo con los tres modos de S07: retrieval (no encontró), generación (encontró pero ignoró) y corpus (no estaba).
+
+**Métrica de dominio que lee el criterio clínico.** El scorecard agrega dos columnas deterministas, sin LLM, que usan el campo `evidencia` de cada caso:
+- `evidencia_en_contexto`: qué fracción de las frases del corpus que justifican la etiqueta llegó textual al contexto recuperado. Es un context recall exacto a nivel del criterio clínico.
+- `cita_doc_relevante`: si la respuesta nombra un documento que respalda la etiqueta.
+
+Con eso se ve si el sistema acertó *por la razón correcta*, no solo si acertó la etiqueta. Además, Camilo puede contrastar este context recall exacto con el context recall que calcula RAGAS usando un LLM como juez.
 
 Se reutiliza `harness_m2.harness()` tal cual, sin copiarlo ni modificarlo, para que el número del RAG se pueda comparar directamente con el de M2.
 
@@ -117,8 +125,30 @@ Por dónde empezar: la sección 1 de `docs/M3_consultas_fallidas.md` (fallos de 
 - Nadie del equipo es clínico: corpus, etiquetas y referencias no tienen validación de un dermatólogo.
 - Las lesiones benignas (bkl, df, vasc) solo tienen fuentes de Wikipedia.
 - 37 casos siguen siendo pocos: cada caso pesa cerca del 3 % en D1. Hay que mirar los casos uno por uno, no solo los promedios.
-- Un generador de 1.5B puede no respetar el formato o mezclar contexto con memoria; por eso `formato_valido` y la sección 2 de consultas fallidas.
+- Un generador de 1.5B puede mezclar contexto con memoria o no reconocer los signos de alarma aunque estén en el contexto. Eso lo muestra la sección 2 de consultas fallidas.
 - La latencia se mide en una T4 de Colab; en CPU es mucho más lenta.
+
+## 10 · Corrida 1 → corrida 2: lo que salió mal y qué se cambió
+
+La primera corrida completa (Colab T4, 26-sep-2026) dejó tres hallazgos. Sus archivos quedaron en `results/m3_ola1_corrida1/` como evidencia.
+
+1. **El eval set nuevo sí es difícil para M1.** BETO+LoRA acertó 19 de 32 casos con etiqueta y su recall de urgentes bajó a **0.50**, cuando en el eval set de M2 era 1.0. Falló 13 casos, entre ellos 10 urgentes clasificados como no urgentes (5 de ellos melanoma). El eval set cumple lo que pedía la profesora.
+2. **Generación libre con un modelo de 1.5B: el formato se rompió.** En 12 de 37 respuestas (configuración B; 17 de 37 en la A) el generador se quedó en bucle repitiendo `URGENCIA: URGENCIA: URGENCIA: …` sin llegar a ninguna etiqueta. Además, el parser no leía casos como `URGENCIA: URGENCIA: urgente`. Por la política de la válvula, todos esos casos contaron como "remitir", así que el recall de 0.50 (B) y 0.75 (A) del RAG salía de fallas de formato, no de aciertos: el **recall estricto fue 0.0**. Por eso esa corrida no sirve como baseline para medir el delta de la Ola 2.
+3. **Cuando sí respetó el formato, el generador casi siempre dijo `no_urgente`**, incluso con el signo de alarma en la consulta ("una bolita… brillante, perlada", "labio… no se quita con vaselina"). Su justificación típica fue "no menciona signos de alarma". Eso es un fallo de generación, no de retrieval, y ninguna técnica de búsqueda de S08 lo arregla.
+
+**Qué se cambió para la corrida 2.** Se corrigió el parser y la etiqueta pasó a elegirse por verosimilitud entre las 4 opciones (sección 5). El retrieval, el corpus, el prompt, el generador y el eval set **no cambiaron**, así que la diferencia entre las dos corridas se debe solo a cómo se lee la etiqueta. Si el hallazgo 3 se mantiene en la corrida 2, queda documentado como la debilidad principal del RAG ingenuo.
+
+## 11 · Qué se atendió de los comentarios de M1 y M2
+
+| Comentario | Qué se hizo en la Ola 1 de M3 |
+|---|---|
+| M2: "Los 26 gold son el test split de M1 … necesitan casos nuevos, en lenguaje de paciente, con variedad sintáctica, y varios que el modelo actual falle" | Eval set de 37 casos nuevos. Similitud con M1/M2 de 0.198 (M2 contra M1 era 0.904). BETO falla 13 de 32 y su recall de urgentes baja de 1.0 a 0.50 (sección 10, corrida 1) |
+| M2: "el 26/26 con recall 1.0 … la señal de alerta de 'puntajes perfectos'" | Ya no hay puntaje perfecto: el resultado de BETO sobre el eval set nuevo se reporta tal cual, caso por caso (`falla_m1` en `eval/eval_set_m3.json`) |
+| M2: "el campo criterio que ya tienen … no lo lee nadie, y ahí está la dimensión de dominio que falta" | `evidencia_en_contexto` y `cita_doc_relevante` (sección 6) leen la evidencia clínica de cada caso y miden si el sistema se apoyó en ella |
+| M1: "el corpus es 93 % plantillas … necesitan más casos reales en lenguaje de paciente, o al menos plantillas con variedad sintáctica real" | Los 37 casos se escribieron uno por uno, sin plantilla. El campo `dificultad` documenta qué variación introduce cada uno (tercera persona, sin tildes, negaciones, vocabulario coloquial, localizaciones nuevas) |
+| M1: "el mismo checkpoint guardado da números diferentes cada vez que se carga" | Revisiones del Hub fijadas para el generador y los embeddings, decodificación greedy y registro del commit que realmente se cargó (`results/rag_ingenuo_config.json`). La corrida 1 confirma que se cargó exactamente la revisión fijada |
+
+Quedan pendientes, fuera de la Ola 1: el juez de 3B de D2 (el comentario de M2 sugiere uno más capaz; decisión para la Ola 4) y el Hallazgo 6 del README de M2 (le toca a Camilo).
 
 ## Cómo correrlo
 

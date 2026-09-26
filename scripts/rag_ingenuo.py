@@ -146,15 +146,19 @@ def construir_prompt_usuario(pregunta, chunks):
 
 
 def parsear_urgencia(texto):
-    """Extrae la etiqueta de la línea 'URGENCIA: ...'. Devuelve (etiqueta|None, formato_valido)."""
-    m = re.search(r"URGENCIA\s*:\s*\**\s*([a-záéíóú_ ]+)", texto, flags=re.IGNORECASE)
+    """Extrae la etiqueta de la línea 'URGENCIA: ...'. Devuelve (etiqueta|None, formato_valido).
+
+    Tolera repeticiones del rótulo ("URGENCIA: URGENCIA: urgente"), asteriscos de
+    markdown y espacios en vez de guion bajo: en la corrida 1 el parser anterior
+    no leía esos casos (ver docs/M3_rag_ingenuo.md, sección 10)."""
+    m = re.search(r"URGENCIA\s*:", texto, flags=re.IGNORECASE)
     if not m:
         return None, False
-    valor = m.group(1).strip().lower().replace(" ", "_")
-    for etiqueta in ETIQUETAS_RAG:
-        if valor.startswith(etiqueta):
-            return etiqueta, True
-    return None, False
+    resto = texto[m.end():m.end() + 200].lower()
+    e = re.search(r"\b(no[_ ]urgente|no[_ ]determinable|no[_ ]aplica|urgente)\b", resto)
+    if not e:
+        return None, False
+    return e.group(1).replace(" ", "_"), True
 
 
 def a_etiqueta_binaria(etiqueta_rag):
@@ -405,13 +409,74 @@ def generar(system, user, max_new_tokens=GEN_MAX_NEW_TOKENS):
     return tok.decode(salida[0][entradas["input_ids"].shape[1]:], skip_special_tokens=True).strip()
 
 
+def clasificar_urgencia(system, user):
+    """Elige la etiqueta por VEROSIMILITUD en vez de dejarla a la generación libre.
+
+    Se arma el prompt de chat, se agrega "URGENCIA:" como comienzo de la
+    respuesta del asistente y se calcula, con el mismo generador, la
+    log-probabilidad de cada una de las 4 continuaciones posibles
+    (" urgente", " no_urgente", " no_determinable", " no_aplica"). Gana la más
+    probable. Es la misma decisión que tomaría el modelo, pero:
+      - no puede quedarse en bucle ni devolver algo fuera de las 4 etiquetas
+        (en la corrida 1, 12 de 37 respuestas se degeneraron en
+        "URGENCIA: URGENCIA: URGENCIA: ..." sin etiqueta);
+      - da una probabilidad por etiqueta: `confianza` deja de ser None y el
+        harness la registra igual que la de BETO.
+    Devuelve (etiqueta, confianza, probabilidades) o (None, None, None) si la
+    tokenización no permite separar el prefijo (entonces se usa el parser)."""
+    import torch
+    tok, model = cargar_generador()
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    prefijo = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True) + "URGENCIA:"
+    ids_prefijo = tok(prefijo, add_special_tokens=False)["input_ids"]
+    n = len(ids_prefijo)
+    logps = {}
+    for etiqueta in ETIQUETAS_RAG:
+        ids = tok(prefijo + " " + etiqueta, add_special_tokens=False)["input_ids"]
+        if ids[:n] != ids_prefijo or len(ids) <= n:
+            return None, None, None
+        entrada = torch.tensor([ids], device=model.device)
+        with torch.no_grad():
+            logits = model(entrada).logits[0].float()
+        lp = torch.log_softmax(logits[n - 1:-1], dim=-1)
+        cont = torch.tensor(ids[n:], device=model.device)
+        logps[etiqueta] = float(lp.gather(1, cont.unsqueeze(1)).sum())
+    maximo = max(logps.values())
+    total = sum(pow(2.718281828459045, v - maximo) for v in logps.values())
+    probs = {k: round(pow(2.718281828459045, v - maximo) / total, 4) for k, v in logps.items()}
+    etiqueta = max(probs, key=probs.get)
+    return etiqueta, probs[etiqueta], probs
+
+
+def justificar(system, user, etiqueta, max_new_tokens=160):
+    """Genera la justificación y las fuentes a continuación de la etiqueta ya
+    elegida (la respuesta del asistente arranca con "URGENCIA: <etiqueta>")."""
+    import torch
+    tok, model = cargar_generador()
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    inicio = f"URGENCIA: {etiqueta}\nJUSTIFICACIÓN:"
+    prompt = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True) + inicio
+    entradas = tok(prompt, return_tensors="pt", add_special_tokens=False).to(model.device)
+    with torch.no_grad():
+        salida = model.generate(**entradas, max_new_tokens=max_new_tokens, do_sample=False,
+                                pad_token_id=tok.eos_token_id)
+    cont = tok.decode(salida[0][entradas["input_ids"].shape[1]:], skip_special_tokens=True)
+    return (inicio + cont).strip()
+
+
 def generar_respuesta(pregunta, chunks, t_retrieval=0.0):
     """AUGMENT + GENERATE sobre chunks ya recuperados. rag_avanzado.py puede
     reutilizar esta función tal cual y cambiar solo cómo obtiene `chunks`."""
     t0 = time.perf_counter()
-    texto = generar(SYSTEM_RAG, construir_prompt_usuario(pregunta, chunks))
+    user = construir_prompt_usuario(pregunta, chunks)
+    etiqueta_rag, confianza, probs = clasificar_urgencia(SYSTEM_RAG, user)
+    if etiqueta_rag is not None:
+        texto = justificar(SYSTEM_RAG, user, etiqueta_rag)
+        formato_ok = True
+    else:  # respaldo: generación libre + parser (comportamiento de la corrida 1)
+        texto = generar(SYSTEM_RAG, user)
+        etiqueta_rag, formato_ok = parsear_urgencia(texto)
     t_gen = time.perf_counter() - t0
-    etiqueta_rag, formato_ok = parsear_urgencia(texto)
     fuentes = []
     for ch in chunks:
         if ch["meta"]["doc_id"] not in fuentes:
@@ -423,9 +488,10 @@ def generar_respuesta(pregunta, chunks, t_retrieval=0.0):
         "fuentes": fuentes,
         # --- lo que necesita el harness de M2 ---
         "etiqueta_predicha": a_etiqueta_binaria(etiqueta_rag),
-        "confianza": None,  # un generador no da una probabilidad calibrada de la etiqueta
+        "confianza": confianza,  # probabilidad de la etiqueta elegida entre las 4 opciones
         # --- diagnóstico ---
         "etiqueta_rag": etiqueta_rag,
+        "probs_etiquetas": probs,
         "valvula": etiqueta_rag in (None, "no_determinable"),
         "formato_valido": formato_ok,
         "chunk_ids": [ch["id"] for ch in chunks],
