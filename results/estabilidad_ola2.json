@@ -1,0 +1,12 @@
+{
+  "corrida1": "eval/scorecard_rag_avanzado_hybrid.csv",
+  "corrida2": "eval/scorecard_rag_avanzado_hybrid_corrida2.csv",
+  "columnas": [
+    "etiqueta_rag",
+    "etiqueta_predicha",
+    "chunk_ids",
+    "confianza_m1"
+  ],
+  "identicas": true,
+  "diferencias": []
+}

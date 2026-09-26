@@ -1,0 +1,252 @@
+{
+  "fecha": "2026-09-26T14:03:07",
+  "modo": "con juez",
+  "chunking": "A_fijo_400c_60",
+  "K": 3,
+  "configs": {
+    "ingenuo": "Denso top-K (Ola 1, sin cambios)",
+    "hybrid": "BM25 + denso, top-20 de cada uno, fusionados con RRF (k=60)",
+    "rerank": "Denso top-20 -> cross-encoder -> top-K",
+    "hybrid_rerank": "Hybrid top-20 -> cross-encoder -> top-K",
+    "hyde": "Denso(consulta) + denso(descripción clínica hipotética del generador), fusionados con RRF"
+  },
+  "retrieval": {
+    "ingenuo": {
+      "n_casos": 34,
+      "hit@1": 0.441,
+      "hit@3": 0.529,
+      "mrr@10": 0.552,
+      "latencia_retrieval_ms_prom": 17.2
+    },
+    "hybrid": {
+      "n_casos": 34,
+      "hit@1": 0.5,
+      "hit@3": 0.794,
+      "mrr@10": 0.647,
+      "latencia_retrieval_ms_prom": 19.2
+    },
+    "rerank": {
+      "n_casos": 34,
+      "hit@1": 0.529,
+      "hit@3": 0.706,
+      "mrr@10": 0.651,
+      "latencia_retrieval_ms_prom": 67.5
+    },
+    "hybrid_rerank": {
+      "n_casos": 34,
+      "hit@1": 0.5,
+      "hit@3": 0.794,
+      "mrr@10": 0.654,
+      "latencia_retrieval_ms_prom": 66.1
+    },
+    "hyde": {
+      "n_casos": 34,
+      "hit@1": 0.353,
+      "hit@3": 0.588,
+      "mrr@10": 0.511,
+      "latencia_retrieval_ms_prom": 3424.8
+    }
+  },
+  "end_to_end": {
+    "ingenuo": {
+      "n_casos": 37,
+      "d1_accuracy": 0.562,
+      "d1_aciertos": "18/32",
+      "d3_recall_urgente": 0.4,
+      "d3_falsos_negativos": 12,
+      "d3_falsos_negativos_por_categoria": {
+        "mel": 6,
+        "bcc": 4,
+        "akiec": 2
+      },
+      "d2_juez_promedio_gold": 2.3,
+      "d3_recall_urgente_estricto": 0.4,
+      "valvulas_activadas": 3,
+      "valvulas_en_casos_con_etiqueta": 1,
+      "formato_invalido": 0,
+      "retrieval_hit@3": 0.529,
+      "evidencia_en_contexto_prom": 0.191,
+      "cita_doc_relevante": 0.471,
+      "no_aplica_con_valvula_o_no_aplica": "2/5",
+      "latencia_s_promedio": 6.84,
+      "latencia_s_p95": 8.28,
+      "hit@1": 0.441,
+      "mrr@10": 0.552,
+      "latencia_retrieval_ms_prom": 19.0,
+      "latencia_retrieval_ms_p95": 24.2
+    },
+    "hybrid": {
+      "n_casos": 37,
+      "d1_accuracy": 0.719,
+      "d1_aciertos": "23/32",
+      "d3_recall_urgente": 0.55,
+      "d3_falsos_negativos": 9,
+      "d3_falsos_negativos_por_categoria": {
+        "mel": 5,
+        "bcc": 2,
+        "akiec": 2
+      },
+      "d2_juez_promedio_gold": 2.28,
+      "d3_recall_urgente_estricto": 0.5,
+      "valvulas_activadas": 3,
+      "valvulas_en_casos_con_etiqueta": 1,
+      "formato_invalido": 0,
+      "retrieval_hit@3": 0.794,
+      "evidencia_en_contexto_prom": 0.338,
+      "cita_doc_relevante": 0.618,
+      "no_aplica_con_valvula_o_no_aplica": "2/5",
+      "latencia_s_promedio": 6.63,
+      "latencia_s_p95": 8.36,
+      "hit@1": 0.5,
+      "mrr@10": 0.647,
+      "latencia_retrieval_ms_prom": 18.1,
+      "latencia_retrieval_ms_p95": 24.4
+    },
+    "rerank": {
+      "n_casos": 37,
+      "d1_accuracy": 0.688,
+      "d1_aciertos": "22/32",
+      "d3_recall_urgente": 0.5,
+      "d3_falsos_negativos": 10,
+      "d3_falsos_negativos_por_categoria": {
+        "mel": 5,
+        "bcc": 3,
+        "akiec": 2
+      },
+      "d2_juez_promedio_gold": 2.31,
+      "d3_recall_urgente_estricto": 0.5,
+      "valvulas_activadas": 2,
+      "valvulas_en_casos_con_etiqueta": 0,
+      "formato_invalido": 0,
+      "retrieval_hit@3": 0.706,
+      "evidencia_en_contexto_prom": 0.279,
+      "cita_doc_relevante": 0.559,
+      "no_aplica_con_valvula_o_no_aplica": "2/5",
+      "latencia_s_promedio": 6.59,
+      "latencia_s_p95": 8.35,
+      "hit@1": 0.529,
+      "mrr@10": 0.651,
+      "latencia_retrieval_ms_prom": 67.7,
+      "latencia_retrieval_ms_p95": 79.9
+    },
+    "hybrid_rerank": {
+      "n_casos": 37,
+      "d1_accuracy": 0.625,
+      "d1_aciertos": "20/32",
+      "d3_recall_urgente": 0.45,
+      "d3_falsos_negativos": 11,
+      "d3_falsos_negativos_por_categoria": {
+        "mel": 6,
+        "bcc": 3,
+        "akiec": 2
+      },
+      "d2_juez_promedio_gold": 2.3,
+      "d3_recall_urgente_estricto": 0.45,
+      "valvulas_activadas": 2,
+      "valvulas_en_casos_con_etiqueta": 1,
+      "formato_invalido": 0,
+      "retrieval_hit@3": 0.794,
+      "evidencia_en_contexto_prom": 0.309,
+      "cita_doc_relevante": 0.647,
+      "no_aplica_con_valvula_o_no_aplica": "1/5",
+      "latencia_s_promedio": 6.78,
+      "latencia_s_p95": 8.28,
+      "hit@1": 0.5,
+      "mrr@10": 0.654,
+      "latencia_retrieval_ms_prom": 65.6,
+      "latencia_retrieval_ms_p95": 79.1
+    },
+    "hyde": {
+      "n_casos": 37,
+      "d1_accuracy": 0.562,
+      "d1_aciertos": "18/32",
+      "d3_recall_urgente": 0.4,
+      "d3_falsos_negativos": 12,
+      "d3_falsos_negativos_por_categoria": {
+        "mel": 5,
+        "bcc": 4,
+        "akiec": 2,
+        "sin_categoria": 1
+      },
+      "d2_juez_promedio_gold": 2.31,
+      "d3_recall_urgente_estricto": 0.4,
+      "valvulas_activadas": 2,
+      "valvulas_en_casos_con_etiqueta": 0,
+      "formato_invalido": 0,
+      "retrieval_hit@3": 0.588,
+      "evidencia_en_contexto_prom": 0.176,
+      "cita_doc_relevante": 0.529,
+      "no_aplica_con_valvula_o_no_aplica": "3/5",
+      "latencia_s_promedio": 10.21,
+      "latencia_s_p95": 12.75,
+      "hit@1": 0.353,
+      "mrr@10": 0.511,
+      "latencia_retrieval_ms_prom": 3464.6,
+      "latencia_retrieval_ms_p95": 5152.7
+    }
+  },
+  "decision": {
+    "regla": "1) guarda: d3_recall_urgente_estricto >= el del ingenuo; 2) mayor retrieval_hit@3; 3) empate -> mayor evidencia_en_contexto_prom; 4) empate -> menor latencia p95",
+    "piso_recall_estricto": 0.4,
+    "pasan_guarda": [
+      "hybrid",
+      "rerank",
+      "hybrid_rerank",
+      "hyde"
+    ],
+    "ninguna_pasa_guarda": false,
+    "elegida": "hybrid"
+  },
+  "reproducibilidad_baseline": {
+    "casos": 37,
+    "misma_etiqueta_rag": 37,
+    "mismos_chunk_ids": 37,
+    "distintos": []
+  },
+  "config": {
+    "fecha": "2026-09-26T14:03:07",
+    "seed": 42,
+    "K": 3,
+    "chunking": "A_fijo_400c_60",
+    "politica_valvula": "urgente",
+    "system_prompt_sha1": "10868d1f8def",
+    "generador": {
+      "id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "revision_fijada": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "commit_cargado": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "dtype": "torch.float16",
+      "max_new_tokens": 200,
+      "do_sample": false
+    },
+    "embeddings": {
+      "id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "revision_fijada": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+      "commit_cargado": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+    },
+    "librerias": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.16.1",
+      "sentence_transformers": "5.7.0",
+      "chromadb": "1.5.9",
+      "peft": "0.20.0",
+      "rank_bm25": "0.2.2"
+    },
+    "ola2": {
+      "configs": {
+        "ingenuo": "Denso top-K (Ola 1, sin cambios)",
+        "hybrid": "BM25 + denso, top-20 de cada uno, fusionados con RRF (k=60)",
+        "rerank": "Denso top-20 -> cross-encoder -> top-K",
+        "hybrid_rerank": "Hybrid top-20 -> cross-encoder -> top-K",
+        "hyde": "Denso(consulta) + denso(descripción clínica hipotética del generador), fusionados con RRF"
+      },
+      "N_CANDIDATOS": 20,
+      "RRF_K": 60,
+      "reranker": {
+        "id": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+        "revision_fijada": "1427fd652930e4ba29e8149678df786c240d8825",
+        "commit_cargado": "1427fd652930e4ba29e8149678df786c240d8825"
+      },
+      "regla_decision": "1) guarda: d3_recall_urgente_estricto >= el del ingenuo; 2) mayor retrieval_hit@3; 3) empate -> mayor evidencia_en_contexto_prom; 4) empate -> menor latencia p95"
+    }
+  }
+}
