@@ -267,9 +267,12 @@ def _parsear_decision(texto_generado: str) -> dict:
     return {"accion": "error", "detalle": f"accion desconocida: {accion!r}"}
 
 
-def _preguntar_al_cerebro(historial_texto: str) -> dict:
+def _preguntar_al_cerebro(historial_texto: str) -> "tuple[dict, str]":
     """Une el prompt del sistema con el historial de la conversación (pregunta +
-    observaciones hasta ahora) y le pide al modelo la siguiente decisión."""
+    observaciones hasta ahora) y le pide al modelo la siguiente decisión.
+
+    Devuelve (decision_parseada, texto_crudo_del_modelo) -- se necesita también
+    el texto crudo para poder guardarlo en pasos_debug cuando algo sale mal."""
     _cargar_cerebro()
     prompt_sistema = PROMPT_SISTEMA_AGENTE.format(
         lista_herramientas=_listar_herramientas_para_prompt()
@@ -292,7 +295,10 @@ def _preguntar_al_cerebro(historial_texto: str) -> dict:
         )
     n_prompt = entradas["input_ids"].shape[1]
     texto = _tokenizer_agente.decode(salida_ids[0][n_prompt:], skip_special_tokens=True)
-    return _parsear_decision(texto)
+    # Se devuelve también el texto crudo (no solo la decisión ya interpretada) para
+    # que agente() pueda guardarlo en pasos_debug -- sin esto, cuando algo sale mal
+    # solo vemos "hubo un error" sin poder ver QUÉ escribió el modelo exactamente.
+    return _parsear_decision(texto), texto
 
 
 # ===========================================================================
@@ -332,9 +338,17 @@ def agente(pregunta: str) -> dict:
     tools_usadas = []
     resultados_tools = {}  # nombre de herramienta -> lo que devolvió, para no repetirla
     historial = [f"Pregunta del paciente: {pregunta}"]
+    # Registro de depuración: qué pensó el cerebro en CADA paso, palabra por palabra.
+    # Se agregó después de ver casos donde el agente se quedaba sin respuesta final
+    # y, sin esto, no había forma de saber si el modelo escribió algo mal formado,
+    # pidió una herramienta repetida, o qué. Ahora esa historia queda en el propio
+    # resultado (ver pasos_debug abajo) -- no hace falta adivinar ni reproducir el
+    # fallo para entenderlo.
+    pasos_debug = []
 
     for paso in range(MAX_PASOS):
-        decision = _preguntar_al_cerebro("\n\n".join(historial))
+        decision, texto_crudo = _preguntar_al_cerebro("\n\n".join(historial))
+        pasos_debug.append({"paso": paso + 1, "decision": decision, "texto_crudo": texto_crudo})
 
         # --- Manejo de fallas #1: el cerebro no devolvió algo entendible ---
         # No tumbamos el agente por esto -- lo anotamos como una observación más
@@ -347,7 +361,7 @@ def agente(pregunta: str) -> dict:
             continue
 
         if decision["accion"] == "responder_final":
-            return _armar_resultado(decision["respuesta"], resultados_tools, tools_usadas)
+            return _armar_resultado(decision["respuesta"], resultados_tools, tools_usadas, pasos_debug)
 
         # accion == "usar_herramienta" a partir de aquí
         nombre = decision["herramienta"]
@@ -388,10 +402,12 @@ def agente(pregunta: str) -> dict:
         "se recomienda revisión manual.",
         resultados_tools,
         tools_usadas,
+        pasos_debug,
     )
 
 
-def _armar_resultado(respuesta_texto: str, resultados_tools: dict, tools_usadas: list) -> dict:
+def _armar_resultado(respuesta_texto: str, resultados_tools: dict, tools_usadas: list,
+                      pasos_debug: list = None) -> dict:
     """Junta lo que dejaron las herramientas usadas en el formato de contrato
     compartido (respuesta, contexto, fuentes) + el detalle de qué se usó."""
     contexto = []
@@ -405,6 +421,7 @@ def _armar_resultado(respuesta_texto: str, resultados_tools: dict, tools_usadas:
         "fuentes": list(dict.fromkeys(fuentes)),  # quita duplicados preservando el orden
         "tools_usadas": tools_usadas,
         "detalle_tools": resultados_tools,  # útil para depurar / para el scorecard de Camilo
+        "pasos_debug": pasos_debug or [],  # qué pensó el cerebro en cada paso -- ver arriba
     }
 
 
