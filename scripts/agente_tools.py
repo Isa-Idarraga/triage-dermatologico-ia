@@ -326,6 +326,47 @@ def _resumir_para_historial(resultado: dict) -> dict:
     return {k: resultado[k] for k in claves_relevantes if k in resultado}
 
 
+def _sintetizar_respuesta_final(resultados_tools: dict) -> str:
+    """Arma la respuesta final aplicando la regla de seguridad del equipo,
+    SIN depender de que el modelo la escriba bien -- ver el comentario en
+    "Manejo de fallas #2" de agente() sobre por qué hace falta esto.
+
+    Regla: si CUALQUIERA de las herramientas usadas dice "urgente", el
+    veredicto final es urgente (preferimos un falso positivo a dejar pasar un
+    caso grave -- la misma prioridad clínica del equipo desde M1). Se usa el
+    texto de `buscar_informacion_dermatologica` como justificación cuando
+    está disponible, porque es la única herramienta que puede citar de dónde
+    sale su conclusión; si no se usó, se arma una frase simple con la salida
+    de BETO.
+    """
+    etiquetas = [r["etiqueta"] for r in resultados_tools.values() if r.get("etiqueta")]
+    veredicto = "urgente" if "urgente" in etiquetas else "no_urgente"
+    respuesta_rag = resultados_tools.get("buscar_informacion_dermatologica", {}).get("respuesta")
+
+    if len(set(etiquetas)) > 1:
+        # Las dos señales no coincidieron -- no tiene sentido pegar tal cual el
+        # texto del RAG (que argumenta SU propia conclusión) como si fuera la
+        # respuesta final, porque podría contradecir al veredicto de seguridad.
+        # Se deja explícito el desacuerdo y por qué gana la lectura conservadora.
+        beto = resultados_tools.get("clasificador_beto", {})
+        return (
+            f"Las dos señales no coincidieron: el clasificador de síntomas dice "
+            f"'{beto.get('etiqueta', 'n/d')}' y la búsqueda de evidencia médica dice "
+            f"'{resultados_tools.get('buscar_informacion_dermatologica', {}).get('etiqueta', 'n/d')}'. "
+            f"Por seguridad clínica, el veredicto final es '{veredicto}' -- se prioriza no "
+            f"dejar pasar un caso potencialmente grave.\n\n"
+            f"Detalle de la búsqueda de evidencia: {respuesta_rag or 'no disponible'}"
+        )
+
+    if respuesta_rag:
+        return respuesta_rag
+
+    beto = resultados_tools.get("clasificador_beto", {})
+    return (f"Según el clasificador del sistema, este caso se considera '{veredicto}' "
+            f"(confianza {beto.get('confianza', 'n/d')}). No fue posible ampliar la "
+            f"justificación con la búsqueda de evidencia médica.")
+
+
 def agente(pregunta: str) -> dict:
     """
     El agente completo. Va y viene entre "pensar" (preguntarle al cerebro qué
@@ -367,9 +408,22 @@ def agente(pregunta: str) -> dict:
         nombre = decision["herramienta"]
 
         # --- Manejo de fallas #2: pidió una herramienta que ya usamos ---
-        # En vez de dejar que el agente gaste sus pasos repitiendo lo mismo (y
-        # potencialmente entrar en un ciclo), se lo hacemos notar explícitamente.
+        # En pruebas reales (Colab) se vio que el modelo de 3B, en vez de pasar a
+        # responder_final una vez que ya tenía las dos señales, se quedaba pidiendo
+        # la misma herramienta una y otra vez -- sin nunca concluir, aunque la
+        # respuesta correcta ya estaba en el historial. Depender de que el modelo
+        # "se dé cuenta solo" es frágil, y en un sistema de triage la salida segura
+        # no puede ser "no se pudo concluir" cuando en realidad SÍ tenemos las
+        # señales que hacían falta. Por eso: si ya se agotaron las herramientas
+        # disponibles y el modelo insiste en repetir en vez de concluir, el propio
+        # código sintetiza la respuesta final en vez de gastar los pasos que
+        # quedan esperando que el modelo entienda la indirecta.
         if nombre in resultados_tools:
+            if len(resultados_tools) >= len(HERRAMIENTAS):
+                return _armar_resultado(
+                    _sintetizar_respuesta_final(resultados_tools), resultados_tools,
+                    tools_usadas, pasos_debug,
+                )
             historial.append(f"Observación: {nombre} ya se usó, no hace falta repetirla. "
                               f"Decide con lo que ya tienes.")
             continue
@@ -394,9 +448,14 @@ def agente(pregunta: str) -> dict:
                           f"{json.dumps(_resumir_para_historial(resultado), ensure_ascii=False)}")
 
     # --- Manejo de fallas #4: se acabaron los pasos sin una respuesta final ---
-    # Mejor una respuesta honesta con lo que se alcanzó a reunir, que ningún
-    # resultado -- por eso armamos la respuesta con lo que haya en resultados_tools
-    # en vez de lanzar una excepción.
+    # Si ya se reunió información de alguna herramienta, se sintetiza con eso en
+    # vez de rendirse -- el mensaje genérico de "revisión manual" queda solo para
+    # el caso de verdad vacío (por ejemplo, si todas las herramientas fallaron).
+    if resultados_tools:
+        return _armar_resultado(
+            _sintetizar_respuesta_final(resultados_tools), resultados_tools,
+            tools_usadas, pasos_debug,
+        )
     return _armar_resultado(
         "No se llegó a una conclusión clara dentro del número de pasos permitido; "
         "se recomienda revisión manual.",
