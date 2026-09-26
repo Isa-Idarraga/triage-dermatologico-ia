@@ -172,8 +172,14 @@ MODEL_ID_AGENTE = "Qwen/Qwen2.5-3B-Instruct"
 MODEL_REVISION_AGENTE = "aa8e72537993ba99e69dfaafa59ed015b17504d1"
 
 SEED = 42
-MAX_NEW_TOKENS = 300
-MAX_PASOS = 4  # tope de vueltas del ciclo pensar/actuar -- ver ETAPA 4, sección de fallas
+# 500 en vez de 300: con 300 se vio en pruebas reales que una justificación final
+# larga (por ejemplo, explicando por qué un caso es urgente citando ABCDE y las
+# fuentes) se cortaba a la mitad antes de cerrar el JSON -- eso lo vuelve
+# inválido, cuenta como "error" y desperdicia un paso del ciclo.
+MAX_NEW_TOKENS = 500
+MAX_PASOS = 5  # tope de vueltas del ciclo pensar/actuar -- ver ETAPA 4, sección de fallas.
+               # Antes era 4; con 2 herramientas ya gastan 2 pasos, dejando muy poco
+               # margen para que el cerebro logre un "responder_final" válido.
 
 _tokenizer_agente = None
 _modelo_agente = None
@@ -294,6 +300,26 @@ def _preguntar_al_cerebro(historial_texto: str) -> dict:
 # ===========================================================================
 
 
+def _resumir_para_historial(resultado: dict) -> dict:
+    """Recorta lo que ve el cerebro sobre el resultado de una herramienta a lo
+    esencial (etiqueta, confianza, respuesta, fuentes) -- sin los bloques de
+    texto crudo del contexto recuperado por el RAG.
+
+    En las primeras pruebas reales (Colab), mandarle al cerebro el JSON
+    completo de cada herramienta -- incluidos los fragmentos largos de
+    `contexto` -- alargaba muchísimo el prompt sin agregarle nada útil a la
+    DECISIÓN que tiene que tomar (el contexto ya se usó para generar la
+    `respuesta` del RAG; no hace falta que el cerebro lo vuelva a leer). Ese
+    prompt más largo y ruidoso parece haber contribuido a que el modelo no
+    lograra cerrar con un `responder_final` válido dentro del límite de pasos.
+    Los datos completos (con el contexto) igual se guardan en
+    `resultados_tools` para el resultado final -- esto solo recorta lo que
+    el cerebro *lee* en cada paso, no lo que el agente termina devolviendo.
+    """
+    claves_relevantes = ("etiqueta", "confianza", "respuesta", "fuentes", "error")
+    return {k: resultado[k] for k in claves_relevantes if k in resultado}
+
+
 def agente(pregunta: str) -> dict:
     """
     El agente completo. Va y viene entre "pensar" (preguntarle al cerebro qué
@@ -350,7 +376,8 @@ def agente(pregunta: str) -> dict:
 
         resultados_tools[nombre] = resultado
         tools_usadas.append(nombre)
-        historial.append(f"Observación de {nombre}: {json.dumps(resultado, ensure_ascii=False)}")
+        historial.append(f"Observación de {nombre}: "
+                          f"{json.dumps(_resumir_para_historial(resultado), ensure_ascii=False)}")
 
     # --- Manejo de fallas #4: se acabaron los pasos sin una respuesta final ---
     # Mejor una respuesta honesta con lo que se alcanzó a reunir, que ningún
