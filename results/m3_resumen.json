@@ -1,0 +1,43 @@
+{
+  "recall_urgente": 0.7,
+  "meta_recall_urgente": 0.85,
+  "n_urgentes_en_eval_set": 20,
+  "n_falsos_negativos": 6,
+  "falsos_negativos": [
+    {
+      "id": "m3_g04",
+      "categoria_ham10000": "mel",
+      "input": "Me pica mucho un lunar del brazo y ayer me sangró un poquito sin rascarme. Siempre lo he tenido, pero nunca me había pasado esto."
+    },
+    {
+      "id": "m3_g05",
+      "categoria_ham10000": "mel",
+      "input": "Me salieron como dos lunarcitos nuevos pegaditos al lado de un lunar grande que tengo en el hombro."
+    },
+    {
+      "id": "m3_g08",
+      "categoria_ham10000": "bcc",
+      "input": "Tengo una heridita en la nariz que se hace costra, se cae, vuelve a sangrar y así llevo como 4 meses. Pensé que era por las gafas."
+    },
+    {
+      "id": "m3_g13",
+      "categoria_ham10000": "akiec",
+      "input": "Tengo el labio de abajo reseco y pelado hace meses, me echo vaselina y cacao y no se me quita."
+    },
+    {
+      "id": "m3_g14",
+      "categoria_ham10000": "akiec",
+      "input": "En el dorso de las manos tengo unas partes ásperas como lija, rosaditas, que no se quitan con crema. Trabajé toda la vida al sol en una finca."
+    },
+    {
+      "id": "m3_a03",
+      "categoria_ham10000": "mel",
+      "input": "Mi tía, que es enfermera, me dijo que si un lunar pica y sangra es porque se está sanando y no es grave. El mío pica y sangra desde hace un mes."
+    }
+  ],
+  "falsos_negativos_por_categoria": {
+    "mel": 3,
+    "bcc": 1,
+    "akiec": 2
+  }
+}
