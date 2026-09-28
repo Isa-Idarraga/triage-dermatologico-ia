@@ -39,5 +39,48 @@
     "mel": 3,
     "bcc": 1,
     "akiec": 2
+  },
+  "corrida_valida": true,
+  "n_casos": 37,
+  "n_casos_sin_senal_de_tools": 0,
+  "d1_aciertos": "23/32",
+  "d1_accuracy": 0.719,
+  "tools_ok": [
+    "clasificador_beto",
+    "buscar_informacion_dermatologica"
+  ],
+  "tools_con_error": {},
+  "ragas": {
+    "estado": "ragas 0.2.15 · juez openai/gpt-oss-120b (groq) · embeddings locales sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "proveedor_juez": "groq",
+    "juez": "openai/gpt-oss-120b",
+    "embeddings_locales": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "max_workers": 2,
+    "casos_evaluados": 17,
+    "ids_evaluados": [
+      "m3_g01",
+      "m3_g02",
+      "m3_g03",
+      "m3_g04",
+      "m3_g05",
+      "m3_g06",
+      "m3_g07",
+      "m3_g08",
+      "m3_g09",
+      "m3_g10",
+      "m3_g11",
+      "m3_g12",
+      "m3_g13",
+      "m3_g14",
+      "m3_g15",
+      "m3_g16",
+      "m3_g17"
+    ],
+    "promedios": {
+      "faithfulness": 0.2685,
+      "context_precision": 0.6029,
+      "context_recall": 0.2941,
+      "answer_relevancy": 0.3087
+    }
   }
 }

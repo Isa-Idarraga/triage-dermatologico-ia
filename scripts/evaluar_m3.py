@@ -9,22 +9,25 @@ Salidas:
     eval/scorecard_m3.csv    una fila por caso, harness + RAGAS
     results/m3_resumen.json  D3 agregada + estado de la corrida
 
-Juez de RAGAS: Gemini por API gratuita, no el Qwen2.5-3B local de M2.
+Juez de RAGAS: Groq (openai/gpt-oss-120b) por API gratuita, no el Qwen2.5-3B
+local de M2 ni Gemini (cupo de 20/día para cuentas nuevas -- ver
+docs/M3_notas_evaluacion.md, secciones 4 y 6, para el detalle de por qué se
+descartó cada uno). Embeddings: locales (sentence-transformers), sin API.
 docs/M3_README.md no lo genera este script.
 
 Decisiones de diseño, incidentes de las corridas y lectura de los resultados:
 docs/M3_notas_evaluacion.md
 
-Requiere (Colab): GOOGLE_API_KEY en el entorno y
-    %pip install -q "ragas==0.2.15" langchain-google-genai
+Requiere (Colab): GROQ_API_KEY en el entorno y
+    %pip install -q "ragas==0.2.15" langchain-groq langchain-huggingface sentence-transformers
 
 Uso (desde la raíz del repo):
-    python scripts/evaluar_m3.py                   # harness + RAGAS
+    python scripts/evaluar_m3.py                   # harness + RAGAS (Groq)
     python scripts/evaluar_m3.py --limite 3        # prueba de humo
     python scripts/evaluar_m3.py --sin-ragas       # solo harness propio
     python scripts/evaluar_m3.py --solo-verificar  # solo el chequeo previo
-    python scripts/evaluar_m3.py --listar-modelos  # qué modelos acepta la llave
-    python scripts/evaluar_m3.py --juez gemini-3.8-flash
+    python scripts/evaluar_m3.py --proveedor gemini --juez gemini-3.8-flash
+    python scripts/evaluar_m3.py --listar-modelos  # qué modelos acepta la llave del proveedor activo
 """
 
 import argparse
@@ -47,12 +50,28 @@ SALIDA_RESUMEN = "results/m3_resumen.json"
 
 RAGAS_COLS = ["faithfulness", "context_precision", "context_recall", "answer_relevancy"]
 
-# Modelos de Gemini. Google retira modelos seguido (gemini-2.0-flash y
-# embedding-001 ya no existen; gemini-2.5-flash no se asigna a llaves nuevas),
-# así que se pueden cambiar sin editar el archivo: --juez / --embeddings o las
-# variables de entorno. `--listar-modelos` muestra lo que acepta TU llave.
-MODELO_JUEZ_RAGAS = os.environ.get("GEMINI_MODELO_JUEZ", "gemini-3.8-flash")
-MODELO_EMB_RAGAS = os.environ.get("GEMINI_MODELO_EMB", "models/gemini-embedding-001")
+# Juez de RAGAS. Se probó primero con Gemini (API gratuita): gemini-2.0-flash y
+# embedding-001/text-embedding-004 fueron retirados, gemini-2.5-flash quedó
+# bloqueado para cuentas nuevas ("no longer available to new users"), y
+# gemini-3.8-flash (el único modelo de texto que sí acepta una cuenta nueva)
+# tiene un cupo gratuito de solo 20 solicitudes/día -- insuficiente para
+# 37 casos x 4 métricas (hasta 148 llamadas). Se cambió a Groq, cuyo cupo
+# gratuito es de otro orden y no tiene esa restricción de cuenta nueva.
+# El modelo es openai/gpt-oss-120b y no llama-3.3-70b-versatile: Groq retiró
+# los dos modelos Llama del self-serve el 2026-08-16 (quedaron Enterprise) y
+# señala gpt-oss-120b como reemplazo. Con --listar-modelos se ve qué acepta la
+# llave, para no repetir el baile de nombres que ya pasó con Gemini.
+# Ver docs/M3_notas_evaluacion.md, secciones 4 y 6.
+#
+# Los embeddings NO usan ninguna API: se calculan localmente con
+# sentence-transformers, para no depender de un segundo cupo gratuito distinto
+# del que usa el juez.
+PROVEEDOR_JUEZ = os.environ.get("JUEZ_PROVEEDOR", "groq")  # "groq" | "gemini"
+JUECES_POR_DEFECTO = {"groq": "openai/gpt-oss-120b", "gemini": "gemini-3.8-flash"}
+MODELO_JUEZ_RAGAS = os.environ.get("MODELO_JUEZ", JUECES_POR_DEFECTO[PROVEEDOR_JUEZ])
+MODELO_EMB_LOCAL = os.environ.get(
+    "MODELO_EMB_LOCAL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
 
 # Pocas llamadas en paralelo y muchos reintentos: el cupo gratuito limita
 # peticiones por minuto y con el default (16) las celdas quedan en NaN por 429.
@@ -123,9 +142,53 @@ def verificar_tools():
     return fallas
 
 
+def _crear_llm_juez():
+    """Instancia el chat model del juez según PROVEEDOR_JUEZ. Groq usa la
+    misma interfaz de LangChain que Gemini, así que el resto del script
+    (calcular_ragas, etc.) no necesita saber cuál proveedor está activo."""
+    if PROVEEDOR_JUEZ == "groq":
+        from langchain_groq import ChatGroq
+        return ChatGroq(model=MODELO_JUEZ_RAGAS, temperature=0)
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    return ChatGoogleGenerativeAI(model=MODELO_JUEZ_RAGAS, temperature=0)
+
+
+def _crear_embeddings_local():
+    """Embeddings locales (sentence-transformers) -- no dependen de ninguna
+    API ni de un segundo cupo gratuito."""
+    try:
+        from langchain_huggingface import HuggingFaceEmbeddings
+    except ImportError:
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+    return HuggingFaceEmbeddings(model_name=MODELO_EMB_LOCAL)
+
+
+def _listar_modelos_groq(limite=60):
+    """GET /openai/v1/models de Groq, con urllib para no agregar dependencias."""
+    import urllib.request
+    clave = os.environ.get("GROQ_API_KEY", "")
+    if not clave:
+        return ["(falta GROQ_API_KEY en el entorno)"]
+    try:
+        peticion = urllib.request.Request(
+            "https://api.groq.com/openai/v1/models",
+            headers={"Authorization": f"Bearer {clave}"},
+        )
+        with urllib.request.urlopen(peticion, timeout=30) as respuesta:
+            datos = json.load(respuesta)
+        return [f"{m.get('id')}  (contexto: {m.get('context_window')}, dueño: {m.get('owned_by')})"
+                for m in datos.get("data", [])][:limite]
+    except Exception as e:  # noqa: BLE001
+        return [f"(no se pudo listar los modelos de Groq: {e!r})"]
+
+
 def listar_modelos_disponibles(limite=60):
-    """Modelos que acepta la llave actual. Evita adivinar nombres cuando Google
-    retira uno."""
+    """Modelos que acepta la llave actual, según el proveedor activo. Los dos
+    proveedores retiran modelos seguido (pasó con gemini-2.0-flash,
+    embedding-001, gemini-2.5-flash y llama-3.3-70b-versatile), así que esto
+    evita adivinar nombres."""
+    if PROVEEDOR_JUEZ == "groq":
+        return _listar_modelos_groq(limite)
     clave = os.environ.get("GOOGLE_API_KEY")
     try:
         from google import genai
@@ -147,51 +210,52 @@ def listar_modelos_disponibles(limite=60):
 
 
 def _probar_juez_y_embeddings():
-    """Una llamada directa al juez y otra a los embeddings. Falla en segundos y
-    nombrando al culpable, en vez de dejar que RAGAS reintente cada job (un 404
-    de modelo retirado se reintenta 10 veces y tarda minutos por métrica).
-    Devuelve None si los dos responden, o el texto del error."""
-    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+    """Una llamada directa al juez y otra a los embeddings locales. Falla en
+    segundos y nombrando al culpable, en vez de dejar que RAGAS reintente cada
+    job (un 404 de modelo retirado, o un 429 de cupo, se reintenta varias
+    veces y tarda minutos por métrica). Devuelve None si los dos responden, o
+    el texto del error."""
     try:
-        ChatGoogleGenerativeAI(model=MODELO_JUEZ_RAGAS, temperature=0).invoke("Responde solo: ok")
-        print(f"-> juez {MODELO_JUEZ_RAGAS} responde")
+        _crear_llm_juez().invoke("Responde solo: ok")
+        print(f"-> juez {MODELO_JUEZ_RAGAS} ({PROVEEDOR_JUEZ}) responde")
     except Exception as e:  # noqa: BLE001
-        return f"el juez '{MODELO_JUEZ_RAGAS}' no responde: {type(e).__name__}: {e}"
+        return f"el juez '{MODELO_JUEZ_RAGAS}' ({PROVEEDOR_JUEZ}) no responde: {type(e).__name__}: {e}"
     try:
-        GoogleGenerativeAIEmbeddings(model=MODELO_EMB_RAGAS).embed_query("prueba")
-        print(f"-> embeddings {MODELO_EMB_RAGAS} responden")
+        _crear_embeddings_local().embed_query("prueba")
+        print(f"-> embeddings locales ({MODELO_EMB_LOCAL}) responden")
     except Exception as e:  # noqa: BLE001
-        return f"los embeddings '{MODELO_EMB_RAGAS}' no responden: {type(e).__name__}: {e}"
+        return f"los embeddings locales '{MODELO_EMB_LOCAL}' no cargaron: {type(e).__name__}: {e}"
     return None
 
 
 def verificar_ragas():
-    """Comprueba librería, llave, que el juez y los embeddings respondan, y una
-    evaluación de 1 fila contra la API real. Devuelve (ok, detalle)."""
-    print("\n=== Verificación 2/2 · RAGAS + Gemini ===")
+    """Comprueba librería, llave, que el juez responda, que los embeddings
+    locales carguen, y una evaluación de 1 fila real. Devuelve (ok, detalle)."""
+    print(f"\n=== Verificación 2/2 · RAGAS + juez {PROVEEDOR_JUEZ} ===")
     try:
         _parche_vertexai()
         import ragas  # noqa: F401
     except ModuleNotFoundError as e:
+        paquete_extra = "langchain-groq" if PROVEEDOR_JUEZ == "groq" else "langchain-google-genai"
         return False, (f'falta una librería ({e.name}). En Colab: %pip install -q '
-                       f'"ragas==0.2.15" langchain-google-genai')
+                       f'"ragas==0.2.15" {paquete_extra} langchain-huggingface sentence-transformers')
     _, version = _version_ragas()
     print(f"-> ragas {version}")
 
-    if not os.environ.get("GOOGLE_API_KEY"):
-        return False, ("GOOGLE_API_KEY no está en el entorno del proceso. Exportarla ANTES de "
-                       "lanzar el script:\n"
-                       "    from google.colab import userdata\n"
-                       "    import os; os.environ['GOOGLE_API_KEY'] = userdata.get('GOOGLE_API_KEY')")
-    print("-> GOOGLE_API_KEY presente en el entorno")
+    var_llave = "GROQ_API_KEY" if PROVEEDOR_JUEZ == "groq" else "GOOGLE_API_KEY"
+    if not os.environ.get(var_llave):
+        return False, (f"{var_llave} no está en el entorno del proceso. Exportarla ANTES de "
+                       f"lanzar el script, ej.:\n"
+                       f"    import os; os.environ['{var_llave}'] = '...'")
+    print(f"-> {var_llave} presente en el entorno")
 
     error_modelos = _probar_juez_y_embeddings()
     if error_modelos:
         print("\nModelos que acepta esta llave:")
         for linea in listar_modelos_disponibles():
             print(f"   {linea}")
-        return False, (f"{error_modelos}\nElige uno de la lista de arriba y vuelve a correr con "
-                       f"--juez <modelo> (o --embeddings <modelo>).")
+        return False, (f"{error_modelos}\nSi es un modelo que ya no existe o no acepta tu cuenta, "
+                       f"vuelve a correr con --juez <modelo> (y --proveedor groq|gemini).")
 
     try:
         df = calcular_ragas(
@@ -203,6 +267,7 @@ def verificar_ragas():
               "contexto": ["Los cambios de color, tamaño o forma de un lunar son signos de "
                            "alarma de melanoma."]}],
         )
+
         valores = df.to_dict(orient="records")[0]
         print(f"-> prueba de 1 fila: {valores}")
         # evaluate() no lanza excepción cuando los jobs fallan por dentro: deja
@@ -211,7 +276,7 @@ def verificar_ragas():
             return False, (f"la prueba de 1 fila devolvió NaN en las 4 métricas. RAGAS no lanza "
                            f"excepción cuando sus jobs fallan por dentro; mira las líneas "
                            f"'Exception raised in Job[...]' de arriba para la causa real.")
-        return True, f"ragas {version} · juez {MODELO_JUEZ_RAGAS} · embeddings {MODELO_EMB_RAGAS}"
+        return True, f"ragas {version} · juez {MODELO_JUEZ_RAGAS} ({PROVEEDOR_JUEZ}) · embeddings locales {MODELO_EMB_LOCAL}"
     except Exception as e:  # noqa: BLE001
         traceback.print_exc()
         return False, f"{type(e).__name__}: {e}"
@@ -350,14 +415,13 @@ def calcular_ragas(eval_set, salidas):
     _parche_vertexai()
 
     from datasets import Dataset
-    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     from ragas import evaluate
     from ragas.metrics import answer_relevancy, context_precision, context_recall, faithfulness
 
     version, version_texto = _version_ragas()
 
-    llm = ChatGoogleGenerativeAI(model=MODELO_JUEZ_RAGAS, temperature=0)
-    embeddings = GoogleGenerativeAIEmbeddings(model=MODELO_EMB_RAGAS)
+    llm = _crear_llm_juez()
+    embeddings = _crear_embeddings_local()
     try:
         from ragas.embeddings import LangchainEmbeddingsWrapper
         from ragas.llms import LangchainLLMWrapper
@@ -446,11 +510,13 @@ def _argumentos():
     p.add_argument("--sin-ragas", action="store_true", help="solo el harness propio (D1/D3)")
     p.add_argument("--solo-verificar", action="store_true", help="solo el chequeo previo, no evalúa")
     p.add_argument("--forzar", action="store_true", help="sigue aunque el chequeo previo falle")
+    p.add_argument("--proveedor", choices=["groq", "gemini"], default=None,
+                   help=f"proveedor del juez de RAGAS (default {PROVEEDOR_JUEZ})")
     p.add_argument("--juez", default=None, help=f"modelo juez de RAGAS (default {MODELO_JUEZ_RAGAS})")
-    p.add_argument("--embeddings", default=None,
-                   help=f"modelo de embeddings de RAGAS (default {MODELO_EMB_RAGAS})")
+    p.add_argument("--embeddings-local", default=None,
+                   help=f"modelo local de embeddings, sin API (default {MODELO_EMB_LOCAL})")
     p.add_argument("--listar-modelos", action="store_true",
-                   help="lista los modelos que acepta la GOOGLE_API_KEY y sale")
+                   help="lista los modelos que acepta la llave del proveedor activo y sale")
     p.add_argument("--max-workers", type=int, default=RAGAS_MAX_WORKERS,
                    help=f"llamadas en paralelo de RAGAS (default {RAGAS_MAX_WORKERS}); 1 si hay 429")
     p.add_argument("--timeout", type=int, default=RAGAS_TIMEOUT,
@@ -494,17 +560,23 @@ def calcular_ragas_en_indices(eval_set, salidas, indices):
 
 
 def main():
-    global MODELO_JUEZ_RAGAS, MODELO_EMB_RAGAS, RAGAS_MAX_WORKERS, RAGAS_TIMEOUT
+    global PROVEEDOR_JUEZ, MODELO_JUEZ_RAGAS, MODELO_EMB_LOCAL, RAGAS_MAX_WORKERS, RAGAS_TIMEOUT
     args = _argumentos()
+    if args.proveedor:
+        PROVEEDOR_JUEZ = args.proveedor
+        # Si cambia el proveedor y no se pasó --juez, usar el default de ESE proveedor,
+        # no el que haya quedado de una corrida anterior.
+        if not args.juez:
+            MODELO_JUEZ_RAGAS = JUECES_POR_DEFECTO[PROVEEDOR_JUEZ]
     if args.juez:
         MODELO_JUEZ_RAGAS = args.juez
-    if args.embeddings:
-        MODELO_EMB_RAGAS = args.embeddings
+    if args.embeddings_local:
+        MODELO_EMB_LOCAL = args.embeddings_local
     RAGAS_MAX_WORKERS = args.max_workers
     RAGAS_TIMEOUT = args.timeout
 
     if args.listar_modelos:
-        print("Modelos que acepta esta GOOGLE_API_KEY:")
+        print(f"Modelos que acepta la llave de {PROVEEDOR_JUEZ}:")
         for linea in listar_modelos_disponibles():
             print(f"  {linea}")
         return 0
@@ -525,8 +597,8 @@ def main():
               "registro del fallo).")
         return 1
 
-    estado_ragas = ("no ejecutado en esta corrida (--sin-ragas): cuota del cupo gratuito "
-                    "agotada; ver docs/M3_notas_evaluacion.md, sección 6")
+    estado_ragas = ("no ejecutado en esta corrida (--sin-ragas); ver "
+                    "docs/M3_notas_evaluacion.md, sección 6, para el motivo")
     usar_ragas = not args.sin_ragas
     if usar_ragas:
         ok, estado_ragas = verificar_ragas()
@@ -591,8 +663,9 @@ def main():
     resumen["tools_con_error"] = {n: e for n, e in fallas_tools.items() if e}
     resumen["ragas"] = {
         "estado": estado_ragas,
+        "proveedor_juez": PROVEEDOR_JUEZ,
         "juez": MODELO_JUEZ_RAGAS,
-        "embeddings": MODELO_EMB_RAGAS,
+        "embeddings_locales": MODELO_EMB_LOCAL,
         "max_workers": RAGAS_MAX_WORKERS,
         "casos_evaluados": (
             int(df[RAGAS_COLS].notna().any(axis=1).sum()) if df_ragas is not None else 0

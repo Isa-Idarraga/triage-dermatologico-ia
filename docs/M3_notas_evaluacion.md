@@ -17,13 +17,20 @@ queda el razonamiento, los incidentes y los números crudos de
   esperado binario. No pesa la gravedad del error.
 - **D3 (dominio)**: recall en `urgente` + desglose de falsos negativos por categoría
   HAM10000. Meta del equipo desde M1: ≥ 0.85.
-- **RAGAS**: faithfulness, context precision, context recall, answer relevancy, con
-  juez Gemini por API gratuita.
+- **RAGAS**: faithfulness, context precision, context recall, answer relevancy. Juez
+  por API gratuita (Groq, `openai/gpt-oss-120b`) y **embeddings locales**
+  (`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`), los mismos del RAG
+  de la Ola 1. Ver sección 4 para el recorrido hasta llegar a esa combinación.
 
 **Por qué el juez de RAGAS no es el Qwen2.5-3B local.** En M2 la profesora señaló que
 ese juez de 3B calificaba mal el 73 % de los aciertos y alucinaba diagnósticos.
 Reusarlo para RAGAS habría arrastrado el mismo sesgo a las 4 métricas nuevas, así que
 el juez es externo y más capaz.
+
+**Por qué los embeddings sí son locales.** `answer_relevancy` necesita embeddings, y
+ese es el único componente de RAGAS que no juzga nada: solo mide similitud. Calcularlo
+en local con el mismo modelo que ya usa el RAG evita depender de un segundo cupo
+gratuito distinto del del juez, que fue exactamente lo que tumbó las primeras corridas.
 
 ---
 
@@ -125,7 +132,121 @@ vez de declararlo como una defensa que funcionó.
 
 ---
 
-## 4 · El incidente de RAGAS: tres causas, no una
+## 3.1 · RAGAS: cobertura parcial y lectura cruzada con el harness
+
+Corrida del 27-sep-2026 con juez Groq `openai/gpt-oss-120b` y embeddings locales.
+
+### Cobertura: 17 de 37 casos, y no son una muestra representativa
+
+| Métrica | Casos con valor | Promedio | Mín | Máx |
+|---|---|---|---|---|
+| `faithfulness` | 17/37 | 0.2685 | 0.000 | 0.778 |
+| `context_precision` | 17/37 | 0.6029 | 0.000 | 1.000 |
+| `context_recall` | 17/37 | 0.2941 | 0.000 | 0.500 |
+| `answer_relevancy` | 16/37 | 0.3087 | 0.000 | 0.866 |
+
+**Estos promedios NO son del eval set.** El cupo de tokens por día de Groq (200.000) se
+agotó al 45 % de los jobs, y `ragas 0.2.15` encola fila por fila (`for i, sample in
+enumerate(dataset)` por fuera, métricas por dentro, verificado en su código fuente), así
+que lo que quedó puntuado son las 17 primeras filas: `m3_g01` a `m3_g17`, **todas de
+esperado `urgente`**. Sin cobertura quedaron los 10 gold `no_urgente`, los 2 informativos
+y los 8 adversariales. Cualquier cifra de esta sección debe reportarse como "sobre los 17
+gold urgentes", nunca junto a los totales del harness, que sí cubre los 37.
+
+### Detalle por caso
+
+| id | esperado | predicho | D1 | faithfulness | context_precision | context_recall | answer_relevancy |
+|---|---|---|---|---|---|---|---|
+| m3_g01 | urgente | urgente | ✅ | 0.500 | 1.000 | 0.500 | 0.555 |
+| m3_g02 | urgente | urgente | ✅ | 0.200 | 0.833 | 0.500 | 0.111 |
+| m3_g03 | urgente | urgente | ✅ | 0.133 | 1.000 | 0.500 | 0.013 |
+| m3_g04 | urgente | no_urgente | ❌ | 0.091 | 0.333 | **0.000** | 0.299 |
+| m3_g05 | urgente | no_urgente | ❌ | 0.400 | 0.333 | 0.500 | 0.000 |
+| m3_g06 | urgente | urgente | ✅ | 0.286 | 0.833 | 0.500 | 0.414 |
+| m3_g07 | urgente | urgente | ✅ | 0.125 | 1.000 | 0.500 | 0.727 |
+| m3_g08 | urgente | no_urgente | ❌ | 0.000 | 0.000 | **0.000** | 0.609 |
+| m3_g09 | urgente | urgente | ✅ | 0.533 | 0.000 | **0.000** | 0.083 |
+| m3_g10 | urgente | urgente | ✅ | 0.778 | 0.500 | 0.500 | 0.000 |
+| m3_g11 | urgente | urgente | ✅ | 0.500 | 1.000 | 0.500 | 0.341 |
+| m3_g12 | urgente | urgente | ✅ | 0.333 | 0.583 | 0.500 | 0.866 |
+| m3_g13 | urgente | no_urgente | ❌ | 0.100 | 0.000 | **0.000** | 0.411 |
+| m3_g14 | urgente | no_urgente | ❌ | 0.125 | 1.000 | **0.000** | 0.381 |
+| m3_g15 | urgente | urgente | ✅ | 0.182 | 1.000 | **0.000** | 0.089 |
+| m3_g16 | urgente | urgente | ✅ | 0.111 | 0.500 | 0.500 | 0.043 |
+| m3_g17 | urgente | urgente | ✅ | 0.167 | 0.333 | **0.000** | — |
+
+### Dónde coinciden las dos evaluaciones
+
+Las tres métricas que miran el contexto separan los aciertos de los fallos del harness,
+y no por poco:
+
+| Métrica | Aciertos (12) | Falsos negativos (5) | Δ |
+|---|---|---|---|
+| `context_precision` | 0.715 | 0.333 | **+0.38** |
+| `context_recall` | 0.375 | 0.100 | **+0.28** |
+| `faithfulness` | 0.321 | 0.143 | **+0.18** |
+| `answer_relevancy` | 0.295 | 0.340 | −0.05 (no separa) |
+
+**El diagnóstico concreto: en 4 de los 5 falsos negativos cubiertos (`g04`, `g08`,
+`g13`, `g14`) el `context_recall` es 0.** La evidencia que respalda la etiqueta correcta
+nunca llegó al prompt, así que no es un fallo de criterio del generador: es un fallo de
+retrieval. El harness solo podía decir "falló"; RAGAS dice *por qué* falló, y apunta a
+una capa distinta del sistema. El quinto (`g05`) sí tenía la evidencia (recall 0.5) y aun
+así falló, así que ahí el problema sí es de generación.
+
+### Dónde se contradicen (lo más interesante para el reporte)
+
+**Tres casos aciertan sin tener la evidencia en el contexto: `g09`, `g15` y `g17`, con
+`context_recall` = 0.** El harness los cuenta como éxito; RAGAS muestra que ese éxito no
+viene del RAG. Vienen de la señal de BETO y de la regla de seguridad del agente, que
+convierte cualquier "urgente" en veredicto final. Es acertar por la razón equivocada, y
+es exactamente el tipo de cosa que una sola dimensión de evaluación no puede ver.
+Consecuencia práctica: el recall de 0.70 del harness está sostenido en parte por el
+clasificador y la regla conservadora, no por la calidad del retrieval.
+
+**El `faithfulness` es bajo incluso en los aciertos (0.321).** El sistema emite un
+veredicto correcto con una justificación que no se deja atribuir al contexto que
+recuperó. Para un sistema de triage clínico eso es una advertencia seria: la
+justificación es la parte que un médico leería para decidir si confía.
+
+### Advertencias de medición, para no sobreinterpretar
+
+- **`answer_relevancy` (0.31) no mide lo que parece aquí.** Penaliza el formato: muchas
+  respuestas del agente son la plantilla `URGENCIA / JUSTIFICACIÓN / FUENTES` o el texto
+  de "las dos señales no coincidieron", que no se parecen a una respuesta conversacional
+  a la pregunta del paciente. Además se calcula con embeddings locales
+  (MiniLM multilingüe), más débiles que un modelo de embeddings dedicado. No leerlo como
+  "las respuestas no sirven".
+- `m3_g17` perdió el job de `answer_relevancy` por el cupo: 16 casos en esa columna, 17
+  en las otras tres.
+- Los promedios del script (`results/m3_resumen.json` → `ragas.promedios`) se calculan
+  ignorando los NaN, así que cada métrica promedia sobre su propio número de casos.
+
+### Lo que falta y quedó como pendiente declarado
+
+Los 20 casos sin puntuar incluyen los 3 falsos positivos (`g19`, `g27`, `a06`) y los 5
+`no_aplica`. La hipótesis que no se pudo verificar: en los falsos positivos el
+`faithfulness` debería ser bajo, porque el veredicto final contradice al contexto
+recuperado (en los tres, el RAG había dicho `no_urgente` con justificación correcta y
+ganó la regla de seguridad).
+
+**Cuánto costaría cerrarlo (cálculo propio, no cifra oficial del proveedor).** Los 198 521
+tokens consumidos se reparten entre los 66 jobs del run y los de las verificaciones
+previas: unos 2 600 a 3 000 tokens por job. Los 80 jobs que faltan quedan entre 208 000 y
+240 000 tokens, **por encima del techo de 200 000 por día**, así que no caben en una sola
+jornada de cupo gratuito. La evaluación completa (148 jobs) pide del orden de dos veces el
+cupo diario. Opciones reales: partirla en dos días, o cupo de pago.
+
+**Y no alcanza con tener cupo: hay dos limitaciones del script.** Cada corrida recalcula
+los 37 casos del agente desde cero (no reanuda desde donde quedó, así que se vuelven a
+gastar ~10 min de GPU), y `--ragas-muestra` toma una submuestra estratificada, por lo que
+no permite pedir "puntúa exactamente estos 20 ids". Para completar justo los que faltan
+haría falta una opción nueva tipo `--ragas-ids`, o guardar las salidas del agente en disco
+para reusarlas entre corridas.
+
+---
+
+## 4 · El incidente de RAGAS: cinco causas encadenadas
 
 El mensaje `ModuleNotFoundError("No module named 'ragas'")` de la primera corrida hizo
 pensar en la `GOOGLE_API_KEY`. La llave nunca fue el problema: exportarla con
@@ -175,6 +296,45 @@ subproceso de `!python` la hereda. Eran tres cosas encadenadas:
    recuperado, y el contexto venía vacío en las 37 filas. Arreglar RAGAS sin arreglar
    el agente no servía de nada.
 
+5. **El cupo de Gemini no daba para esta evaluación: 20 solicitudes/día.** Con el juez
+   ya respondiendo, los jobs pasaron de ~16 s a agotar los 300 s de `timeout` y morir.
+   Revisando la consola de Google AI Studio apareció el número: `gemini-3.8-flash` —el
+   único modelo de texto que acepta una cuenta nueva, porque 2.0-flash está retirado y
+   2.5-flash está cerrado a cuentas nuevas— da **20 solicitudes por día** en el cupo
+   gratuito. La evaluación necesita hasta 148 llamadas (37 casos × 4 métricas, y varias
+   métricas hacen más de una llamada por fila). No era un problema de configuración ni
+   de paralelismo: el cupo es dos órdenes de magnitud menor que la tarea.
+
+   **Migración a Groq.** Se cambió el proveedor del juez a Groq, cuyo cupo gratuito es
+   de otro orden y no tiene la restricción de "cuenta nueva". El script quedó con
+   `--proveedor groq|gemini`, así que el cambio es de configuración y no de código, y
+   Gemini sigue disponible si algún día conviene volver.
+
+   **Y el mismo trampa otra vez, ahora en Groq:** el primer modelo elegido,
+   `llama-3.3-70b-versatile`, salió del self-serve de Groq el 2026-08-16 (quedó
+   Enterprise); Groq señala `openai/gpt-oss-120b` como reemplazo, que es el default
+   actual del script. Para no seguir adivinando, `--listar-modelos` ahora funciona
+   también con Groq (consulta `GET /openai/v1/models` con la llave propia), no solo con
+   Gemini.
+   Fuentes: [retiro de los Llama en Groq](https://ecorpit.hashnode.dev/groq-retired-llama-33-70b-versatile-on-16-august-2026-and-points-production-teams-at-a-preview-model) ·
+   [pricing y modelos de Groq](https://markaicode.com/pricing/groq-pricing/).
+   *(Contenido reformulado por restricciones de licencia.)*
+
+   **Y el límite final, ya con todo funcionando: los tokens por día.** Groq resolvió el
+   problema de velocidad (la prueba de 1 fila pasó de 65 s con Gemini a 3 s) pero el cupo
+   gratuito tiene un techo de **200.000 tokens por día por organización**. La evaluación
+   completa lo agotó en el job 66 de 148 (~45 %), con 198.521 tokens usados. De ahí en
+   adelante cada job restante consumió su presupuesto de reintentos y terminó en NaN: la
+   corrida tardó 1 h 50 min, de las cuales los primeros 22 min fueron trabajo real y el
+   resto reintentos condenados. Resultado: 17 de 37 casos puntuados (sección 3.1).
+
+   **Lección para el README:** en cinco intentos, cuatro se cayeron por nombres de modelo
+   retirados o por cupos, ninguno por el código de la evaluación. La parte transferible
+   del trabajo no es "usamos Gemini" ni "usamos Groq", es que el juez quedó detrás de una
+   interfaz (`_crear_llm_juez`) con proveedor y modelo configurables, con un chequeo
+   previo que falla en segundos y lista los modelos válidos, y con el estado de RAGAS
+   registrado en el propio artefacto de salida.
+
 ---
 
 ## 5 · Otras decisiones del script
@@ -192,7 +352,14 @@ subproceso de `!python` la hereda. Eran tres cosas encadenadas:
 - **Prueba directa del juez y de los embeddings antes de RAGAS.** Un 404 de modelo
   retirado se reintenta 10 veces por job (148 jobs en los 37 casos × 4 métricas), así
   que el error tardaba minutos en ser legible. Dos llamadas directas lo detectan en
-  segundos y dicen cuál de los dos modelos es el que falla.
+  segundos y dicen cuál de los dos componentes es el que falla. Si el juez no responde,
+  el script imprime además los modelos que acepta la llave.
+- **Juez detrás de una interfaz, no incrustado.** `_crear_llm_juez()` decide entre Groq
+  y Gemini, y el resto del script (`calcular_ragas`, el chequeo previo, el resumen) no
+  sabe cuál está activo. Proveedor, modelo y modelo de embeddings se pasan por
+  `--proveedor` / `--juez` / `--embeddings-local` o por variables de entorno. Esto salió
+  de la experiencia: tres de los cuatro intentos fallaron por nombres de modelo
+  retirados, así que cambiar de juez tenía que costar un flag y no una edición.
 - **Cuota del cupo gratuito como límite real de la evaluación.** Con el juez
   respondiendo bien, la primera prueba de 1 fila tardó 16 s por job; corridas más tarde
   el mismo job se comía los 300 s de `timeout` completos y moría con `TimeoutError`, lo
@@ -229,10 +396,14 @@ subproceso de `!python` la hereda. Eran tres cosas encadenadas:
 Si la evaluación con RAGAS queda incompleta por cuota, esto es lo que hay que contar, y
 está todo verificado:
 
-**Qué se decidió y por qué.** El juez de RAGAS es Gemini por API gratuita, no el
-Qwen2.5-3B local. La razón viene de la retroalimentación de M2: ese juez de 3B calificó
-mal el 73 % de los aciertos y alucinó diagnósticos. Reusarlo para las 4 métricas nuevas
-habría arrastrado el mismo sesgo, ahora multiplicado por cuatro.
+**Qué se decidió y por qué.** El juez de RAGAS es un modelo externo por API gratuita, no
+el Qwen2.5-3B local. La razón viene de la retroalimentación de M2: ese juez de 3B
+calificó mal el 73 % de los aciertos y alucinó diagnósticos. Reusarlo para las 4
+métricas nuevas habría arrastrado el mismo sesgo, ahora multiplicado por cuatro.
+El proveedor final es **Groq** (`openai/gpt-oss-120b`) después de que el cupo gratuito de
+Gemini resultara insuficiente (20 solicitudes/día contra las hasta 148 que pide la
+evaluación); los embeddings se calculan en local para no depender de un segundo cupo.
+El recorrido completo está en la sección 4.
 
 **Por qué no se retrocedió al juez local cuando la API se puso difícil.** Dos razones,
 y la segunda es técnica, no de principios:
@@ -253,30 +424,42 @@ demostrada aunque falten filas:
   corridas independientes.
 
 **Cuál fue el límite real.** El cupo gratuito, no el código. 37 casos × 4 métricas = 148
-jobs, y cada métrica hace más de una llamada al juez. Tras varias corridas en el mismo
-día, los jobs pasaron de ~16 s a agotar el `timeout` de 300 s, mientras una llamada
-suelta al mismo modelo seguía respondiendo: estrangulamiento de cuota, no un modelo
-caído. Mitigaciones aplicadas antes de rendirse: `--max-workers 1`, `--timeout` más
-corto y `--ragas-muestra N`.
+jobs, y varias métricas hacen más de una llamada al juez. Con Gemini el techo era
+explícito: 20 solicitudes/día para el único modelo que acepta una cuenta nueva. Antes de
+rendirse se aplicaron, en orden: `--max-workers 1`, `--timeout` más corto,
+`--ragas-muestra N`, embeddings locales para no gastar un segundo cupo, y finalmente el
+cambio de proveedor a Groq.
 
-**Qué haría falta para cerrarlo.** Cupo de pago, o correr la misma evaluación otro día
-con la cuota fresca: el script queda listo y no necesita cambios, solo
-`python scripts/evaluar_m3.py`. Si se corre con submuestra, los ids puntuados quedan en
+**Qué haría falta para cerrarlo.** No cabe en una jornada de cupo gratuito: la evaluación
+completa pide del orden de dos veces el techo diario de 200 000 tokens (ver el cálculo al
+final de la sección 3.1). Las opciones son partirla en dos días con `--ragas-muestra`, o
+cupo de pago. Si se corre con submuestra, los ids puntuados quedan en
 `results/m3_resumen.json` → `ragas.ids_evaluados`, y el promedio debe reportarse diciendo
-sobre cuántos casos se calculó.
+sobre cuántos casos se calculó, nunca como si fuera sobre los 37.
 
 ---
 
-## 7 · Pendientes para `docs/M3_README.md`
+## 7 · Estado de `docs/M3_README.md`
 
-- [ ] Correr la evaluación con RAGAS funcionando y cruzar sus 4 métricas con D1/D3:
-      dónde coinciden y dónde se contradicen. Hipótesis a revisar: en los 3 falsos
-      positivos el `faithfulness` debería ser bajo (el veredicto final contradice el
-      contexto recuperado, que decía `no_urgente`).
-- [ ] Reportar que la meta de recall 0.85 no se alcanza (0.70) y qué haría falta.
-- [ ] Nombrar la limitación de "no hay rechazo real" con los 5 casos `no_aplica` como
-      evidencia.
-- [ ] Ampliar el eval set si aparecen fallos nuevos propios del agente (hasta ahora los
-      6 falsos negativos son de las herramientas, no de la combinación).
-- [ ] Anotar que la corrida 1 quedó registrada como inválida, y por qué: es parte de la
-      "lectura honesta de qué falla y por qué" que pide el criterio 4.
+El reporte final ya está escrito. Qué quedó cubierto y dónde:
+
+- [x] Lectura cruzada de RAGAS con D1/D3, coincidencias y contradicciones → secciones 5.4
+      y 5.5 del README.
+- [x] La meta de recall 0.85 no se alcanza (0.70) → secciones 1 y 6.
+- [x] La limitación de "no hay rechazo real", con los 5 casos `no_aplica` como evidencia →
+      sección 6, punto 2.
+- [x] La corrida 1 registrada como inválida y por qué → sección 6, punto 5.
+- [x] Cobertura parcial de RAGAS (17/37, todos urgentes) declarada y auditable → sección
+      5.3 del README y `results/m3_resumen.json` → `ragas.ids_evaluados`.
+
+Sigue abierto:
+
+- [ ] Puntuar con RAGAS los 20 casos restantes (~80 jobs ≈ 208 000-240 000 tokens, más de
+      un día de cupo gratuito) para verificar la hipótesis de los 3 falsos positivos.
+      Requiere además una opción tipo `--ragas-ids` para apuntar a esos casos, o guardar
+      las salidas del agente para no recalcularlas.
+      La hipótesis: `faithfulness` bajo en los tres, porque el veredicto final contradice
+      al contexto recuperado, que decía `no_urgente`.
+- [ ] Ampliar el eval set si aparecen fallos propios del agente. Hasta ahora los 6 falsos
+      negativos son de las herramientas, no de la combinación, así que no hubo caso nuevo
+      que justificara ampliarlo.
