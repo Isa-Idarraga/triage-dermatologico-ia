@@ -1,0 +1,96 @@
+[
+  {
+    "pregunta": "Tengo un lunar que me cambió de color y de forma en los últimos meses.",
+    "respuesta": "URGENCIA: urgente\nJUSTIFICACIÓN: El lunar ha cambiado de color y forma, lo que indica un posible cambio hacia un melanoma. Según el contexto proporcionado por la CDC, cualquier cambio en la piel debe ser evaluado por un médico rápidamente.\nFUENTES: [cdc_01_sintomas_cancer_piel], [nci_03_lunares_nevos_displasicos]",
+    "contexto": [
+      "ia. Consulte a su médico si nota cualquiera de estos cambios en la piel:\nA. Asimetría: el lunar o la mancha tiene forma irregular con partes que se ven diferentes.\nB. Borde: el borde es dentado.\nC. Color: el color es desparejo.\nD. Diámetro: el lunar o la mancha es más grande que un guisante.\nE. Evolución: el lunar o la mancha ha cambiado o evolucionado en las últimas semanas o meses.\nEste melanoma",
+      "de melanoma (1).\nHay algunos cambios que indican que un lunar se está convirtiendo en un melanoma (2). Las personas deberían avisarle al médico si notan alguno de los siguientes cambios:\n- El lunar cambia de color.\n- El lunar se agranda o achica pero de forma desigual (a diferencia de los lunares comunes infantiles, que crecen de manera uniforme).\n- La forma, la textura o la altura del lunar cambi",
+      "ho). Hay un cambio de tamaño; en general se agranda. Los melanomas a veces son diminutos, pero la mayoría tienen más de 6 milímetros de ancho (cerca de 1/4 de pulgada de ancho).\n- Evolución. El lunar cambia a lo largo de algunas semanas o meses.\nLos melanomas tienen formas muy variadas. La mayoría de los melanomas tienen todas las características de ABCDE. Sin embargo, algunos quizás tengan una o "
+    ],
+    "fuentes": ["cdc_01_sintomas_cancer_piel", "nci_03_lunares_nevos_displasicos"],
+    "tools_usadas": ["clasificador_beto", "buscar_informacion_dermatologica"],
+    "detalle_tools": {
+      "clasificador_beto": {"herramienta": "clasificador_beto", "etiqueta": "urgente", "confianza": 0.9846},
+      "buscar_informacion_dermatologica": {
+        "herramienta": "buscar_informacion_dermatologica",
+        "etiqueta": "urgente",
+        "respuesta": "URGENCIA: urgente\nJUSTIFICACIÓN: El lunar ha cambiado de color y forma, lo que indica un posible cambio hacia un melanoma. Según el contexto proporcionado por la CDC, cualquier cambio en la piel debe ser evaluado por un médico rápidamente.\nFUENTES: [cdc_01_sintomas_cancer_piel], [nci_03_lunares_nevos_displasicos]",
+        "fuentes": ["cdc_01_sintomas_cancer_piel", "nci_03_lunares_nevos_displasicos"],
+        "contexto": [
+          "ia. Consulte a su médico si nota cualquiera de estos cambios en la piel:\nA. Asimetría: el lunar o la mancha tiene forma irregular con partes que se ven diferentes.\nB. Borde: el borde es dentado.\nC. Color: el color es desparejo.\nD. Diámetro: el lunar o la mancha es más grande que un guisante.\nE. Evolución: el lunar o la mancha ha cambiado o evolucionado en las últimas semanas o meses.\nEste melanoma",
+          "de melanoma (1).\nHay algunos cambios que indican que un lunar se está convirtiendo en un melanoma (2). Las personas deberían avisarle al médico si notan alguno de los siguientes cambios:\n- El lunar cambia de color.\n- El lunar se agranda o achica pero de forma desigual (a diferencia de los lunares comunes infantiles, que crecen de manera uniforme).\n- La forma, la textura o la altura del lunar cambi",
+          "ho). Hay un cambio de tamaño; en general se agranda. Los melanomas a veces son diminutos, pero la mayoría tienen más de 6 milímetros de ancho (cerca de 1/4 de pulgada de ancho).\n- Evolución. El lunar cambia a lo largo de algunas semanas o meses.\nLos melanomas tienen formas muy variadas. La mayoría de los melanomas tienen todas las características de ABCDE. Sin embargo, algunos quizás tengan una o "
+        ],
+        "valvula": false
+      }
+    },
+    "pasos_debug": [
+      {"paso": 1, "decision": {"accion": "usar_herramienta", "herramienta": "clasificador_beto"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"clasificador_beto\"}"},
+      {"paso": 2, "decision": {"accion": "usar_herramienta", "herramienta": "buscar_informacion_dermatologica"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"buscar_informacion_dermatologica\"}"},
+      {"paso": 3, "decision": {"accion": "usar_herramienta", "herramienta": "buscar_informacion_dermatologica"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"buscar_informacion_dermatologica\"}"}
+    ]
+  },
+  {
+    "pregunta": "Me salió un bultico firme bajo la piel, no crece ni duele.",
+    "respuesta": "El bulto firme bajo la piel que no crece ni duele se encuentra dentro del rango de lesiones benignas. Se trata probablemente de un dermatofibroma, que es una condición común y generalmente no requiere tratamiento inmediato.",
+    "contexto": [
+      "ares, sin cambios recientes - nevus melanocitico comun.\n- bkl → no_urgente: Mancha rugosa de aspecto 'pegado' a la piel, estable en el tiempo - queratosis benigna, sin potencial maligno.\n- df → no_urgente: Bulto firme bajo la piel, no crece ni duele - dermatofibroma, benigno.\n- vasc → no_urgente: Manchas rojo-purpura tipo puntos de sangre bajo la piel, estables - lesion vascular, generalmente beni",
+      "enigno (no canceroso) o maligno (canceroso), usted podría pedir que un segundo patólogo analice la muestra de la biopsia.\nLa mayoría de los melanomas de la piel se observan a simple vista. Por lo general, el melanoma crece durante mucho tiempo debajo de la capa externa de la piel (la epidermis) pero no penetra la capa más profunda de la piel (la dermis). Esto da tiempo para que el cáncer de piel s",
+      " bajo la piel, estables - lesion vascular, generalmente benigna.\n\n## Riesgos y mitigación (Plantilla del proyecto, sección 7)\nFalsos negativos: clasificar como \"no urgente\" un caso que sí era grave tiene consecuencias serias para la salud del paciente (diagnóstico tardío de melanoma).\nMitigación: el sistema sugiere, no decide — el profesional de triage siempre tiene la última palabra; se muestra e"
+    ],
+    "fuentes": ["eq_01_protocolo_urgencia_equipo", "nci_04_deteccion_cancer_piel_pdq"],
+    "tools_usadas": ["clasificador_beto", "buscar_informacion_dermatologica"],
+    "detalle_tools": {
+      "clasificador_beto": {"herramienta": "clasificador_beto", "etiqueta": "no_urgente", "confianza": 0.966},
+      "buscar_informacion_dermatologica": {
+        "herramienta": "buscar_informacion_dermatologica",
+        "etiqueta": "no_urgente",
+        "respuesta": "URGENCIA: no_urgente\nJUSTIFICACIÓN: El bulto firme bajo la piel, no crece ni duele, se encuentra dentro del rango de lesiones benignas descritos en el contexto, específicamente en la categoría de \"dermatofibroma\". Este tipo de manchas son generalmente benignos y no requieren tratamiento inmediato.\nFUENTES: [nci_04_deteccion_cancer_piel_pdq] [eq_01_protocolo_urgencia_equipo]",
+        "fuentes": ["eq_01_protocolo_urgencia_equipo", "nci_04_deteccion_cancer_piel_pdq"],
+        "contexto": [
+          "ares, sin cambios recientes - nevus melanocitico comun.\n- bkl → no_urgente: Mancha rugosa de aspecto 'pegado' a la piel, estable en el tiempo - queratosis benigna, sin potencial maligno.\n- df → no_urgente: Bulto firme bajo la piel, no crece ni duele - dermatofibroma, benigno.\n- vasc → no_urgente: Manchas rojo-purpura tipo puntos de sangre bajo la piel, estables - lesion vascular, generalmente beni",
+          "enigno (no canceroso) o maligno (canceroso), usted podría pedir que un segundo patólogo analice la muestra de la biopsia.\nLa mayoría de los melanomas de la piel se observan a simple vista. Por lo general, el melanoma crece durante mucho tiempo debajo de la capa externa de la piel (la epidermis) pero no penetra la capa más profunda de la piel (la dermis). Esto da tiempo para que el cáncer de piel s",
+          " bajo la piel, estables - lesion vascular, generalmente benigna.\n\n## Riesgos y mitigación (Plantilla del proyecto, sección 7)\nFalsos negativos: clasificar como \"no urgente\" un caso que sí era grave tiene consecuencias serias para la salud del paciente (diagnóstico tardío de melanoma).\nMitigación: el sistema sugiere, no decide — el profesional de triage siempre tiene la última palabra; se muestra e"
+        ],
+        "valvula": false
+      }
+    },
+    "pasos_debug": [
+      {"paso": 1, "decision": {"accion": "usar_herramienta", "herramienta": "clasificador_beto"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"clasificador_beto\"}"},
+      {"paso": 2, "decision": {"accion": "usar_herramienta", "herramienta": "clasificador_beto"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"clasificador_beto\"}"},
+      {"paso": 3, "decision": {"accion": "usar_herramienta", "herramienta": "buscar_informacion_dermatologica"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"buscar_informacion_dermatologica\"}"},
+      {"paso": 4, "decision": {"accion": "responder_final", "respuesta": "El bulto firme bajo la piel que no crece ni duele se encuentra dentro del rango de lesiones benignas. Se trata probablemente de un dermatofibroma, que es una condición común y generalmente no requiere tratamiento inmediato."}, "texto_crudo": "{\"accion\": \"responder_final\", \"respuesta\": \"El bulto firme bajo la piel que no crece ni duele se encuentra dentro del rango de lesiones benignas. Se trata probablemente de un dermatofibroma, que es una condición común y generalmente no requiere tratamiento inmediato.\"}"}
+    ]
+  },
+  {
+    "pregunta": "Tengo dolor de cabeza fuerte y fiebre desde ayer, ¿debería preocuparme?",
+    "respuesta": "Las dos señales no coincidieron: el clasificador de síntomas dice 'urgente' y la búsqueda de evidencia médica dice 'no_urgente'. Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: El contexto proporciona información sobre signos y síntomas generales como dolor de cabeza fuerte y fiebre, pero no especifica ninguna lesión o cambio en la piel que pueda indicar un cáncer de piel o una lesión premaligna. Estos síntomas pueden ser atribuidos a muchos otros factores, incluyendo infecciones, enfermedades respiratorias o problemas gastrointestinales, por lo que no se puede determinar con certeza si el caso es urgente o no.\nFUENTES: [wiki_05_granuloma_piogeno], [nci_03_lunares_nevos_displasicos], [eq_01_protocolo_urgencia_equipo]",
+    "contexto": [
+      "al, también se ha encontrado lejos de la cabeza, como en los muslos.\nLos granulomas piógenos pueden observarse a cualquier edad, y son más comunes en mujeres que en hombres. En mujeres embarazadas, las lesiones pueden presentarse en el primer trimestre con una incidencia creciente hasta el séptimo mes y a veces se observan en las encías.\n## Signos y síntomas\nLa apariencia del granuloma piógeno es ",
+      "o porque hay un aumento moderado del riesgo de melanoma. A las personas que además tienen antecedentes familiares de melanoma, los médicos quizás les indiquen un examen de la piel más frecuente, como cada 3 a 6 meses (3).\n## ¿Debería pedir al médico que me saque un nevo displásico o un lunar común para que no se convierta en melanoma?\nNo. Por lo normal, no es necesario extirpar un nevo displásico ",
+      "# Criterio de urgencia del proyecto (documento interno del equipo)\n\n## Usuario y decisión (Plantilla del proyecto, sección 2)\nUsuario: enfermero(a) o médico(a) general que atiende la primera consulta (triage), antes de que el caso llegue a un dermatólogo.\nDecisión que cambia: si el caso se refiere con urgencia a dermatología (sospecha de melanoma u otra lesión de riesgo) o se agenda como cita de r"
+    ],
+    "fuentes": ["wiki_05_granuloma_piogeno", "nci_03_lunares_nevos_displasicos", "eq_01_protocolo_urgencia_equipo"],
+    "tools_usadas": ["clasificador_beto", "buscar_informacion_dermatologica"],
+    "detalle_tools": {
+      "clasificador_beto": {"herramienta": "clasificador_beto", "etiqueta": "urgente", "confianza": 0.8627},
+      "buscar_informacion_dermatologica": {
+        "herramienta": "buscar_informacion_dermatologica",
+        "etiqueta": "no_urgente",
+        "respuesta": "URGENCIA: no_urgente\nJUSTIFICACIÓN: El contexto proporciona información sobre signos y síntomas generales como dolor de cabeza fuerte y fiebre, pero no especifica ninguna lesión o cambio en la piel que pueda indicar un cáncer de piel o una lesión premaligna. Estos síntomas pueden ser atribuidos a muchos otros factores, incluyendo infecciones, enfermedades respiratorias o problemas gastrointestinales, por lo que no se puede determinar con certeza si el caso es urgente o no.\nFUENTES: [wiki_05_granuloma_piogeno], [nci_03_lunares_nevos_displasicos], [eq_01_protocolo_urgencia_equipo]",
+        "fuentes": ["wiki_05_granuloma_piogeno", "nci_03_lunares_nevos_displasicos", "eq_01_protocolo_urgencia_equipo"],
+        "contexto": [
+          "al, también se ha encontrado lejos de la cabeza, como en los muslos.\nLos granulomas piógenos pueden observarse a cualquier edad, y son más comunes en mujeres que en hombres. En mujeres embarazadas, las lesiones pueden presentarse en el primer trimestre con una incidencia creciente hasta el séptimo mes y a veces se observan en las encías.\n## Signos y síntomas\nLa apariencia del granuloma piógeno es ",
+          "o porque hay un aumento moderado del riesgo de melanoma. A las personas que además tienen antecedentes familiares de melanoma, los médicos quizás les indiquen un examen de la piel más frecuente, como cada 3 a 6 meses (3).\n## ¿Debería pedir al médico que me saque un nevo displásico o un lunar común para que no se convierta en melanoma?\nNo. Por lo normal, no es necesario extirpar un nevo displásico ",
+          "# Criterio de urgencia del proyecto (documento interno del equipo)\n\n## Usuario y decisión (Plantilla del proyecto, sección 2)\nUsuario: enfermero(a) o médico(a) general que atiende la primera consulta (triage), antes de que el caso llegue a un dermatólogo.\nDecisión que cambia: si el caso se refiere con urgencia a dermatología (sospecha de melanoma u otra lesión de riesgo) o se agenda como cita de r"
+        ],
+        "valvula": false
+      }
+    },
+    "pasos_debug": [
+      {"paso": 1, "decision": {"accion": "usar_herramienta", "herramienta": "clasificador_beto"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"clasificador_beto\"}"},
+      {"paso": 2, "decision": {"accion": "usar_herramienta", "herramienta": "buscar_informacion_dermatologica"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"buscar_informacion_dermatologica\"}"},
+      {"paso": 3, "decision": {"accion": "usar_herramienta", "herramienta": "clasificador_beto"}, "texto_crudo": "{\"accion\": \"usar_herramienta\", \"herramienta\": \"clasificador_beto\"}"}
+    ]
+  }
+]
