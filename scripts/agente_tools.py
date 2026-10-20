@@ -90,6 +90,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # cerebro no entiende para qué sirve una herramienta, nunca la va a usar bien.
 
 import metricas_m2  # BETO+LoRA de M1 -- sistema(texto) -> {"etiqueta_predicha", "confianza"}
+from decision_m3 import decidir, redactar, parsear_decision
 import rag_avanzado  # RAG de María Alejandra -- sistema(config) -> fn(pregunta) -> dict
 
 # El RAG avanzado se arma UNA vez (construir el índice vectorial no es gratis) y
@@ -138,6 +139,7 @@ def tool_buscar_informacion_dermatologica(pregunta: str) -> dict:
         "fuentes": salida.get("fuentes", []),
         "contexto": salida.get("contexto", []),
         "valvula": salida.get("valvula", False),
+        "etiqueta_rag": salida.get("etiqueta_rag"),  # sin perder la etiqueta anterior al escalamiento
     }
 
 
@@ -240,31 +242,8 @@ def _listar_herramientas_para_prompt():
 
 
 def _parsear_decision(texto_generado: str) -> dict:
-    """Extrae la decisión del cerebro del texto crudo que generó el modelo.
-
-    Igual que en juez_m2.py: buscamos el primer objeto {...} en vez de asumir que
-    toda la respuesta es JSON limpio, porque los modelos instruction-tuned a veces
-    agregan texto de más aunque se les pida que no lo hagan. Si no se puede
-    entender nada, devolvemos una decisión de "error" explícita en vez de dejar
-    que una excepción tumbe todo el ciclo -- ver ETAPA 4 para cómo se maneja eso.
-    """
-    match = re.search(r"\{.*?\}", texto_generado, re.DOTALL)
-    if not match:
-        return {"accion": "error", "detalle": f"respuesta sin JSON: {texto_generado[:200]!r}"}
-    try:
-        decision = json.loads(match.group(0))
-    except json.JSONDecodeError as e:
-        return {"accion": "error", "detalle": f"JSON invalido ({e}): {match.group(0)[:200]!r}"}
-
-    accion = decision.get("accion")
-    if accion == "usar_herramienta":
-        nombre = decision.get("herramienta")
-        if nombre not in HERRAMIENTAS:
-            return {"accion": "error", "detalle": f"herramienta inexistente pedida: {nombre!r}"}
-        return {"accion": "usar_herramienta", "herramienta": nombre}
-    if accion == "responder_final":
-        return {"accion": "responder_final", "respuesta": decision.get("respuesta", "")}
-    return {"accion": "error", "detalle": f"accion desconocida: {accion!r}"}
+    """Parser validado: errores de JSON/tipos son observaciones, no excepciones de despacho."""
+    return parsear_decision(texto_generado, HERRAMIENTAS)
 
 
 def _preguntar_al_cerebro(historial_texto: str) -> "tuple[dict, str]":
@@ -327,44 +306,8 @@ def _resumir_para_historial(resultado: dict) -> dict:
 
 
 def _sintetizar_respuesta_final(resultados_tools: dict) -> str:
-    """Arma la respuesta final aplicando la regla de seguridad del equipo,
-    SIN depender de que el modelo la escriba bien -- ver el comentario en
-    "Manejo de fallas #2" de agente() sobre por qué hace falta esto.
-
-    Regla: si CUALQUIERA de las herramientas usadas dice "urgente", el
-    veredicto final es urgente (preferimos un falso positivo a dejar pasar un
-    caso grave -- la misma prioridad clínica del equipo desde M1). Se usa el
-    texto de `buscar_informacion_dermatologica` como justificación cuando
-    está disponible, porque es la única herramienta que puede citar de dónde
-    sale su conclusión; si no se usó, se arma una frase simple con la salida
-    de BETO.
-    """
-    etiquetas = [r["etiqueta"] for r in resultados_tools.values() if r.get("etiqueta")]
-    veredicto = "urgente" if "urgente" in etiquetas else "no_urgente"
-    respuesta_rag = resultados_tools.get("buscar_informacion_dermatologica", {}).get("respuesta")
-
-    if len(set(etiquetas)) > 1:
-        # Las dos señales no coincidieron -- no tiene sentido pegar tal cual el
-        # texto del RAG (que argumenta SU propia conclusión) como si fuera la
-        # respuesta final, porque podría contradecir al veredicto de seguridad.
-        # Se deja explícito el desacuerdo y por qué gana la lectura conservadora.
-        beto = resultados_tools.get("clasificador_beto", {})
-        return (
-            f"Las dos señales no coincidieron: el clasificador de síntomas dice "
-            f"'{beto.get('etiqueta', 'n/d')}' y la búsqueda de evidencia médica dice "
-            f"'{resultados_tools.get('buscar_informacion_dermatologica', {}).get('etiqueta', 'n/d')}'. "
-            f"Por seguridad clínica, el veredicto final es '{veredicto}' -- se prioriza no "
-            f"dejar pasar un caso potencialmente grave.\n\n"
-            f"Detalle de la búsqueda de evidencia: {respuesta_rag or 'no disponible'}"
-        )
-
-    if respuesta_rag:
-        return respuesta_rag
-
-    beto = resultados_tools.get("clasificador_beto", {})
-    return (f"Según el clasificador del sistema, este caso se considera '{veredicto}' "
-            f"(confianza {beto.get('confianza', 'n/d')}). No fue posible ampliar la "
-            f"justificación con la búsqueda de evidencia médica.")
+    """Misma política para cierre normal, repetición y agotamiento de pasos."""
+    return redactar(decidir(resultados_tools), resultados_tools)
 
 
 def agente(pregunta: str) -> dict:
@@ -435,6 +378,8 @@ def agente(pregunta: str) -> dict:
         # (probar la otra herramienta, o responder con lo que ya tiene).
         try:
             resultado = HERRAMIENTAS[nombre]["funcion"](pregunta)
+            if not isinstance(resultado, dict):
+                raise TypeError("la herramienta debe devolver un objeto")
         except Exception as e:
             resultado = {"herramienta": nombre, "error": str(e)}
             historial.append(f"Observación de {nombre}: FALLÓ ({e}).")
@@ -469,13 +414,19 @@ def _armar_resultado(respuesta_texto: str, resultados_tools: dict, tools_usadas:
                       pasos_debug: list = None) -> dict:
     """Junta lo que dejaron las herramientas usadas en el formato de contrato
     compartido (respuesta, contexto, fuentes) + el detalle de qué se usó."""
+    # Todos los caminos del agente pasan por esta función, incluido responder_final.
+    decision = decidir(resultados_tools)
     contexto = []
     fuentes = []
     for r in resultados_tools.values():
         contexto.extend(r.get("contexto", []))
         fuentes.extend(r.get("fuentes", []))
     return {
-        "respuesta": respuesta_texto,
+        "respuesta": redactar(decision, resultados_tools),
+        "decision": decision,
+        "senal_disponible": decision["etiqueta"] is not None,
+        # Se conserva para auditoría, no se presenta como veredicto del sistema.
+        "texto_cierre_propuesto": respuesta_texto,
         "contexto": contexto,
         "fuentes": list(dict.fromkeys(fuentes)),  # quita duplicados preservando el orden
         "tools_usadas": tools_usadas,

@@ -1,0 +1,71 @@
+{
+  "base_commit": "1a9afc75dbbd3a3eab8ab471bd42b6dd73410166",
+  "original_agent_blob": "a99e26aba6fe11cadfbfb7c7ee4b5a69cb14b802",
+  "original_agent_verified": true,
+  "python": "3.13.5",
+  "versions": {
+    "torch": "2.10.0+cpu",
+    "pandas": "2.2.3"
+  },
+  "characterization_tests_reexecuted": 30,
+  "regression_tests_passed": 38,
+  "command": "python -m unittest discover -s review/m3/tests -p 'test_*review.py' -v",
+  "limits": [
+    "No clon completo: DNS bloqueado",
+    "Agente original completo verificado por Git blob; evaluador heredado consultado por conector",
+    "Pruebas con dobles de planificador, herramientas y RAGAS; sin pesos, GPU ni APIs",
+    "Contrato RAGAS contrastado con documentación v0.2.15; integración real pendiente"
+  ],
+  "files": [
+    {
+      "path": "scripts/agente_tools.py",
+      "bytes": 22407,
+      "git_blob_sha1": "cbd34611648dbdb16ce628b543fcbae7ffc85fcd",
+      "sha256": "b549c8d023b6185b9d8f80fb40a42a73a6fde550dfc2350ae7950f1b94fef3fa"
+    },
+    {
+      "path": "scripts/decision_m3.py",
+      "bytes": 4415,
+      "git_blob_sha1": "ed3392ffee602b9745f51daecc1931e950da7c8b",
+      "sha256": "544edbc14d7d1ad5292ff0278e9e75aa375ad452be67d692848072875f9c54c1"
+    },
+    {
+      "path": "scripts/evaluacion_m3_reanudable.py",
+      "bytes": 14652,
+      "git_blob_sha1": "311c94b3dcb109a977f92f66421b8fd5862cb646",
+      "sha256": "4d15ba5bb9ff13c0617dd9713bb83a6b6294e58d6af9c7753b95d4af0ffcbd36"
+    },
+    {
+      "path": "review/m3/tests/test_agent_review.py",
+      "bytes": 7570,
+      "git_blob_sha1": "bf78f7346f3a0516f48d65ce298c359fe169903c",
+      "sha256": "87a553f1eb6f23deb960e9d966d1f0adb67bdde5c4ef6b2f63da30543d21329d"
+    },
+    {
+      "path": "review/m3/tests/test_resume_review.py",
+      "bytes": 9168,
+      "git_blob_sha1": "460ee14b90c6e8d6e340291250d272383b4924bc",
+      "sha256": "b810655a56e793495117a99929b15ad79942278fd49f71ce16e286e09affb225"
+    },
+    {
+      "path": "review/m3/USO_CORRECCIONES.md",
+      "bytes": 5078,
+      "git_blob_sha1": "9d91b435422bdbe1d2b81f1cc241207c3105cc75",
+      "sha256": "bf60c0bc9554c0abd9c28988f28215e6b75cf5fe8e4d3a5327d0d4e681f2a290"
+    },
+    {
+      "path": "review/m3/README.md",
+      "bytes": 7057,
+      "git_blob_sha1": "a469f398be5c4b2e0ef83c4a0dd5c24509441418",
+      "sha256": "16a09e9b03c1a1451e2ff1e25e1e406b2ac2906a9e291c83f17eb1446fcd0556"
+    },
+    {
+      "path": "review/m3/evidence/regression_tests.txt",
+      "bytes": 4740,
+      "git_blob_sha1": "56186643dca7310e3cc29f0c12ef6085abb809e4",
+      "sha256": "e10ca360f603d5d4866a12510ef22fccc710dd8681a2d7fa9cb0cacb52938911"
+    }
+  ],
+  "revalidated_utc": "2026-10-20T16:04:01.872645+00:00",
+  "historical_characterization_note": "Las 30 comprobaciones del original corresponden al preview anterior; esta sesión reejecutó las 38 regresiones."
+}
