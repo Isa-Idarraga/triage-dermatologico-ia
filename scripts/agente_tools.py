@@ -198,7 +198,10 @@ HERRAMIENTAS = {
     },
     "ver_imagen": {
         "funcion": tool_ver_imagen,
-        "descripcion": "Clasifica la foto adjunta de la lesión como urgente/no_urgente, o indica que no se puede evaluar.",
+        # Descripción literal de Camilo (m4/pipeline/ver.py, DESCRIPCION_TOOL) -- no
+        # una paráfrasis mía. El reparto de M4 lo pide así explícitamente: es su
+        # tool, su texto. Si él lo cambia en ver.py, este cambia solo.
+        "descripcion": _modulo_ver.DESCRIPCION_TOOL,
         "cuando_usarla": "Si el usuario adjuntó una foto -- el texto solo puede no describir bien el color, la forma o los bordes.",
     },
 }

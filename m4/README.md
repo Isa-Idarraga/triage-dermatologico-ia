@@ -31,6 +31,63 @@ El color, los bordes y la simetría se ven mejor de lo que se describen. M3 solo
 
 ## 3 · Dónde se enchufó *(Juan Esteban)*
 
+**Flujo:** pregunta del enfermero (+ foto, si la adjuntó) → `sistema_multimodal()`
+(`m4/pipeline/sistema_multimodal.py`) → el agente de M3 (`scripts/agente_tools.py`)
+decide qué herramientas llamar: `clasificador_beto` (M1), `buscar_informacion_dermatologica`
+(RAG hybrid, M3 Ola 2) y, **solo si hay foto**, `ver_imagen` (M4, Camilo) → respuesta
+final, combinando las señales con la misma regla de seguridad que el equipo usa desde
+M1: si cualquiera dice "urgente", el veredicto es urgente.
+
+`ver_imagen` no es una opción que el modelo pueda elegir mal: si no se adjuntó foto,
+directamente no aparece en la lista de herramientas disponibles que ve el cerebro
+(`agente_tools._herramientas_disponibles`) — no se depende de que el modelo obedezca
+la instrucción "úsala solo si hay foto", se le quita la opción de la lista.
+
+**Cómo correrlo:**
+```python
+from sistema_multimodal import sistema_multimodal
+
+sistema_multimodal("Tengo un lunar que cambió de color.")                 # sin foto
+sistema_multimodal("¿Es grave esto?", imagen="ruta/a/foto.jpg")           # con foto
+```
+Reproducible de cero en `notebooks/M4_multimodal_colab.ipynb` (Colab, GPU T4 —
+carga 4 modelos a la vez: el cerebro del agente, el generador del RAG, BETO y el
+clasificador visual, no cabe en una laptop sin GPU).
+
+**Prueba con y sin foto (verificado, no asumido):**
+
+| | Sin foto | Con foto |
+|---|---|---|
+| Tools usadas | `clasificador_beto`, `buscar_informacion_dermatologica` | `ver_imagen`, `clasificador_beto`, `buscar_informacion_dermatologica` |
+| ¿Llamó `ver_imagen`? | No (correcto — no había foto) | Sí (correcto — sí había foto) |
+| Latencia end-to-end* | 14.02 s | 22.49 s |
+
+\* Ambas medidas con los modelos ya cargados en memoria (misma sesión de Colab, ya
+"caliente") — la primera llamada de una sesión nueva tarda ~160s porque ahí se
+cargan los 3-4 modelos desde cero; esa parte es costo de arranque, no de inferencia,
+así que no se compara contra eso. El +8.5s de la foto es sobre todo el paso extra
+que el cerebro necesita para decidir llamar a una tool más, no el clasificador visual
+en sí (que Camilo ya midió en ~0.03s una vez cargado).
+
+**Un hallazgo real, no hipotético, sobre el costo de la regla de seguridad:**
+probando con la imagen `ISIC_0024876.jpg` (nevus benigno confirmado por biopsia,
+`no_urgente` según `m4/pipeline/eval_tool/manifiesto.csv`) y una pregunta de texto
+deliberadamente poco informativa ("Le adjunto una foto de la lesión, ¿debería verla
+pronto?"), pasó esto:
+
+- `ver_imagen` acertó: "no_urgente", score 0.1565 (confiado).
+- El RAG también leyó "no_urgente", aunque dudando mucho en el texto.
+- `clasificador_beto`, sin ninguna descripción real del síntoma en el texto, igual
+  forzó una etiqueta: "urgente".
+- Resultado final: **"urgente"** — la regla de seguridad (si cualquiera dice urgente,
+  gana urgente) escaló un lunar benigno porque una sola señal, mal informada, votó
+  distinto a las otras dos.
+
+No es un bug: es el costo visible de una regla pensada para nunca dejar pasar un
+caso grave, que de forma explícita acepta falsos positivos (ver `docs/M3_tools.md`).
+Pero es un costo real, medido con un caso real, no una advertencia abstracta —
+documentado aquí tal cual salió, sin pulirlo.
+
 ## 4 · Tabla de delta M3 vs M4 *(María Alejandra)*
 
 ## 5 · El peor caso *(María Alejandra)*
