@@ -24,7 +24,19 @@ models/     -> checkpoints del fine-tuning con LoRA (adaptador BETO)
 results/    -> métricas de baseline, LoRA e hiperparámetros registrados
 ```
 
-## Estado actual (M1 — completo)
+## Módulos
+
+| Módulo | Qué se construyó | Documentación |
+|---|---|---|
+| M1 | Clasificador de texto BETO + LoRA y dataset (real + sintético) | [comparacion_resultados.md](docs/comparacion_resultados.md) |
+| M2 | Harness de evaluación en 3 dimensiones, con juez LLM (Qwen2.5-3B) y análisis de sus sesgos | [M2_README.md](docs/M2_README.md) |
+| M3 | RAG (ingenuo e híbrido BM25 + denso) y agente con tool use, evaluado con RAGAS | [M3_README.md](docs/M3_README.md) |
+| M4 | Componente visual: tool `ver()` que clasifica la foto de la lesión (ViT + regresión logística, HAM10000) | [m4/README.md](m4/README.md) |
+
+Resultado principal de M3, sobre 37 casos nuevos: el agente (BETO + RAG híbrido) sube el
+recall en casos urgentes de 0.50 (BETO solo) a 0.70, todavía por debajo de la meta de 0.85.
+
+## Detalle de M1
 
 - **Modelo base elegido:** `dccuchile/bert-base-spanish-wwm-cased` (BETO).
   Justificación completa en `docs/M1_modelo_base_y_dataset.docx`, respaldada con
