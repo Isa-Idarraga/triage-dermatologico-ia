@@ -93,6 +93,19 @@ caso grave, que de forma explícita acepta falsos positivos (ver `docs/M3_tools.
 Pero es un costo real, medido con un caso real, no una advertencia abstracta —
 documentado aquí tal cual salió, sin pulirlo.
 
+> **Nota para el equipo (Juan Esteban → María Alejandra e Isabella):** dejo este
+> hallazgo documentado pero sin tocar la regla de combinación — no es decisión de
+> una sola persona cambiar la regla de seguridad que el equipo fijó desde M1, y
+> ahora mismo el enchufe ya está probado y funcionando. Dos usos concretos para lo
+> que sigue:
+> - **Isabella (Turno 3):** es un caso límite real ("¿la imagen aporta?", como tu
+>   propio `img_03` sugerido) — se puede formalizar tal cual en `casos_imagen.csv`
+>   en vez de inventar uno desde cero.
+> - **María Alejandra (Turno 4, sección 5):** candidato directo para "el peor caso"
+>   — ya está el qué pasó y por qué; falta la parte de "qué harían" (por ejemplo:
+>   ¿debería `clasificador_beto` abstenerse si el texto no trae información real?
+>   ¿pesar las tres señales distinto en vez de "cualquiera gana"? ¿exigir 2 de 3?).
+
 ## 4 · Tabla de delta M3 vs M4 *(María Alejandra)*
 
 ## 5 · El peor caso *(María Alejandra)*
