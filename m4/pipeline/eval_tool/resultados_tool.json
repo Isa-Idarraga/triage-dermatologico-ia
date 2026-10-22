@@ -1,0 +1,147 @@
+{
+  "modelo": {
+    "backend": "lr_vit",
+    "modelo": "google/vit-base-patch16-224-in21k",
+    "umbral": 0.5310078860115258,
+    "pesos": "ver_pesos_lr_vit.npz"
+  },
+  "metricas_40": {
+    "n": 40,
+    "n_urgentes": 20,
+    "n_no_urgentes": 20,
+    "verdaderos_positivos": 12,
+    "falsos_negativos": 8,
+    "falsos_positivos": 12,
+    "verdaderos_negativos": 8,
+    "no_evaluables_total": 0,
+    "accuracy": 0.5,
+    "accuracy_ic95": [
+      0.35199278797099753,
+      0.6480072120290025
+    ],
+    "recall_urgente": 0.6,
+    "recall_urgente_ic95": [
+      0.38657794231520604,
+      0.7811960325858073
+    ],
+    "recall_con_escalamiento": 0.6,
+    "especificidad": 0.4,
+    "especificidad_ic95": [
+      0.21880396741419272,
+      0.613422057684794
+    ]
+  },
+  "latencia": {
+    "hardware": "Tesla T4",
+    "carga_modelo_s": 0.45,
+    "n_llamadas": 40,
+    "mediana_s": 0.0298,
+    "media_s": 0.0322,
+    "p95_s": 0.0479,
+    "max_s": 0.0501
+  },
+  "candidatos_validacion": [
+    {
+      "candidato": "lr_vit",
+      "auc_val": 0.9058902946,
+      "umbral": 0.531007886,
+      "recall_val": 0.852739726,
+      "especificidad_val": 0.8266779949,
+      "latencia_ms": 51.3418709997
+    },
+    {
+      "candidato": "vit_lora",
+      "auc_val": 0.9176220016,
+      "umbral": 0.6704980135,
+      "recall_val": 0.852739726,
+      "especificidad_val": 0.8283772302,
+      "latencia_ms": 64.0776354994
+    },
+    {
+      "candidato": "lr_clip",
+      "auc_val": 0.9083285809,
+      "umbral": 0.4646415165,
+      "recall_val": 0.852739726,
+      "especificidad_val": 0.7960917587,
+      "latencia_ms": 46.4786785001
+    },
+    {
+      "candidato": "clip_7clases",
+      "auc_val": 0.5147257364,
+      "umbral": 0.4166707538,
+      "recall_val": 0.852739726,
+      "especificidad_val": 0.204757859,
+      "latencia_ms": 42.4477135002
+    },
+    {
+      "candidato": "clip_binario",
+      "auc_val": 0.5093952584,
+      "umbral": 0.3875843848,
+      "recall_val": 0.852739726,
+      "especificidad_val": 0.1733220051,
+      "latencia_ms": 16.849611
+    }
+  ],
+  "candidatos_40_informativo": [
+    {
+      "candidato": "clip_binario",
+      "accuracy": 0.525,
+      "recall_urgente": 0.95,
+      "especificidad": 0.1,
+      "auc_40": 0.5275
+    },
+    {
+      "candidato": "clip_7clases",
+      "accuracy": 0.525,
+      "recall_urgente": 0.95,
+      "especificidad": 0.1,
+      "auc_40": 0.5675
+    },
+    {
+      "candidato": "lr_clip",
+      "accuracy": 0.65,
+      "recall_urgente": 0.95,
+      "especificidad": 0.35,
+      "auc_40": 0.7575
+    },
+    {
+      "candidato": "lr_vit",
+      "accuracy": 0.5,
+      "recall_urgente": 0.6,
+      "especificidad": 0.4,
+      "auc_40": 0.6675
+    },
+    {
+      "candidato": "vit_lora",
+      "accuracy": 0.625,
+      "recall_urgente": 0.7,
+      "especificidad": 0.55,
+      "auc_40": 0.7075
+    }
+  ],
+  "fotos_degradadas": {
+    "no_evaluable": {
+      "desenfoque fuerte": 10,
+      "muy pequeña (48 px)": 10,
+      "casi negra": 10,
+      "gris liso": 10,
+      "ruido": 0
+    },
+    "urgente": {
+      "desenfoque fuerte": 0,
+      "muy pequeña (48 px)": 0,
+      "casi negra": 0,
+      "gris liso": 0,
+      "ruido": 10
+    }
+  },
+  "versiones": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.1",
+    "sklearn": "1.6.1",
+    "numpy": "2.1.3",
+    "pillow": "11.3.0"
+  },
+  "semilla": 42
+}

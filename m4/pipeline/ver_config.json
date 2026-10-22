@@ -1,0 +1,29 @@
+{
+  "backend": "lr_vit",
+  "modelo": "google/vit-base-patch16-224-in21k",
+  "umbral": 0.5310078860115258,
+  "banda_incertidumbre": 0.0,
+  "pesos": "ver_pesos_lr_vit.npz",
+  "calidad": {
+    "lado_minimo": 64,
+    "desviacion_minima": 8.0,
+    "nitidez_minima": 11.332866191864014
+  },
+  "calibracion": {
+    "regla": "mayor especificidad con recall de urgentes >= recall_min en validacion; empate, menor latencia",
+    "recall_min": 0.85,
+    "recall_val": 0.8527397260273972,
+    "especificidad_val": 0.826677994902294,
+    "n_validacion": 1469,
+    "semilla": 42,
+    "hardware": "Tesla T4",
+    "versiones": {
+      "python": "3.13.15",
+      "torch": "2.11.0+cu130",
+      "transformers": "5.20.1",
+      "sklearn": "1.6.1",
+      "numpy": "2.1.3",
+      "pillow": "11.3.0"
+    }
+  }
+}
