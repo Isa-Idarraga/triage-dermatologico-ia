@@ -60,14 +60,19 @@ clasificador visual, no cabe en una laptop sin GPU).
 |---|---|---|
 | Tools usadas | `clasificador_beto`, `buscar_informacion_dermatologica` | `ver_imagen`, `clasificador_beto`, `buscar_informacion_dermatologica` |
 | ¿Llamó `ver_imagen`? | No (correcto — no había foto) | Sí (correcto — sí había foto) |
-| Latencia end-to-end* | 14.02 s | 22.49 s |
+| Latencia end-to-end* | 13.4–14.0 s | 21.8 s |
 
 \* Ambas medidas con los modelos ya cargados en memoria (misma sesión de Colab, ya
-"caliente") — la primera llamada de una sesión nueva tarda ~160s porque ahí se
-cargan los 3-4 modelos desde cero; esa parte es costo de arranque, no de inferencia,
-así que no se compara contra eso. El +8.5s de la foto es sobre todo el paso extra
-que el cerebro necesita para decidir llamar a una tool más, no el clasificador visual
-en sí (que Camilo ya midió en ~0.03s una vez cargado).
+"caliente") — la primera llamada de una sesión **realmente nueva** (`Desconectar y
+eliminar entorno de ejecución` antes de correr, no solo "Reiniciar") tarda ~162s
+porque ahí se cargan los 3-4 modelos desde cero; esa parte es costo de arranque, no
+de inferencia, así que no se compara contra eso. El número "sin foto" se midió dos
+veces en sesiones distintas (14.02s y 13.37s) y salió consistente, así que no es un
+accidente. El +8 s de la foto es sobre todo el paso extra que el cerebro necesita
+para decidir llamar a una tool más, no el clasificador visual en sí (que Camilo ya
+midió en ~0.03s una vez cargado). Detalle completo, incluida la confirmación de que
+la corrida fue sobre una VM de Colab nueva (no reciclada), en
+`m4/pipeline/resultados_sistema_multimodal.json`.
 
 **Un hallazgo real, no hipotético, sobre el costo de la regla de seguridad:**
 probando con la imagen `ISIC_0024876.jpg` (nevus benigno confirmado por biopsia,
