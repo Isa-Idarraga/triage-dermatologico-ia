@@ -25,7 +25,7 @@
 - **Se reusan imágenes del eval set de la tool** porque no hubo acceso a HAM10000 completo al armar esto. Todas vienen de la partición reservada: ninguna lesión se usó para entrenar ni calibrar `ver()`.
 - **img_03 ya se corrió una vez** (prueba de Juan Esteban, Turno 2) y salió urgente. Se incluye para medir si el fallo se repite.
 - **Ya verificado sin GPU** (filtro de calidad de `ver()`, numpy puro): img_06 sale `no_evaluable` (desenfocada); img_07 pasa el filtro, así que llega al clasificador.
-- **No hay caso de piel oscura.** HAM10000 no trae el fototipo y casi todas sus imágenes son de piel clara; no se encontró una imagen de piel oscura con licencia compatible. Queda como límite no medido (ver la sección 6 del README de M4).
+- **No hay caso de piel oscura.** HAM10000 no trae el fototipo y casi todas sus imágenes son de piel clara; no se encontró una imagen de piel oscura con licencia compatible. Queda como límite no medido (ver la sección 7 del README de M4).
 
 ## Primera corrida (23 OCT, Colab T4)
 
