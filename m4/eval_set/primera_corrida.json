@@ -1,0 +1,222 @@
+[
+  {
+    "id": "img_01",
+    "esperado": "urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": true,
+    "tools_usadas": [
+      "ver_imagen",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "urgente",
+        "score": 0.9147,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "urgente"
+      }
+    },
+    "respuesta": "URGENCIA: urgente\nJUSTIFICACIÓN: El paciente presenta signos de alarma relacionados con cáncer de piel, específicamente un lunar en la espalda que creció, tiene bordes irregulares y varios tonos de café y negro. Estos son claramente indicativos de un melanoma, lo cual requiere atención médica inmediata.\nFUENTES: [nci_01_melanoma_pdq], [nci_02_cancer_piel_no_melanoma_pdq]",
+    "latencia_s": 153.62
+  },
+  {
+    "id": "img_02",
+    "esperado": "no_urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": false,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "no_urgente",
+        "score": 0.1416,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.8806
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      }
+    },
+    "respuesta": "Las señales no coincidieron (ver_imagen='no_urgente', clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: El paciente menciona tener el lunar desde niño y que no ha cambiado, lo que indica que es una lesión benigna y no requiere atención médica inmediata. Sin signos de alarma asociados con cáncer de piel o lesiones premalignas, esta consulta se agende como cita de rutina.\nFUENTES: [nci_03_lunares_nevos_displasicos], [eq_01_protocolo_urgencia_equipo]",
+    "latencia_s": 26.42
+  },
+  {
+    "id": "img_03",
+    "esperado": "no_urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": false,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "no_urgente",
+        "score": 0.1565,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.9555
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      }
+    },
+    "respuesta": "Las señales no coincidieron (ver_imagen='no_urgente', clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta no proporciona detalles específicos sobre la lesión ni descripción clínica detallada. Sin más información, no puedo determinar si la lesión es benigna o precaria. El protocolo interno menciona patrones típicos de lesiones premalignas como queratosis actinica y carcinoma basocelular, pero no especifica cuándo debe ser vista. Por lo tanto, la lesión parece estar en un rango medio entre benigna y pre-maligna, lo que hace difícil determinar si es urgente o no.\nFUENTES: [eq_01_protocolo_urgencia_equipo], [cdc_01_sintomas_cancer_piel]",
+    "latencia_s": 21.71
+  },
+  {
+    "id": "img_04",
+    "esperado": "urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": true,
+    "tools_usadas": [
+      "ver_imagen",
+      "buscar_informacion_dermatologica",
+      "clasificador_beto"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "urgente",
+        "score": 0.6757,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.9559
+      }
+    },
+    "respuesta": "Las señales no coincidieron (ver_imagen='urgente', buscar_informacion_dermatologica='no_urgente', clasificador_beto='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta describe un lunar en la pierna que ha sido notado por el paciente durante varios años y que no causa molestias. Según el contexto, estos lunares son considerados benignos y no presentan signos de alarma. Sin embargo, dado que el paciente menciona haber tenido este lunar desde hace años, podría ser útil revisarlo por precaución. Por lo tanto, aunque no es urgente, se recomienda que el paciente consulte a un dermatólogo para su seguimiento.\nFUENTES: [nci_02_cancer_piel_no_melanoma_pdq], [eq_01_protocolo_urgencia_equipo]",
+    "latencia_s": 22.67
+  },
+  {
+    "id": "img_05",
+    "esperado": "urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "no_urgente",
+    "revision_preliminar": false,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "no_urgente",
+        "score": 0.2551,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "clasificador_beto": {
+        "etiqueta": "no_urgente",
+        "confianza": 0.8472
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      }
+    },
+    "respuesta": "URGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta describe un lunar que no presenta signos de alarma como cambios en tamaño, forma, color, bordes irregulars, más de un color, picazón, pus, sangre o úlceras. Además, el lunar no produce dolor ni sangrado. Estos factores indican que el lunar puede ser benigno y no requiere atención médica inmediata.\nFUENTES: [nci_03_lunares_nevos_displasicos], [nci_01_melanoma_pdq], [eq_01_protocolo_urgencia_equipo]",
+    "latencia_s": 22.06
+  },
+  {
+    "id": "img_06",
+    "esperado": "no_evaluable",
+    "tipo_criterio": "valvula",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": true,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": null,
+        "score": null,
+        "no_evaluable": true,
+        "motivo_no_evaluable": "imagen desenfocada"
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.9725
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      }
+    },
+    "respuesta": "Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta adjunta muestra una placa aspera, descamativa y persistente sobre la piel del cuero cabelludo, pero no presenta signos de alarma como sangrado, no cicatrización, o patrones típicos de cáncer de piel o lesiones premalignas mencionados en el contexto. Sin embargo, dado que el cuero cabelludo puede presentar condiciones similares a otras lesiones cutáneas, es importante que el profesional de triage consulte al dermatólogo para confirmar el diagnóstico.\nFUENTES: [eq_01_protocolo_urgencia_equipo], [wiki_05_granuloma_piogeno]\n\nAviso sobre la foto: no se pudo evaluar automáticamente (imagen desenfocada). Esto NO equivale a 'no urgente' -- se recomienda pedir otra foto o basarse en la evaluación directa.",
+    "latencia_s": 22.92
+  },
+  {
+    "id": "img_07",
+    "esperado": "no_evaluable",
+    "tipo_criterio": "valvula",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": false,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "no_urgente",
+        "score": 0.4973,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.9842
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      }
+    },
+    "respuesta": "Las señales no coincidieron (ver_imagen='no_urgente', clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta adjunta muestra una lesión rosada plana con grietas en la superficie y algo de sangrado, pero no hay evidencia clara de cambios recientes o signos de alarma típicos de un cáncer de piel. Esta lesión parece más bien benigna y podría ser una lesión premaligna como queratosis actinica o enfermedad de Bowen. Sin embargo, dado que el protocolo interno menciona que cualquier sospecha de cáncer debe ser evaluada con urgencia, sería prudente seguir ese procedimiento hasta obtener más detalles o confirmaciones médicas.\nFUENTES: [eq_01_protocolo_urgencia_equipo], [cdc_01_sintomas_cancer_piel]",
+    "latencia_s": 23.53
+  },
+  {
+    "id": "img_08",
+    "esperado": "urgente",
+    "tipo_criterio": "llamada_correcta",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": true,
+    "tools_usadas": [
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.9968
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "urgente"
+      }
+    },
+    "respuesta": "URGENCIA: urgente\nJUSTIFICACIÓN: El paciente presenta signos de alarma relacionados con el melanoma, incluyendo un aumento en el tamaño del lunar, bordes irregulares y variación de colores. Estos síntomas son claramente asociados con el melanoma y requieren atención médica inmediata.\nFUENTES: [nci_01_melanoma_pdq], [nci_02_cancer_piel_no_melanoma_pdq]",
+    "latencia_s": 14.19
+  }
+]
