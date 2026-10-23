@@ -111,4 +111,10 @@ documentado aquí tal cual salió, sin pulirlo.
 ## 5 · El peor caso *(María Alejandra)*
 
 ## 6 · Límites y ética *(Isabella)*
-Nota de Camilo para esta sección: HAM10000 son imágenes **dermatoscópicas**; el enfermero adjuntará fotos de celular, que son otra distribución. El modelo no se evaluó en ese caso.
+
+- **Sugiere, no diagnostica.** El sistema prioriza la fila de espera; la decisión de remitir es del enfermero o del médico. Ninguna salida es un diagnóstico, y la respuesta debe leerse junto con la evaluación directa del paciente.
+- **La válvula.** Si la foto está movida, es muy pequeña o casi uniforme, `ver()` devuelve `no_evaluable` y la respuesta lo dice; una foto no evaluable nunca cuenta como "no urgente". Su límite está medido: atrapa fotos degradadas (img_06), pero no detecta una imagen que no es piel (Camilo: 10/10 ruidos salieron `urgente`; img_07 lo prueba en el sistema completo).
+- **Sesgo de tono de piel.** HAM10000 casi no tiene piel oscura y no trae el fototipo, así que no sabemos cómo se comporta `ver()` en pieles oscuras. No conseguimos una imagen de piel oscura con licencia compatible, así que este sesgo **no está medido**, no está descartado. El sistema no debería usarse con pacientes de piel oscura sin evaluarlo antes.
+- **Foto de celular ≠ dermatoscopia** *(nota de Camilo)*. HAM10000 son imágenes dermatoscópicas; el enfermero adjuntará fotos de celular, que son otra distribución. El modelo no se evaluó en ese caso.
+- **Falsos negativos.** `ver()` detectó 3 de 8 melanomas en su evaluación. Un melanoma que se escapa es el peor error posible en triage; img_05 lo prueba en el sistema completo. Por eso la regla del equipo hace que cualquier señal "urgente" gane, aunque eso escale benignos (img_03).
+- **Datos y licencia.** Las imágenes son de HAM10000 (CC BY-NC 4.0, uso académico, con atribución en `eval_tool/ATRIBUCION.md` y `eval_set/README.md`) o generadas por el equipo. Son dermatoscopias sin rostros ni documentos; del metadato se omitieron edad y sexo. El repo no tiene datos personales de pacientes.
