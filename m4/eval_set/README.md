@@ -1,12 +1,13 @@
 # Eval set con imagen — M4 (Turno 3, Isabella)
 
-8 casos: 7 con foto y 1 de control sin foto. 2 son adversariales (foto movida, foto que no es piel) y 3 son casos límite donde el componente puede fallar. El criterio de cada caso quedó escrito antes de correr el sistema.
+10 casos: 9 con foto y 1 de control sin foto. 2 son adversariales (foto movida, foto que no es piel), 3 son casos límite donde el componente puede fallar y 2 son de piel oscura. El criterio de cada caso quedó escrito antes de correr el sistema.
 
 - `casos_imagen.json`: mismo esquema del eval set de M2 (`id`, `tipo`, `categoria_adversarial`, `input`, `esperado`, `criterio`, `categoria_ham10000`, `tipo_fuente`, `origen`) más `imagen`, `tipo_criterio`, `esperado_ver`, `fuente_imagen`, `que_prueba`, `sha256_imagen` y `calidad`.
 - `casos_imagen.csv`: los mismos casos en CSV; la columna `imagen` referencia el archivo por nombre.
-- `imagenes/`: las 7 fotos.
+- `imagenes/`: las 9 fotos.
 - `construir_casos_imagen.py`: regenera todo lo anterior (`python m4/eval_set/construir_casos_imagen.py`).
-- `correr_casos_imagen.py`: primera corrida por `sistema_multimodal` en Colab; deja `primera_corrida.json`. No es la calificación oficial (esa es `calificar()`, Turno 4).
+- `correr_casos_imagen.py`: corrida por `sistema_multimodal` en Colab; deja `primera_corrida.json` (img_01 a img_08) y `corrida_img_09_img_10.json`. No es la calificación oficial (esa es `calificar()`, Turno 4).
+- [`piel_oscura/`](piel_oscura/README.md): de dónde salen img_09 e img_10 y la medición de `ver()` por tono de piel.
 
 | ID | Entrada | Esperado | Criterio | Qué prueba |
 |---|---|---|---|---|
@@ -18,6 +19,8 @@
 | img_06 | Foto desenfocada | no_evaluable | válvula (0/1) | adversarial: foto movida |
 | img_07 | Hoja de papel, no es piel | no_evaluable | válvula (0/1) | adversarial donde se espera fallo: la válvula no detecta "no es piel" |
 | img_08 | Texto de img_01 sin foto | urgente | llamada correcta (0/1) | control: no debe llamar `ver_imagen` |
+| img_09 | Lesión benigna en piel oscura (fototipo VI, dermatoscopia) + texto tranquilo | no_urgente | exacto | sesgo: ¿escala un benigno en piel oscura? |
+| img_10 | Carcinoma escamocelular en piel oscura (fototipo V, foto de celular) + texto sin síntomas | urgente | exacto | sesgo: ¿detecta un cáncer en piel oscura con foto de celular? |
 
 ## Lo que hay que saber antes de leer los resultados
 
@@ -25,11 +28,11 @@
 - **Se reusan imágenes del eval set de la tool** porque no hubo acceso a HAM10000 completo al armar esto. Todas vienen de la partición reservada: ninguna lesión se usó para entrenar ni calibrar `ver()`.
 - **img_03 ya se corrió una vez** (prueba de Juan Esteban, Turno 2) y salió urgente. Se incluye para medir si el fallo se repite.
 - **Ya verificado sin GPU** (filtro de calidad de `ver()`, numpy puro): img_06 sale `no_evaluable` (desenfocada); img_07 pasa el filtro, así que llega al clasificador.
-- **No hay caso de piel oscura.** HAM10000 no trae el fototipo y casi todas sus imágenes son de piel clara; no se encontró una imagen de piel oscura con licencia compatible. Queda como límite no medido (ver la sección 7 del README de M4).
+- **img_09 e img_10 son de piel oscura** y salen del ISIC Archive (CC BY), porque HAM10000 casi no tiene piel oscura y no trae el fototipo. Se eligieron con una regla fija, sin ver antes qué respondía `ver()` (ver [`piel_oscura/`](piel_oscura/README.md)).
 
-## Primera corrida (23 OCT, Colab T4)
+## Corrida (23 OCT, Colab T4)
 
-`primera_corrida.json`, una pasada por `sistema_multimodal`. Revisión preliminar con la regla de `correr_casos_imagen.py`: **4 de 8** cumplen el criterio. La calificación oficial es la de `calificar()` (Turno 4).
+Una pasada por `sistema_multimodal`: img_01 a img_08 en `primera_corrida.json` e img_09 e img_10, agregados después, en `corrida_img_09_img_10.json`. Revisión preliminar con la regla de `correr_casos_imagen.py`: **5 de 10** cumplen el criterio. La calificación oficial es la de `calificar()` (Turno 4).
 
 | ID | Esperado | Salió | ¿Cumple? | Señales (ver · BETO · RAG) | Latencia |
 |---|---|---|---|---|---|
@@ -41,14 +44,17 @@
 | img_06 | no_evaluable | `ver` no_evaluable + aviso; veredicto urgente | sí (válvula) | no_evaluable · urgente (0.97) · no_urgente | 22.9 s |
 | img_07 | no_evaluable | urgente | no (válvula) | no_urgente (0.50) · urgente (0.98) · no_urgente | 23.5 s |
 | img_08 | no llama `ver` | no la llamó; urgente | sí | — · urgente (1.00) · urgente | 14.2 s |
+| img_09 | no_urgente | urgente | no | no_urgente (0.01) · urgente (0.98) · no_urgente | 71.8 s* |
+| img_10 | urgente | urgente | sí | urgente (0.81) · urgente (0.94) · no se llamó | 14.0 s |
 
-\* La primera llamada incluye la carga de los modelos; no es latencia de inferencia.
+\* La primera llamada de cada corrida incluye la carga de los modelos; no es latencia de inferencia.
 
 Lo que se ve:
 
 - **img_05 es el peor caso:** un melanoma confirmado sale `no_urgente` y las tres señales coinciden, así que la regla de seguridad no lo salva. Es el falso negativo que más importa.
-- **img_02 e img_03 fallan igual:** `ver()` y el RAG aciertan (no urgente), BETO dice urgente y la regla escala. El hallazgo de Juan Esteban se repite y además aparece en un caso con texto completo (img_02).
-- **img_04 acierta, pero no por la imagen:** BETO también dijo urgente, así que M3 sin foto habría llegado a lo mismo. En esta corrida la imagen no cambió ningún veredicto final.
+- **img_02, img_03 e img_09 fallan igual:** `ver()` y el RAG aciertan (no urgente), BETO dice urgente y la regla escala. El hallazgo de Juan Esteban se repite, también con texto completo (img_02) y en piel oscura (img_09).
+- **img_04 e img_10 aciertan, pero no por la imagen:** BETO también dijo urgente, así que M3 sin foto habría llegado a lo mismo. En esta corrida la imagen no cambió ningún veredicto final.
+- **Piel oscura:** `ver()` acertó en los dos casos (0.01 en el benigno, 0.81 en el cáncer). El veredicto final de img_09 falló por BETO, no por la imagen. La medición por tono de piel está en [`piel_oscura/`](piel_oscura/README.md).
 - **img_07: la válvula no detecta que no es piel.** `ver()` puntuó la hoja de papel en 0.50, justo debajo del umbral.
 - **El RAG describe fotos que nunca vio.** En img_06 escribe "placa áspera, descamativa" y en img_07 "lesión rosada plana con grietas y algo de sangrado"; ninguna de las dos imágenes muestra eso, y el RAG solo recibe texto.
 - **BETO da urgente con confianza alta (0.96–0.98) a textos sin síntomas** (img_03, img_06, img_07). En el log de carga, `classifier.weight` y `classifier.bias` aparecen como MISSING en el modelo base antes de aplicar LoRA; vale la pena confirmar que el adaptador trae la cabeza de clasificación.
@@ -56,3 +62,5 @@ Lo que se ve:
 ## Atribución
 
 img_01 a img_05 son copias sin modificar de HAM10000 (`ISIC_0034050`, `ISIC_0030535`, `ISIC_0024876`, `ISIC_0027187`, `ISIC_0033814`). img_06 es `ISIC_0029041` con desenfoque gaussiano (radio 12), modificada por el equipo. Fuente: Tschandl, Rosendahl y Kittler, *Sci. Data* 5, 180161 (2018), Harvard Dataverse doi:10.7910/DVN/DBW86T, licencia CC BY-NC 4.0; uso académico, no comercial. img_07 la genera el script; es un documento ficticio sin datos personales.
+
+img_09 (`ISIC_0589302`, Memorial Sloan Kettering Cancer Center) e img_10 (`ISIC_6492984`, Universidade Federal do Espírito Santo, PAD-UFES-20) son copias sin modificar del ISIC Archive (isic-archive.com), licencia CC BY 4.0. img_10 es un primer plano de la lesión; no muestra rasgos que identifiquen a la persona.

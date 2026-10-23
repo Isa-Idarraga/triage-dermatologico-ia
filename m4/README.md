@@ -108,15 +108,15 @@ documentado aquí tal cual salió, sin pulirlo.
 
 ## 4 · Casos con imagen *(Isabella)*
 
-8 casos en [`eval_set/`](eval_set/README.md): 7 con foto y 1 de control sin foto, cada uno con su criterio escrito antes de correr (exacto, válvula o llamada correcta). Hay 2 adversariales (foto desenfocada y una hoja de papel que no es piel) y 3 casos límite donde se esperaba que el componente fallara. Las fotos son de la partición reservada de HAM10000, salvo la desenfocada (derivada) y la hoja (generada).
+10 casos en [`eval_set/`](eval_set/README.md): 9 con foto y 1 de control sin foto, cada uno con su criterio escrito antes de correr (exacto, válvula o llamada correcta). Hay 2 adversariales (foto desenfocada y una hoja de papel que no es piel), 3 casos límite donde se esperaba que el componente fallara y 2 de piel oscura. Siete fotos son de la partición reservada de HAM10000 (una de ellas desenfocada por el equipo), una es generada (la hoja) y las dos de piel oscura vienen del ISIC Archive.
 
-Primera corrida en Colab (T4), revisión preliminar: **4 de 8** cumplen el criterio.
+Corrida en Colab (T4), revisión preliminar: **5 de 10** cumplen el criterio.
 
-- **Aciertan:** el melanoma claro (img_01), el melanoma con texto benigno (img_04), la válvula con la foto desenfocada (img_06) y el control sin foto, que no llamó `ver_imagen` (img_08).
-- **Fallan:** un melanoma que sale no urgente porque `ver()`, BETO y el RAG coinciden en no urgente (img_05); dos lunares benignos que la regla escala porque BETO dice urgente aunque `ver()` y el RAG acierten (img_02, img_03); y la hoja de papel, que la válvula no detecta (img_07).
-- **La imagen no cambió ningún veredicto final** en esta corrida: en img_04 BETO también dijo urgente.
+- **Aciertan:** el melanoma claro (img_01), el melanoma con texto benigno (img_04), la válvula con la foto desenfocada (img_06), el control sin foto, que no llamó `ver_imagen` (img_08), y el cáncer en piel oscura (img_10).
+- **Fallan:** un melanoma que sale no urgente porque `ver()`, BETO y el RAG coinciden en no urgente (img_05); tres lesiones benignas que la regla escala porque BETO dice urgente aunque `ver()` y el RAG acierten (img_02, img_03 e img_09, esta en piel oscura); y la hoja de papel, que la válvula no detecta (img_07).
+- **La imagen no cambió ningún veredicto final** en esta corrida: en img_04 e img_10 BETO también dijo urgente.
 
-Detalle caso por caso en [`eval_set/primera_corrida.json`](eval_set/primera_corrida.json). La calificación oficial con `calificar()` va en la sección 5.
+Detalle caso por caso en [`eval_set/primera_corrida.json`](eval_set/primera_corrida.json) y [`eval_set/corrida_img_09_img_10.json`](eval_set/corrida_img_09_img_10.json). La calificación oficial con `calificar()` va en la sección 5.
 
 ## 5 · Tabla de delta M3 vs M4 *(María Alejandra)*
 
@@ -130,8 +130,8 @@ Detalle caso por caso en [`eval_set/primera_corrida.json`](eval_set/primera_corr
 
 - **Sugiere, no diagnostica.** El sistema prioriza la fila de espera; la decisión de remitir es del enfermero o del médico. Ninguna salida es un diagnóstico, y la respuesta debe leerse junto con la evaluación directa del paciente.
 - **La válvula.** Si la foto está movida, es muy pequeña o casi uniforme, `ver()` devuelve `no_evaluable` y la respuesta lo dice; una foto no evaluable nunca cuenta como "no urgente". Su límite está medido: atrapa fotos degradadas (img_06), pero no detecta una imagen que no es piel (Camilo: 10/10 ruidos salieron `urgente`; en el sistema completo tampoco detectó la hoja de papel de img_07).
-- **Sesgo de tono de piel.** HAM10000 casi no tiene piel oscura y no trae el fototipo, así que no sabemos cómo se comporta `ver()` en pieles oscuras. No conseguimos una imagen de piel oscura con licencia compatible, así que este sesgo **no está medido**, no está descartado. El sistema no debería usarse con pacientes de piel oscura sin evaluarlo antes.
-- **Foto de celular ≠ dermatoscopia** *(nota de Camilo)*. HAM10000 son imágenes dermatoscópicas; el enfermero adjuntará fotos de celular, que son otra distribución. El modelo no se evaluó en ese caso.
-- **Falsos negativos.** `ver()` detectó 3 de 8 melanomas en su evaluación. Un melanoma que se escapa es el peor error posible en triage, y en el sistema completo pasó: img_05 salió no urgente. Por eso la regla del equipo hace que cualquier señal "urgente" gane, aunque eso escale benignos (img_02, img_03).
+- **Sesgo de tono de piel, medido a medias.** HAM10000 casi no tiene piel oscura, así que lo medimos con el ISIC Archive ([`eval_set/piel_oscura/`](eval_set/piel_oscura/README.md)). En lesiones benignas, `ver()` no da más falsas alarmas en piel oscura: 0 de 58, contra 8 de 58 en piel clara. Pero puntúa mucho más bajo en piel oscura (score medio 0.05 contra 0.22), lo que podría hacer que se le escape un cáncer, y eso no lo pudimos medir: hay solo 7 cánceres en piel oscura disponibles (detectó 4) y ninguno en dermatoscopia. El sesgo no está descartado; el sistema no debería usarse con pacientes de piel oscura sin una evaluación con más casos malignos.
+- **Foto de celular ≠ dermatoscopia** *(nota de Camilo)*. `ver()` se entrenó con dermatoscopias y el enfermero adjuntará fotos de celular. Medido con PAD-UFES-20: en fotos de celular de piel clara, `ver()` detectó solo 24 de 60 cánceres y queratosis actínicas (40 %). Es la limitación más grande del componente.
+- **Falsos negativos.** `ver()` detectó 3 de 8 melanomas en su evaluación. Un melanoma que se escapa es el peor error posible en triage, y en el sistema completo pasó: img_05 salió no urgente. Por eso la regla del equipo hace que cualquier señal "urgente" gane, aunque eso escale benignos (img_02, img_03, img_09).
 - **Descripciones inventadas.** En la primera corrida, el RAG describió detalles visuales de fotos que nunca vio (una "lesión rosada con grietas y sangrado" para una hoja de papel, img_07). El texto de justificación no debe leerse como una descripción de la foto.
-- **Datos y licencia.** Las imágenes son de HAM10000 (CC BY-NC 4.0, uso académico, con atribución en [`pipeline/eval_tool/ATRIBUCION.md`](pipeline/eval_tool/ATRIBUCION.md) y [`eval_set/README.md`](eval_set/README.md)) o generadas por el equipo. Las de HAM10000 son dermatoscopias sin rostros; la única imagen de un documento (img_07) es ficticia. Del metadato se omitieron edad y sexo. El repo no tiene datos personales de pacientes.
+- **Datos y licencia.** Las imágenes son de HAM10000 (CC BY-NC 4.0, uso académico), del ISIC Archive (CC BY 4.0: img_09 e img_10) o generadas por el equipo, con atribución en [`pipeline/eval_tool/ATRIBUCION.md`](pipeline/eval_tool/ATRIBUCION.md) y [`eval_set/README.md`](eval_set/README.md). Son dermatoscopias o primeros planos de la lesión, sin rostros; la única imagen de un documento (img_07) es ficticia. Del metadato se omitieron edad y sexo. El repo no tiene datos personales de pacientes.

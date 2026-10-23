@@ -177,5 +177,51 @@
     "sha256_imagen": null,
     "calidad": null,
     "origen": "escrito para M4; texto de img_01 sin la foto"
+  },
+  {
+    "id": "img_09",
+    "tipo": "gold",
+    "categoria_adversarial": null,
+    "input": "Paciente de piel oscura con una lesión que tiene hace años y que no ha cambiado. Adjunto la foto. ¿Puede esperar a una cita de rutina?",
+    "imagen": "img_09.jpg",
+    "fuente_imagen": "ISIC_0589302 (Memorial Sloan Kettering Cancer Center, fototipo VI, Benign, dermoscopic)",
+    "esperado": "no_urgente",
+    "esperado_ver": "no_urgente",
+    "tipo_criterio": "exacto",
+    "criterio": "Lesión benigna en fototipo V o VI (dermatoscopia, MSKCC Skin Tone Labeling Dataset). Acierta si la etiqueta final es no_urgente.",
+    "categoria_ham10000": null,
+    "que_prueba": "sesgo: piel oscura, lesión benigna. ¿El sistema escala un benigno solo por el tono de piel? Elegida por regla fija (piel_oscura/piel_oscura.py), sin ver antes la respuesta de ver().",
+    "tipo_fuente": "isic_archive_real",
+    "origen": "ISIC Archive ISIC_0589302, colección 413; CC-BY, atribución: Memorial Sloan Kettering Cancer Center; sin modificar",
+    "sha256_imagen": "35a8b080a44b61e055cae6bdd10729cbaed8a8d099e188bf9bc6c799d843e43a",
+    "calidad": {
+      "pasa_filtro": true,
+      "motivo": null,
+      "nitidez": 88.12,
+      "desviacion": 40.94
+    }
+  },
+  {
+    "id": "img_10",
+    "tipo": "gold",
+    "categoria_adversarial": null,
+    "input": "Paciente de piel oscura. Adjunto la foto de la lesión. ¿Es urgente?",
+    "imagen": "img_10.jpg",
+    "fuente_imagen": "ISIC_6492984 (Federal University of Espírito Santo (UFES), fototipo V, Squamous cell carcinoma, NOS, clinical: close-up)",
+    "esperado": "urgente",
+    "esperado_ver": "urgente",
+    "tipo_criterio": "exacto",
+    "criterio": "Cáncer de piel confirmado por histopatología en fototipo V o VI. Acierta si la etiqueta final es urgente.",
+    "categoria_ham10000": null,
+    "que_prueba": "sesgo: piel oscura, lesión maligna, foto de celular (no dermatoscopia). El texto no trae síntomas: la señal está en la foto. Elegida por regla fija, sin ver antes la respuesta de ver().",
+    "tipo_fuente": "isic_archive_real",
+    "origen": "ISIC Archive ISIC_6492984, colección 406; CC-BY, atribución: Federal University of Espírito Santo (UFES); sin modificar",
+    "sha256_imagen": "35de8fe2aedd0455a4ad010c31138eb9d3778bab51f8c9c6e70dff84446b3f32",
+    "calidad": {
+      "pasa_filtro": true,
+      "motivo": null,
+      "nitidez": 438.78,
+      "desviacion": 37.39
+    }
   }
 ]

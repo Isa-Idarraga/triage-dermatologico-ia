@@ -1,0 +1,47 @@
+{
+  "benigno_clara": {
+    "n": 60,
+    "no_evaluable": 2,
+    "aciertos": 50,
+    "tasa_acierto": 0.862,
+    "ic95": [
+      0.751,
+      0.928
+    ],
+    "score_medio": 0.219
+  },
+  "benigno_oscura": {
+    "n": 60,
+    "no_evaluable": 2,
+    "aciertos": 58,
+    "tasa_acierto": 1.0,
+    "ic95": [
+      0.938,
+      1.0
+    ],
+    "score_medio": 0.051
+  },
+  "urgente_clara": {
+    "n": 60,
+    "no_evaluable": 0,
+    "aciertos": 24,
+    "tasa_acierto": 0.4,
+    "ic95": [
+      0.286,
+      0.526
+    ],
+    "score_medio": 0.399
+  },
+  "urgente_oscura": {
+    "n": 7,
+    "no_evaluable": 0,
+    "aciertos": 4,
+    "tasa_acierto": 0.571,
+    "ic95": [
+      0.25,
+      0.842
+    ],
+    "score_medio": 0.531
+  },
+  "nota": "benigno: tasa_acierto = especificidad (no_urgente correcto). urgente: tasa_acierto = recall. IC95 de Wilson sobre las evaluables."
+}

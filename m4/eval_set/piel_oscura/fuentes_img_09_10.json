@@ -1,0 +1,24 @@
+{
+  "img_09.jpg": {
+    "isic_id": "ISIC_0589302",
+    "coleccion": 413,
+    "fototipo": "VI",
+    "diagnostico": "Benign",
+    "confirmacion": "single contributor clinical assessment",
+    "tipo_imagen": "dermoscopic",
+    "localizacion": null,
+    "licencia": "CC-BY",
+    "atribucion": "Memorial Sloan Kettering Cancer Center"
+  },
+  "img_10.jpg": {
+    "isic_id": "ISIC_6492984",
+    "coleccion": 406,
+    "fototipo": "V",
+    "diagnostico": "Squamous cell carcinoma, NOS",
+    "confirmacion": "histopathology",
+    "tipo_imagen": "clinical: close-up",
+    "localizacion": "Head and neck",
+    "licencia": "CC-BY",
+    "atribucion": "Federal University of Espírito Santo (UFES)"
+  }
+}

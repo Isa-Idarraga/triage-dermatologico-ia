@@ -256,8 +256,9 @@ def construir():
             continue
         ruta = DESTINO / nombre
         if caso["id"] == "img_06":
-            Image.open(ORIGEN / "ISIC_0029041.jpg").convert("RGB").filter(
-                ImageFilter.GaussianBlur(12)).save(ruta, quality=92)
+            if not ruta.is_file():  # no se regenera si ya existe: así el sha256 del repo no cambia
+                Image.open(ORIGEN / "ISIC_0029041.jpg").convert("RGB").filter(
+                    ImageFilter.GaussianBlur(12)).save(ruta, quality=92)
             caso["tipo_fuente"] = "derivada_de_ham10000"
             caso["origen"] = ORIGEN_HAM + "; modificada (desenfoque)"
         elif caso["id"] in ("img_09", "img_10"):
@@ -270,7 +271,8 @@ def construir():
             caso["origen"] = (f"ISIC Archive {fuente['isic_id']}, colección {fuente['coleccion']}; "
                               f"{fuente['licencia']}, atribución: {fuente['atribucion']}; sin modificar")
         elif caso["id"] == "img_07":
-            imagen_no_piel(ruta)
+            if not ruta.is_file():
+                imagen_no_piel(ruta)
             caso["tipo_fuente"] = "generada_por_el_equipo"
             caso["origen"] = "generada por m4/eval_set/construir_casos_imagen.py; sin datos personales"
         else:

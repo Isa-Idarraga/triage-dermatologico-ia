@@ -1,0 +1,188 @@
+grupo,tono,esperado,clase,score,motivo,isic_id,lesion_id,fototipo,diagnostico,confirmacion,tipo_imagen,localizacion,licencia,atribucion
+benigno,clara,no_urgente,no_urgente,0.0292,,ISIC_4573174,IL_0955498,II,Benign - Other,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.6192,,ISIC_5179578,IL_9931780,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.3097,,ISIC_0385306,IL_3200195,II,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0655,,ISIC_1927116,IL_1297368,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.3465,,ISIC_6904764,IL_8012041,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0498,,ISIC_9073352,IL_9678628,II,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0698,,ISIC_3840444,IL_2041556,I,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0045,,ISIC_6058406,IL_2366103,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.3126,,ISIC_7242143,IL_3038023,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.319,,ISIC_5941232,IL_9514073,II,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0314,,ISIC_3301558,IL_7347166,II,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0209,,ISIC_2050690,IL_0115789,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0005,,ISIC_6307397,IL_1239680,I,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0053,,ISIC_0769933,IL_7708545,I,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.6178,,ISIC_2586333,IL_4692745,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2319,,ISIC_9474279,IL_2815278,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.4087,,ISIC_9291424,IL_1223719,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0154,,ISIC_6994342,IL_4359684,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0373,,ISIC_1255764,IL_9537355,I,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0398,,ISIC_7284306,IL_1428414,I,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2929,,ISIC_4274161,IL_7737590,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0121,,ISIC_8892928,IL_4994205,I,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.4108,,ISIC_6655408,IL_5555657,I,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.5337,,ISIC_2628438,IL_9099444,I,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.5891,,ISIC_2569532,IL_7350065,I,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_evaluable,,imagen desenfocada,ISIC_8004465,IL_2058218,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0041,,ISIC_8800617,IL_6299460,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.5431,,ISIC_6407463,IL_1927895,I,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0898,,ISIC_4510345,IL_8464876,II,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_evaluable,,imagen desenfocada,ISIC_1413067,IL_2345384,I,Benign - Other,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.019,,ISIC_3026320,IL_5051225,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1133,,ISIC_9693090,IL_6041962,I,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0208,,ISIC_1271542,IL_5635988,I,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1425,,ISIC_2832700,IL_5577013,II,Benign - Other,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0486,,ISIC_0202306,IL_9480586,II,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2248,,ISIC_4018600,IL_6447245,I,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2562,,ISIC_3055219,IL_8595239,II,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2867,,ISIC_5759116,IL_2212840,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.3196,,ISIC_0696457,IL_6859844,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.26,,ISIC_4738259,IL_7825515,II,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0968,,ISIC_5179651,IL_5456577,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1658,,ISIC_1131088,IL_3684576,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1854,,ISIC_9472449,IL_3615301,I,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0638,,ISIC_1067447,IL_4043190,I,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.8704,,ISIC_7800747,IL_0724407,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1228,,ISIC_7258879,IL_2799825,II,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.3961,,ISIC_9707621,IL_1590292,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.409,,ISIC_1306278,IL_0964345,II,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2599,,ISIC_8889511,IL_2337570,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0009,,ISIC_9042731,IL_2050841,I,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.2071,,ISIC_6502138,IL_1468642,II,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1655,,ISIC_1123588,IL_0606037,II,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.3943,,ISIC_7293919,IL_9477227,I,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.561,,ISIC_3456619,IL_0310264,I,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1165,,ISIC_2832992,IL_7174779,II,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0826,,ISIC_6403421,IL_8927071,I,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0563,,ISIC_7520573,IL_0106469,I,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,urgente,0.6519,,ISIC_6230640,IL_3160322,II,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.0403,,ISIC_4925726,IL_9827163,I,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,clara,no_urgente,no_urgente,0.1726,,ISIC_3562476,IL_2791405,II,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+urgente,clara,urgente,no_urgente,0.2358,,ISIC_4334863,IL_1729026,II,Solar or actinic keratosis,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.3397,,ISIC_5051297,IL_0466998,II,Solar or actinic keratosis,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0419,,ISIC_3828990,IL_4525633,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.6501,,ISIC_6964511,IL_0909036,I,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.7833,,ISIC_5821556,IL_6073894,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0158,,ISIC_8953348,IL_2556939,II,Solar or actinic keratosis,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.6412,,ISIC_5775908,IL_5350979,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.7501,,ISIC_8769268,IL_2575531,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0334,,ISIC_0477844,IL_7681024,II,Solar or actinic keratosis,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8108,,ISIC_8466479,IL_1569626,I,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.5967,,ISIC_0100911,IL_6699343,II,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0154,,ISIC_7318550,IL_4132543,II,Solar or actinic keratosis,single image expert consensus,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.3057,,ISIC_2280654,IL_5043233,II,"Melanoma, NOS",histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.3263,,ISIC_9452889,IL_1030345,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0679,,ISIC_6144631,IL_1771989,II,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.2927,,ISIC_7890915,IL_8840889,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.1135,,ISIC_0593422,IL_5647202,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8662,,ISIC_3474969,IL_5328469,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.1161,,ISIC_3083543,IL_8996253,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8168,,ISIC_6544236,IL_1951091,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.1807,,ISIC_8100334,IL_9278828,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.7705,,ISIC_6947871,IL_5879600,II,Solar or actinic keratosis,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8335,,ISIC_7012242,IL_5932114,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.7762,,ISIC_1362936,IL_7392579,II,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0431,,ISIC_0551660,IL_2767214,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.123,,ISIC_4773123,IL_1243562,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.2208,,ISIC_6646914,IL_3506966,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0222,,ISIC_7049047,IL_4793770,I,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.013,,ISIC_0381852,IL_0047355,II,"Melanoma, NOS",histopathology,clinical: close-up,Lower extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.6966,,ISIC_1129315,IL_6691424,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0831,,ISIC_4852563,IL_0156862,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.1268,,ISIC_3915214,IL_4743877,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.5838,,ISIC_8864344,IL_9663995,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0857,,ISIC_9122078,IL_5183951,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.3194,,ISIC_3931469,IL_0576123,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.2179,,ISIC_8563463,IL_2908101,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.9315,,ISIC_2533257,IL_5457414,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0874,,ISIC_9006552,IL_4692253,II,Solar or actinic keratosis,single image expert consensus,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.767,,ISIC_2417403,IL_0317017,II,Solar or actinic keratosis,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.3759,,ISIC_2348598,IL_1069901,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.2317,,ISIC_6719026,IL_4028288,I,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.9637,,ISIC_9360522,IL_8799618,II,Solar or actinic keratosis,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.05,,ISIC_8392530,IL_4681932,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0951,,ISIC_1102161,IL_9353419,I,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.5968,,ISIC_0798312,IL_9689731,I,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.002,,ISIC_9210846,IL_4225374,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.2672,,ISIC_3415291,IL_6954022,I,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0284,,ISIC_5780775,IL_9390569,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.7799,,ISIC_7856707,IL_6490479,II,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.544,,ISIC_7687597,IL_8140914,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8066,,ISIC_7861305,IL_1028777,II,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.1935,,ISIC_8776158,IL_8982478,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8639,,ISIC_4474667,IL_0927674,I,Basal cell carcinoma,histopathology,clinical: close-up,Trunk,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.1613,,ISIC_1350278,IL_4018798,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Lower extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.716,,ISIC_7265705,IL_7423443,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.2402,,ISIC_2022973,IL_4023602,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.4707,,ISIC_4071379,IL_8320695,II,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8712,,ISIC_0257880,IL_7353159,II,Basal cell carcinoma,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,no_urgente,0.0792,,ISIC_9261130,IL_6890059,II,Solar or actinic keratosis,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,clara,urgente,urgente,0.8739,,ISIC_6055174,IL_0507476,II,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+benigno,oscura,no_urgente,no_urgente,0.0085,,ISIC_0589302,IL_9620664,VI,Benign,single contributor clinical assessment,dermoscopic,,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0025,,ISIC_9137382,IL_2859465,V,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.5264,,ISIC_0988480,IL_7082085,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0005,,ISIC_3056070,IL_8770009,VI,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0967,,ISIC_1121059,IL_8044129,V,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0497,,ISIC_3410225,IL_5215973,V,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0,,ISIC_0451949,IL_8267082,V,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.2417,,ISIC_0858469,IL_0084769,V,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0046,,ISIC_3906040,IL_3940334,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0259,,ISIC_0824335,IL_3501744,V,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0001,,ISIC_8697018,IL_5324743,V,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.2721,,ISIC_4337732,IL_6876377,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.1632,,ISIC_3951657,IL_2696182,VI,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0008,,ISIC_2094936,IL_4202097,V,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0012,,ISIC_6164982,IL_4670936,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0024,,ISIC_1792446,IL_8746394,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_evaluable,,imagen casi uniforme: no se ve ninguna lesión,ISIC_3736628,IL_3189284,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0004,,ISIC_1823696,IL_2341218,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0001,,ISIC_5702250,IL_0078060,VI,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0082,,ISIC_3175126,IL_0932119,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0,,ISIC_5464752,IL_4021233,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.1124,,ISIC_9712544,IL_2968633,VI,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.184,,ISIC_7709093,IL_2443785,V,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0,,ISIC_5590344,IL_8505083,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0909,,ISIC_2732540,IL_3645496,V,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0021,,ISIC_2361891,IL_0462259,V,Benign,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0087,,ISIC_3445219,IL_3539436,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0086,,ISIC_6846196,IL_4792048,V,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0147,,ISIC_3803126,IL_2190333,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.1149,,ISIC_2107732,IL_1143032,V,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0038,,ISIC_8575737,IL_6256364,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0211,,ISIC_3088716,IL_4605254,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.058,,ISIC_8726224,IL_5464097,VI,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_evaluable,,imagen casi uniforme: no se ve ninguna lesión,ISIC_7020171,IL_6635526,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0305,,ISIC_4378683,IL_8973729,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0204,,ISIC_0905296,IL_4350765,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.4092,,ISIC_0931615,IL_5783233,VI,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0021,,ISIC_7325558,IL_5220184,VI,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0016,,ISIC_0982166,IL_5076437,V,Benign - Other,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0201,,ISIC_5554282,IL_2384921,V,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0071,,ISIC_0310422,IL_4698386,V,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0569,,ISIC_5111679,IL_2492613,VI,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0326,,ISIC_6022815,IL_0579961,VI,Benign,single contributor clinical assessment,dermoscopic,Head and neck,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0115,,ISIC_7156041,IL_7241160,V,Benign - Other,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0056,,ISIC_1498936,IL_4692731,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0002,,ISIC_6750979,IL_3398153,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0003,,ISIC_0839729,IL_8197683,V,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0001,,ISIC_6721503,IL_9925148,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0174,,ISIC_5582764,IL_4349234,VI,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0008,,ISIC_0797171,IL_5673278,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0059,,ISIC_3103690,IL_4374970,VI,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0818,,ISIC_1019081,IL_4511794,VI,Benign,single contributor clinical assessment,dermoscopic,Lower extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0111,,ISIC_4161159,IL_5500816,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0984,,ISIC_9249796,IL_8122570,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0288,,ISIC_0876888,IL_6165797,V,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0004,,ISIC_1669931,IL_1105850,V,Benign,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0002,,ISIC_3959061,IL_0473733,V,Benign,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0,,ISIC_1826945,IL_2088359,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Trunk,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0396,,ISIC_0969795,IL_6257045,V,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+benigno,oscura,no_urgente,no_urgente,0.0352,,ISIC_3373662,IL_4299766,VI,Benign - Other,single contributor clinical assessment,dermoscopic,Upper extremity,CC-BY,Memorial Sloan Kettering Cancer Center
+urgente,oscura,urgente,urgente,0.8125,,ISIC_6492984,IL_3320939,V,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,oscura,urgente,no_urgente,0.0138,,ISIC_7796428,IL_8811201,V,Solar or actinic keratosis,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,oscura,urgente,urgente,0.8129,,ISIC_4676550,IL_5823260,V,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,oscura,urgente,no_urgente,0.2082,,ISIC_5903817,IL_3378293,V,Basal cell carcinoma,histopathology,clinical: close-up,Head and neck,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,oscura,urgente,urgente,0.6515,,ISIC_5598808,IL_6380422,V,"Squamous cell carcinoma, NOS",histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,oscura,urgente,urgente,0.7869,,ISIC_1048177,IL_3896597,V,Solar or actinic keratosis,histopathology,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
+urgente,oscura,urgente,no_urgente,0.4285,,ISIC_5707836,IL_0243549,V,Solar or actinic keratosis,single image expert consensus,clinical: close-up,Upper extremity,CC-BY,Federal University of Espírito Santo (UFES)
