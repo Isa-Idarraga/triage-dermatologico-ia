@@ -14,6 +14,8 @@ De dónde salen las imágenes
   una foto movida. Es la única imagen modificada; se dice en el CSV y en ATRIBUCION.
 - img_07: generada por este script (una hoja con texto, ficticia, sin datos personales).
   No es piel: prueba si la válvula de ver() detecta "esto no es una lesión".
+- img_09 e img_10: piel oscura (fototipo V o VI), del ISIC Archive con licencia CC BY.
+  Las baja piel_oscura/piel_oscura.py (necesita internet); este script solo las lee.
 
 Por qué se reusan imágenes del eval set de la tool
 No hay acceso a HAM10000 completo desde el equipo donde se armó esto. Las 40 ya están en
@@ -179,6 +181,41 @@ CASOS = [
         "que_prueba": "control: el mismo texto de img_01 sin foto. Sirve también para comparar la "
                       "respuesta con y sin imagen.",
     },
+    {
+        "id": "img_09",
+        "tipo": "gold",
+        "categoria_adversarial": None,
+        "input": "Paciente de piel oscura con una lesión que tiene hace años y que no ha cambiado. "
+                 "Adjunto la foto. ¿Puede esperar a una cita de rutina?",
+        "imagen": "img_09.jpg",
+        "fuente_imagen": "ISIC Archive, colección 413 (ver piel_oscura/fuentes_img_09_10.json)",
+        "esperado": "no_urgente",
+        "esperado_ver": "no_urgente",
+        "tipo_criterio": "exacto",
+        "criterio": "Lesión benigna en fototipo V o VI (dermatoscopia, MSKCC Skin Tone Labeling "
+                    "Dataset). Acierta si la etiqueta final es no_urgente.",
+        "categoria_ham10000": None,
+        "que_prueba": "sesgo: piel oscura, lesión benigna. ¿El sistema escala un benigno solo por el "
+                      "tono de piel? Elegida por regla fija (piel_oscura/piel_oscura.py), sin ver antes "
+                      "la respuesta de ver().",
+    },
+    {
+        "id": "img_10",
+        "tipo": "gold",
+        "categoria_adversarial": None,
+        "input": "Paciente de piel oscura. Adjunto la foto de la lesión. ¿Es urgente?",
+        "imagen": "img_10.jpg",
+        "fuente_imagen": "ISIC Archive, colección 406 PAD-UFES-20 (ver piel_oscura/fuentes_img_09_10.json)",
+        "esperado": "urgente",
+        "esperado_ver": "urgente",
+        "tipo_criterio": "exacto",
+        "criterio": "Cáncer de piel confirmado por histopatología en fototipo V o VI. Acierta si la "
+                    "etiqueta final es urgente.",
+        "categoria_ham10000": None,
+        "que_prueba": "sesgo: piel oscura, lesión maligna, foto de celular (no dermatoscopia). El texto "
+                      "no trae síntomas: la señal está en la foto. Elegida por regla fija, sin ver antes "
+                      "la respuesta de ver().",
+    },
 ]
 
 COLUMNAS_CSV = ["id", "tipo", "categoria_adversarial", "input", "imagen", "esperado", "tipo_criterio",
@@ -204,6 +241,10 @@ def imagen_no_piel(ruta):
     img.save(ruta, quality=92)
 
 
+FUENTES_PIEL = json.loads((AQUI / "piel_oscura" / "fuentes_img_09_10.json").read_text(encoding="utf-8")) \
+    if (AQUI / "piel_oscura" / "fuentes_img_09_10.json").is_file() else {}
+
+
 def construir():
     DESTINO.mkdir(exist_ok=True)
     cfg = ver.cargar_config()
@@ -219,6 +260,15 @@ def construir():
                 ImageFilter.GaussianBlur(12)).save(ruta, quality=92)
             caso["tipo_fuente"] = "derivada_de_ham10000"
             caso["origen"] = ORIGEN_HAM + "; modificada (desenfoque)"
+        elif caso["id"] in ("img_09", "img_10"):
+            fuente = FUENTES_PIEL[nombre]
+            if not ruta.is_file():
+                raise FileNotFoundError(f"Falta {ruta}: correr antes piel_oscura/piel_oscura.py casos")
+            caso["fuente_imagen"] = f"{fuente['isic_id']} ({fuente['atribucion']}, fototipo {fuente['fototipo']}, " \
+                                    f"{fuente['diagnostico']}, {fuente['tipo_imagen']})"
+            caso["tipo_fuente"] = "isic_archive_real"
+            caso["origen"] = (f"ISIC Archive {fuente['isic_id']}, colección {fuente['coleccion']}; "
+                              f"{fuente['licencia']}, atribución: {fuente['atribucion']}; sin modificar")
         elif caso["id"] == "img_07":
             imagen_no_piel(ruta)
             caso["tipo_fuente"] = "generada_por_el_equipo"

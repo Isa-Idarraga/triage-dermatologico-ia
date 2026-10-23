@@ -5,9 +5,10 @@ Primera corrida del eval set con imagen por sistema_multimodal (M4, Turno 3).
 Corre en Colab con GPU T4 (el sistema carga 4 modelos; no cabe en un portátil).
 Después de las celdas 1 y 2 de notebooks/M4_multimodal_colab.ipynb:
 
-    !python m4/eval_set/correr_casos_imagen.py
+    !python m4/eval_set/correr_casos_imagen.py                      # los 10 casos
+    !python m4/eval_set/correr_casos_imagen.py img_09 img_10        # solo algunos
 
-Escribe m4/eval_set/primera_corrida.json con, por caso: la respuesta, las tools
+Escribe m4/eval_set/primera_corrida.json (o corrida_<ids>.json si se pasan ids) con, por caso: la respuesta, las tools
 usadas, lo que dijo cada tool, el veredicto según la regla del equipo y la latencia.
 
 Esto NO es la calificación oficial. Sirve para confirmar que cada caso corre y para
@@ -47,6 +48,9 @@ def revision_preliminar(caso, salida, veredicto):
 
 def main():
     casos = json.loads((AQUI / "casos_imagen.json").read_text(encoding="utf-8"))
+    solo = sys.argv[1:]
+    if solo:
+        casos = [c for c in casos if c["id"] in solo]
     filas = []
     for caso in casos:
         imagen = str(AQUI / "imagenes" / caso["imagen"]) if caso["imagen"] else None
@@ -71,7 +75,7 @@ def main():
         print(f"{caso['id']}  esperado={caso['esperado']:<12} veredicto={veredicto}  "
               f"tools={salida['tools_usadas']}  ok={ok}  {latencia}s")
 
-    destino = AQUI / "primera_corrida.json"
+    destino = AQUI / ("corrida_" + "_".join(solo) + ".json" if solo else "primera_corrida.json")
     destino.write_text(json.dumps(filas, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"\nGuardado en {destino.relative_to(RAIZ)}")
 
