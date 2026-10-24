@@ -3,9 +3,9 @@
 Proyecto integrador SI4006 — Universidad EAFIT.
 
 Sistema de triage dermatológico asistido por IA: clasifica la descripción de
-síntomas de un paciente (y, a futuro, una foto de la lesión) en **urgente**
+síntomas de un paciente y, si la adjunta, la foto de la lesión, en **urgente**
 o **no urgente**, para apoyar la decisión de un enfermero/a de triage sobre
-si referir con prioridad a dermatología.
+si referir con prioridad a dermatología. El sistema sugiere; no diagnostica.
 
 ## Equipo
 - Isabella Idárraga — dataset y preprocesamiento
@@ -16,22 +16,40 @@ si referir con prioridad a dermatología.
 ## Estructura del repo
 
 ```
-docs/       -> plantilla de definición del proyecto + documento de M1 + comparación de resultados
-data/       -> corpus final (real + sintético) y datos crudos intermedios
-scripts/    -> todo el código de construcción del dataset, fine-tuning y evaluación
-notebooks/  -> notebook de entrega de M1 y notebooks de Kaggle/Colab usados durante el proyecto
-models/     -> checkpoints del fine-tuning con LoRA (adaptador BETO)
-results/    -> métricas de baseline, LoRA e hiperparámetros registrados
+docs/       -> plantilla del proyecto, documento de M1 y READMEs de M2 y M3
+data/       -> corpus final (real + sintético), corpus del RAG y datos intermedios
+scripts/    -> dataset, fine-tuning, harness de evaluación, RAG y agente
+eval/       -> eval sets de M2 y M3 y sus scorecards
+m4/         -> componente visual: pipeline, eval set con imágenes y README de M4
+notebooks/  -> notebooks de entrega y de Colab/Kaggle de cada módulo
+models/     -> adaptador LoRA de BETO
+results/    -> métricas y configuraciones registradas
 ```
 
-## Estado actual (M1 — completo)
+## Módulos
+
+| Módulo | Qué se construyó | Documentación |
+|---|---|---|
+| M1 | Clasificador de texto BETO + LoRA y dataset (real + sintético) | [comparacion_resultados.md](docs/comparacion_resultados.md) |
+| M2 | Harness de evaluación en 3 dimensiones, con juez LLM (Qwen2.5-3B) y análisis de sus sesgos | [M2_README.md](docs/M2_README.md) |
+| M3 | RAG (ingenuo e híbrido BM25 + denso) y agente con tool use, evaluado con RAGAS | [M3_README.md](docs/M3_README.md) |
+| M4 | Componente visual: tool `ver()` que clasifica la foto de la lesión (ViT + regresión logística, HAM10000), enchufada al agente de M3, y eval set con imágenes | [m4/README.md](m4/README.md) |
+
+Resultado principal de M3, sobre 37 casos nuevos: el agente (BETO + RAG híbrido) sube el
+recall en casos urgentes de 0.50 (BETO solo) a 0.70, todavía por debajo de la meta de 0.85.
+
+## Detalle de M1
 
 - **Modelo base elegido:** `dccuchile/bert-base-spanish-wwm-cased` (BETO).
   Justificación completa en `docs/M1_modelo_base_y_dataset.docx`, respaldada con
   evidencia empírica del tokenizador en `results/tokenizacion_beto-español.csv` y
   `results/tokenizacion_distilbert-multilingual.csv`.
 - **Dataset:** 136 ejemplos (10 reales verificados + 126 sintéticos
-  balanceados). Ver `data/README.md` para documentación completa "los 10 casos reales están redactados en lenguaje de reporte clínico especialista, mientras que los 126 sintéticos imitan el lenguaje de un paciente describiendo sus síntomas — solo estos últimos representan el tipo de texto que el sistema recibirá en producción; los reales sirven principalmente para anclar los criterios clínicos de clasificación.".
+  balanceados). Documentación completa en `data/README.md`. Los 10 casos reales
+  están redactados en lenguaje de reporte clínico especialista; los 126 sintéticos
+  imitan el lenguaje de un paciente describiendo sus síntomas. Solo estos últimos
+  representan el texto que el sistema recibirá en producción; los reales sirven
+  para anclar los criterios clínicos de clasificación.
 - **Fine-tuning con LoRA:** completo. Adaptador entrenado en `models/lora-triage/`,
   hiperparámetros registrados en `results/lora_config.json`.
 - **Baseline y métricas:** comparación honesta baseline vs. LoRA en

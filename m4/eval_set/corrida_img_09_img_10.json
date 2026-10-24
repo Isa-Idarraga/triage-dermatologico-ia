@@ -1,0 +1,56 @@
+[
+  {
+    "id": "img_09",
+    "esperado": "no_urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": false,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "no_urgente",
+        "score": 0.0085,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.9837
+      },
+      "buscar_informacion_dermatologica": {
+        "etiqueta": "no_urgente"
+      }
+    },
+    "respuesta": "Las señales no coincidieron (ver_imagen='no_urgente', clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: El paciente tiene una lesión que ha estado presente durante años y no ha cambiado, lo cual indica que es probable que sea una lesión benigna. Según el protocolo interno del equipo [eq_01_protocolo_urgencia_equipo], las lesiones que han permanecido estáticas durante mucho tiempo generalmente son consideradas benignas. Además, el estudio de la NCI [nci_03_lunares_nevos_displasicos] sugiere que las lesiones de piel oscura pueden tener un mayor riesgo de ser avanzadas, lo que aumentaría la urgencia si fuera una lesión maligna. Sin embargo, dado que la lesión no parece haber cambiado y no presenta signos de alarma, puede ser consider",
+    "latencia_s": 71.82
+  },
+  {
+    "id": "img_10",
+    "esperado": "urgente",
+    "tipo_criterio": "exacto",
+    "veredicto_regla": "urgente",
+    "revision_preliminar": true,
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto"
+    ],
+    "senales": {
+      "ver_imagen": {
+        "etiqueta": "urgente",
+        "score": 0.8125,
+        "no_evaluable": false,
+        "motivo_no_evaluable": null
+      },
+      "clasificador_beto": {
+        "etiqueta": "urgente",
+        "confianza": 0.938
+      }
+    },
+    "respuesta": "Según el clasificador del sistema, este caso se considera 'urgente' (confianza 0.938). No fue posible ampliar la justificación con la búsqueda de evidencia médica.",
+    "latencia_s": 14.02
+  }
+]

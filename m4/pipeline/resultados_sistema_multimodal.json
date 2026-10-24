@@ -1,0 +1,35 @@
+{
+  "imagen_usada": "m4/pipeline/eval_tool/imagenes/ISIC_0024876.jpg",
+  "imagen_etiqueta_real": "no_urgente (nv, confirmado por biopsia -- ver m4/pipeline/eval_tool/manifiesto.csv)",
+  "sin_foto": {
+    "pregunta": "Tengo un lunar que me cambió de color y de forma en los últimos meses.",
+    "tools_usadas": [
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "respuesta": "URGENCIA: urgente\nJUSTIFICACIÓN: El lunar ha cambiado de color y forma, lo que indica un posible cambio hacia un melanoma. Según el contexto proporcionado por la CDC, cualquier cambio en la piel debe ser evaluado por un médico rápidamente.\nFUENTES: [cdc_01_sintomas_cancer_piel], [nci_03_lunares_nevos_displasicos]",
+    "latencia_s_corrida_fria": 162.0373,
+    "latencia_s_corrida_caliente_corrida1": 14.02,
+    "latencia_s_corrida_caliente_corrida2": 13.37,
+    "nota_latencia": "Corrida fria = primera llamada de una sesion de Colab realmente nueva (Desconectar y eliminar entorno de ejecucion antes de correr), incluye cargar los 3-4 modelos desde cero (~160s de arranque, no de inferencia). Las dos corridas calientes (sesiones distintas, mismo resultado ~13-14s) confirman que el numero es estable y es el comparable contra 'con_foto' abajo, no la corrida fria."
+  },
+  "con_foto": {
+    "pregunta": "Le adjunto una foto de la lesión, ¿debería verla pronto?",
+    "tools_usadas": [
+      "ver_imagen",
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "respuesta": "Las señales no coincidieron (ver_imagen='no_urgente', clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.\n\nDetalle de la búsqueda de evidencia: URGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta no proporciona detalles específicos sobre la lesión ni descripción clínica detallada. Sin más información, no puedo determinar si la lesión es benigna o precaria. El protocolo interno menciona patrones típicos de lesiones premalignas como queratosis actinica y carcinoma basocelular, pero no especifica cuándo debe ser vista. Por lo tanto, la lesión parece estar en un rango medio entre benigna y pre-maligna, lo que hace difícil determinar si es urgente o no.\nFUENTES: [eq_01_protocolo_urgencia_equipo], [cdc_01_sintomas_cancer_piel]",
+    "detalle_ver_imagen": {
+      "herramienta": "ver_imagen",
+      "etiqueta": "no_urgente",
+      "score": 0.1565,
+      "no_evaluable": false,
+      "motivo_no_evaluable": null
+    },
+    "latencia_s": 21.8397
+  },
+  "verificacion_colab_limpio": "Confirmado: corrida con 'Desconectar y eliminar entorno de ejecucion' antes de ejecutar, no una sesion reciclada -- el arranque en frio de 162s (carga de los 4 modelos) es la evidencia de que fue una VM nueva.",
+  "lectura": "ver_imagen y el RAG acertaron (no_urgente, coincide con la etiqueta real); solo clasificador_beto forzo 'urgente' sin tener descripcion real del sintoma en el texto. La regla de seguridad (si cualquiera dice urgente, gana urgente) escalo un caso benigno -- ver m4/README.md seccion 3 para la lectura completa."
+}
