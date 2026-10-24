@@ -495,7 +495,12 @@ def agente(pregunta: str, imagen=None) -> dict:
             continue
 
         if decision["accion"] == "responder_final":
-            return _armar_resultado(decision["respuesta"], resultados_tools, tools_usadas, pasos_debug)
+            respuesta = decision["respuesta"]
+            v = resultados_tools.get("ver_imagen")
+            if v and v.get("no_evaluable"):
+                respuesta += ("\n\nAviso sobre la foto: no se pudo evaluar automáticamente "
+                      f"({v.get('motivo_no_evaluable')}). Esto NO equivale a 'no urgente'.")
+            return _armar_resultado(respuesta, resultados_tools, tools_usadas, pasos_debug)
 
         # accion == "usar_herramienta" a partir de aquí
         nombre = decision["herramienta"]
