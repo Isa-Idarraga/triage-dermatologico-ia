@@ -395,6 +395,14 @@ def _resumir_para_historial(resultado: dict) -> dict:
     return {k: resultado[k] for k in claves_relevantes if k in resultado}
 
 
+def _aviso_foto(resultados_tools: dict) -> str:
+    v = resultados_tools.get("ver_imagen")
+    if v and v.get("no_evaluable"):
+        return ("\n\nAviso sobre la foto: no se pudo evaluar automáticamente "
+                f"({v.get('motivo_no_evaluable')}). Esto NO equivale a 'no urgente'.")
+    return ""
+
+
 def _sintetizar_respuesta_final(resultados_tools: dict) -> str:
     """Arma la respuesta final aplicando la regla de seguridad del equipo,
     SIN depender de que el modelo la escriba bien -- ver el comentario en
@@ -415,6 +423,10 @@ def _sintetizar_respuesta_final(resultados_tools: dict) -> str:
     no que el sistema la miró y la consideró benigna.
     """
     etiquetas = [r["etiqueta"] for r in resultados_tools.values() if r.get("etiqueta")]
+    if not etiquetas:
+        # Ninguna herramienta dio señal: no se puede afirmar "no urgente".
+        return ("SIN SEÑAL: ninguna herramienta pudo dar un veredicto; "
+                "se recomienda revisión manual." + _aviso_foto(resultados_tools))
     veredicto = "urgente" if "urgente" in etiquetas else "no_urgente"
     respuesta_rag = resultados_tools.get("buscar_informacion_dermatologica", {}).get("respuesta")
 
@@ -495,11 +507,13 @@ def agente(pregunta: str, imagen=None) -> dict:
             continue
 
         if decision["accion"] == "responder_final":
-            respuesta = decision["respuesta"]
-            v = resultados_tools.get("ver_imagen")
-            if v and v.get("no_evaluable"):
-                respuesta += ("\n\nAviso sobre la foto: no se pudo evaluar automáticamente "
-                      f"({v.get('motivo_no_evaluable')}). Esto NO equivale a 'no urgente'.")
+            # El texto libre del cerebro puede contradecir la regla de seguridad:
+            # el cierre usa la misma síntesis que las demás rutas.
+            if resultados_tools:
+                respuesta = _sintetizar_respuesta_final(resultados_tools)
+            else:
+                respuesta = decision["respuesta"]
+            pasos_debug.append({"cierre": "responder_final"})
             return _armar_resultado(respuesta, resultados_tools, tools_usadas, pasos_debug)
 
         # accion == "usar_herramienta" a partir de aquí

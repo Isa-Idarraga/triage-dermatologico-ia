@@ -137,7 +137,7 @@ def correr(nombre, limite=None):
         latencia = round(time.perf_counter() - t0, 2)
 
         etq = etiqueta_final(r)
-        salida = {**r, "etiqueta_predicha": etq or "no_urgente"}
+        salida = {**r, "etiqueta_predicha": etq or "sin_senal"}
         d1 = metrica_clasica(c, salida)
         det = r.get("detalle_tools", {})
         ver = det.get("ver_imagen", {})
