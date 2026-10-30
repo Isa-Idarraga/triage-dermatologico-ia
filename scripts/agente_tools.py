@@ -534,6 +534,7 @@ def agente(pregunta: str, imagen=None) -> dict:
         # esperando que el modelo entienda la indirecta.
         if nombre in resultados_tools:
             if len(resultados_tools) >= len(herramientas):
+                pasos_debug.append({"cierre": "sintesis_por_repeticion"})
                 return _armar_resultado(
                     _sintetizar_respuesta_final(resultados_tools), resultados_tools,
                     tools_usadas, pasos_debug,
@@ -566,10 +567,12 @@ def agente(pregunta: str, imagen=None) -> dict:
     # vez de rendirse -- el mensaje genérico de "revisión manual" queda solo para
     # el caso de verdad vacío (por ejemplo, si todas las herramientas fallaron).
     if resultados_tools:
+        pasos_debug.append({"cierre": "sintesis_pasos_agotados"})
         return _armar_resultado(
             _sintetizar_respuesta_final(resultados_tools), resultados_tools,
             tools_usadas, pasos_debug,
         )
+    pasos_debug.append({"cierre": "sin_conclusion"})
     return _armar_resultado(
         "No se llegó a una conclusión clara dentro del número de pasos permitido; "
         "se recomienda revisión manual.",
