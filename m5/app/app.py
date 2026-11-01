@@ -153,9 +153,12 @@ def consultar(sintoma, foto):
     )
 
 
+_TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
+
+
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico -- M5") as demo:
-        gr.Markdown(f"# Triage dermatológico\nVersión: `{_version_tag()}` · sugiere, no diagnostica")
+    with gr.Blocks(title="Triage dermatológico -- M5", theme=_TEMA) as demo:
+        gr.Markdown(f"# 🩺 Triage dermatológico\nVersión: `{_version_tag()}` · sugiere, no diagnostica")
         with gr.Row():
             sintoma = gr.Textbox(
                 label="Síntoma del paciente", lines=3,

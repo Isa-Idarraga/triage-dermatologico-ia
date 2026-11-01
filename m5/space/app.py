@@ -40,10 +40,13 @@ def mostrar_caso(caso_id):
     )
 
 
+_TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
+
+
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico -- vitrina") as demo:
+    with gr.Blocks(title="Triage dermatológico -- vitrina", theme=_TEMA) as demo:
         gr.Markdown(
-            "# Triage dermatológico -- vitrina\n"
+            "# 🩺 Triage dermatológico -- vitrina\n"
             "Esta página muestra **casos ya corridos** en GPU T4 (no corre los modelos "
             "aquí, esta máquina es CPU). Para probar el sistema en vivo con tu propio "
             "síntoma y foto, usa el link de la demo del jueves (Gradio sobre Kaggle T4)."
