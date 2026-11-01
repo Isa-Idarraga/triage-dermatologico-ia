@@ -10,4 +10,4 @@ chromadb>=0.5
 pyyaml>=6.0
 rank-bm25>=0.2.2
 pillow>=10.0
-gradio>=5.7.1
+gradio==5.27.0
