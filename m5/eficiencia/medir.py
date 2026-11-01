@@ -83,6 +83,16 @@ def medir(config, limite=None):
     h.calentar()
     import agente_tools
     import rag_ingenuo
+    # El calentamiento solo carga lo que el cerebro decida usar. Con el cerebro a 4 bits se vio que no
+    # llamó ninguna herramienta, y los otros modelos se cargaron dentro del primer caso medido.
+    # Se fuerza la carga de todo aquí, para que latencia y memoria no dependan de eso.
+    pregunta = "Tengo un lunar que cambió de color."
+    foto = os.path.join(h.CARPETA_IMAGENES, next(c["imagen"] for c in h.cargar(h.CASOS_IMAGEN) if c.get("imagen")))
+    agente_tools.tool_clasificador_beto(pregunta)
+    agente_tools.tool_buscar_informacion_dermatologica(pregunta)
+    agente_tools.tool_ver_imagen(pregunta, foto)
+    if agente_tools._modelo_agente is None or rag_ingenuo._gen_model is None:
+        sys.exit("El cerebro o el generador no quedaron cargados; no se puede medir.")
     torch.cuda.synchronize()
     tras_carga = torch.cuda.memory_allocated()
     torch.cuda.reset_peak_memory_stats()
@@ -138,7 +148,7 @@ def tabla():
     if not filas:
         sys.exit("No hay mediciones en m5/eficiencia/.")
     L = ["| Config | Exactos con foto (n=7) | Recall urgentes (n=37 casos) | sin_senal (de 57) | Latencia p50 / p95 (s, n=57) "
-         "| GPU tras cargar / pico (GB) | Cerebro: dtype, guardado (GB) | Generador: dtype, guardado (GB) | ¿Cumple la regla? |",
+         "| GPU tras cargar / pico (GiB) | Cerebro: dtype, guardado (GiB) | Generador: dtype, guardado (GiB) | ¿Cumple la regla? |",
          "|---|---|---|---|---|---|---|---|---|"]
     for f in filas:
         m, lat = f["m"], f["m"]["latencia_todas_las_corridas"]
