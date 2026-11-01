@@ -103,7 +103,19 @@ def _bloque_foto(resultado, hay_foto):
         return f"### Foto\n⚠️ No evaluable ({v.get('motivo_no_evaluable')}). Esto **no** equivale a 'no urgente'."
     score = v.get("score")
     score_txt = f"{score:.3f}" if isinstance(score, (int, float)) else "n/d"
-    return f"### Foto\nClase: **{v.get('etiqueta')}** · score {score_txt} · calidad: {v.get('calidad', 'n/d')}"
+    return (f"### Foto\nClase: **{v.get('etiqueta')}** · score {score_txt} "
+            f"· calidad: {_formatear_calidad(v.get('calidad'))}")
+
+
+def _formatear_calidad(calidad):
+    """calidad llega como dict (ej. {'nitidez': 27.24, 'desviacion': 18.33}) desde
+    ver.py -- se muestra redondeado y legible en vez del repr crudo del dict."""
+    if isinstance(calidad, dict):
+        return " · ".join(f"{k} {v:.1f}" if isinstance(v, (int, float)) else f"{k} {v}"
+                           for k, v in calidad.items())
+    if isinstance(calidad, (int, float)):
+        return f"{calidad:.2f}"
+    return calidad or "n/d"
 
 
 def _bloque_evidencia(resultado, hay_foto):
