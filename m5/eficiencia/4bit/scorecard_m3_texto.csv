@@ -1,0 +1,142 @@
+corrida,id,tipo,categoria_adversarial,categoria_ham10000,esperado,tipo_criterio,hay_foto,etiqueta_predicha,senal_disponible,acierto_d1,puntaje_criterio,etiqueta_ver,score_ver,ver_no_evaluable,etiqueta_beto,confianza_beto,etiqueta_rag,tools_usadas,ruta_cierre,latencia_s,respuesta
+m3_texto,m3_g01,gold,,mel,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9904,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.5,"URGENCIA: urgente
+JUSTIFICACIÓN: El cambio en el color y el tamaño de la peca, junto con el hecho de que ha aumentado significativamente, sugiere una posibilidad de melanoma. Las características mencionadas (como el cambio en la forma, el color, el borde irregular, etc.) coinciden con los signos de alerta del melanoma descritos en el contexto.
+FUENTES: [nci_03_lunares_nevos_displasicos], [wiki_02_lentigo_solar]"
+m3_texto,m3_g02,gold,,mel,urgente,exacto,False,urgente,True,True,1.0,,,,no_urgente,0.8242,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.61,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: urgente
+JUSTIFICACIÓN: El cuadro médico menciona cambios en la forma, el color, el tamaño, y la evolución rápida de un melanoma. La consulta indica un cambio en la forma de la uña del dedo gordo del pie, que podría ser un signo de alarma relacionado con un melanoma. Además, el melanoma puede evoluir rápidamente, por lo que es importante realizar un examen visual para confirmar si hay otros signos de alarma, como un aumento en el tamaño o en la profundidad de la uña.
+FUENTES: [nci_03_lunares_nevos_displasicos], [cdc_01_sintomas_cancer_piel]"
+m3_texto,m3_g03,gold,,mel,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9652,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,14.4,"Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: 
+El nevo displásico mencionado en el contexto parece ser una descripción de un lunar común, que generalmente no requiere atención médica inmediata. Sin signos de alarma como dolor, cambios en la forma, textura o color, esta situación no parece urgente. Además, el nevo displásico no incluye cambios como picazón, sangrado o dureza, lo que también minimiza la urgencia. Por lo tanto, aunque puede ser interesante para consultar a un dermatólogo, no parece necesario remitirlo con urgencia."
+m3_texto,m3_g04,gold,,mel,urgente,exacto,False,urgente,True,True,1.0,,,,no_urgente,0.9145,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,12.3,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_aplica
+JUSTIFICACIÓN: La consulta no describe una lesión o cambio de la piel. No trae datos suficientes para decidir si el caso debe ser remitido con prioridad a dermatología (urgente) o si se puede agendar como cita de rutina (no_urgente).
+FUENTES: [wiki_04_angioma_en_cereza], [eq_01_protocolo_urgencia_equipo]"
+m3_texto,m3_g05,gold,,mel,urgente,exacto,False,no_urgente,True,False,0.0,,,,no_urgente,0.7064,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.68,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El texto no menciona cambios significativos en la piel o signos de alarma que puedan indicar un cáncer de piel o una lesión premaligna. Solo se refiere a nuevos lunares en un área ya afectada por lunares anteriores, lo cual es considerado normal según la información proporcionada.
+FUENTES: [nci_03_lunares_nevos_displasicos] (NCI, 2022-11-17, autoridad: alto)"
+m3_texto,m3_g06,gold,,mel,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9925,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,14.21,"URGENCIA: urgente
+JUSTIFICACIÓN: La mancha en la pierna muestra varios signos de alarma relacionados con melanoma, como su cambio de color, su diámetro creciente, y la aparición de una parte diferente de color (azul grisácea).
+FUENTES: [nci_02_cancer_piel_no_melanoma_pdq], [nci_03_lunares_nevos_displasicos]
+NOTA: Esta consulta no especifica una lesión o cambio de la piel, por lo que no puede ser considerada como una consulta de rutina."
+m3_texto,m3_g07,gold,,mel,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9991,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.1,"URGENCIA: urgente
+JUSTIFICACIÓN: La mancha ha aumentado en tamaño y presenta bordes irregular, lo que sugiere una posible evolución, lo que puede indicar un melanoma. Además, el cambio en color podría ser un signo de alarma.
+FUENTES: [cdc_01_sintomas_cancer_piel], [nci_03_lunares_nevos_displasicos]
+NOTA: Aunque hay otros síntomas mencionados en el contexto, como el cambio en color, no se han especificado todos ellos. Por lo tanto, aunque hay signos de alarma, no se pueden confirmar definitivamente si es un melanoma."
+m3_texto,m3_g08,gold,,bcc,urgente,exacto,False,no_urgente,True,False,0.0,,,,no_urgente,0.8126,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.0,"URGENCIA: no_urgente
+JUSTIFICACIÓN: La consulta no describe una lesión o cambio de piel. Se trata de una herida en la nariz que se hace costra, se cae, vuelve a sangrar y ha persistido por 4 meses. Esta situación no parece indicar signos de alarma relacionados con cáncer de piel o lesiones premalignas. Sin embargo, dado que la lesión persiste y se manifiesta regularmente, podría considerarse como una lesión de rutina que requiere seguimiento médico.
+FUENTES: [wiki_04_angioma_en_cereza], [cdc_01_sintomas_cancer_piel]"
+m3_texto,m3_g09,gold,,bcc,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.6767,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,18.12,"URGENCIA: urgente
+JUSTIFICACIÓN: El cuadro clínico menciona manchas en la piel menores de un centímetro de diámetro que varían en color, desde marrón claro a rojo o incluso negro, y se localizan en áreas expuestas al sol. Además, la consulta indica que la mancha es brillante, como perlada, y tiene venitas finitas encima. Estos síntomas sugieren una posible lesión premaligna, lo cual puede ser un signo de alarma relacionado con cáncer de piel. Por lo tanto, esta consulta debe ser remitida con urgencia a dermatología para realizar una evaluación más detallada.
+FUENTES: [wiki_02_lentigo_solar], [eq_01"
+m3_texto,m3_g10,gold,,bcc,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9349,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.87,"URGENCIA: no_determinable
+JUSTIFICACIÓN: El contexto no proporciona detalles sobre signos de alarma o cambios en la piel que puedan indicar un cáncer de piel. Solo menciona una cicatriz blanca en el cachete que no parece haber sido cortada, pero no hay información sobre otros cambios en la piel o signos de alarma.
+FUENTES: [wiki_04_angioma_en_cereza], [nci_02_cancer_piel_no_melanoma_pdq], [cdc_01_sintomas_cancer_piel]"
+m3_texto,m3_g11,gold,,bcc,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.5758,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.34,"Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: El texto menciona una protuberancia brillante, una llaga que no sana y tiene costras o sangra, lo cual podría ser un signo de alarma relacionado con un cáncer de piel. Sin embargo, no se mencionan cambios en la piel que puedan indicar una lesión premaligna. Además, el texto no especifica si la lesión está expuesta al sol o no, lo que implica que no se trata de una queratosis actínica. Por lo tanto, aunque hay signos de alarma, no se consideran urgentes debido a la falta de evidencia clínica específica para un cáncer de piel.
+FUENTES: [cdc_01_sintomas_cancer_piel],"
+m3_texto,m3_g12,gold,,,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.981,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.47,"URGENCIA: urgente
+JUSTIFICACIÓN: El carcinoma de células escamosas se caracteriza por una protuberancia firme roja o del color de la piel, mientras que el bulto duro y rojo en la oreja de tu abuelo podría ser un signo de advertencia de un posible cáncer de piel. Los signos de advertencia mencionados en el contexto incluyen cambios de tamaño, forma o color, así como la aparición de bordes irregulars, múltiples colores, asimetría y dolor. Además, el hecho de que tu abuelo tenga un bulto recién surgido hace poco también aumenta la preocupación.
+FUENTES: [nci_01_melanoma_pdq], [cdc_01_sint"
+m3_texto,m3_g13,gold,,akiec,urgente,exacto,False,no_urgente,True,False,0.0,,,,no_urgente,0.7308,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.03,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El texto no describe una lesión o cambio de piel visible. No menciona signos de alarma como cambios en color, tamaño, forma o área de la lesión. Además, no proporciona información sobre su ubicación, duración o evolución. No se trata de una lesión cancerosa o pre-cancérea. 
+FUENTES: [nci_03_lunares_nevos_displasicos], [cdc_01_sintomas_cancer_piel]"
+m3_texto,m3_g14,gold,,akiec,urgente,exacto,False,no_urgente,True,False,0.0,,,,no_urgente,0.9514,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.19,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El contexto indica que las escamosas de piel pueden ser causadas por exposición al sol, pero no especifica una lesión específica. Además, la consulta no menciona cambios en la piel significativos o signos de alarma.
+FUENTES: [nci_02_cancer_piel_no_melanoma_pdq], [nci_03_lunares_nevos_displasicos], [wiki_02_lentigo_solar]"
+m3_texto,m3_g15,gold,,,urgente,exacto,False,urgente,True,True,1.0,,,,no_urgente,0.5405,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.76,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: urgente
+JUSTIFICACIÓN: Los costras que sangran y no se curan describen signos de alarma relacionados con cáncer de piel, específicamente un melanoma. Según el contexto proporcionado, estos síntomas deben ser evaluados por un dermatólogo inmediatamente debido a su alta posibilidad de ser causados por un tumor cutáneo maligno.
+FUENTES: [nci_02_cancer_piel_no_melanoma_pdq], [nci_03_lunares_nevos_displasicos]"
+m3_texto,m3_g16,gold,,,urgente,exacto,False,urgente,True,True,1.0,,,,no_urgente,0.784,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,14.13,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: urgente
+JUSTIFICACIÓN: El melanoma presentado en el contexto muestra características clínicas sospechosas de ser una lesión maligna, específicamente una melanoma. Los signos mencionados incluyen formas irregular, bordes dentados, colores desparejos y evoluciones recientes. Estos síntomas son preocupantes y deben ser evaluados por un profesional de la salud rápidamente.
+FUENTES: [cdc_01_sintomas_cancer_piel], [nci_05_carcinoma_celulas_merkel_pdq]"
+m3_texto,m3_g17,gold,,,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9934,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.55,"URGENCIA: urgente
+JUSTIFICACIÓN: El melanoma describido en el contexto presenta signos de advertencia como una protuberancia firme roja o del color de la piel, una sección de piel escamosa o una llaga abierta que sangra. Además, el tumor ha crecido rápidamente en solo dos semanas, lo que indica una alta probabilidad de ser un melanoma.
+FUENTES: [cdc_01_sintomas_cancer_piel], [wiki_01_queratosis_seborrheica]"
+m3_texto,m3_g18,gold,,bkl,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.9702,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.04,"URGENCIA: no_urgente
+JUSTIFICACIÓN: Los signos presentados en el contexto no indican cambios significativos en la piel que puedan ser considerados como signos de alarma relacionados con cáncer de piel o lesiones premalignas. Las manchas presentadas tienen características similares a las de lentigenda solar, pero no especifican cambios específicos que podrían sugerir un cáncer. Además, la consulta no menciona cambios en la forma, tamaño o color de estas manchas, lo cual sería necesario para determinar si hay algún signo de alarma.
+FUENTES: [wiki_02_lentigo_solar], [nci_03_lunares_nevos_displasicos], [nci_05_carcinoma_celulas_merk"
+m3_texto,m3_g19,gold,,bkl,no_urgente,exacto,False,urgente,True,False,0.0,,,,urgente,0.9611,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.37,"Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: La consulta no describe signos de alarma que el contexto asocia con cáncer de piel o lesiones premalignas. La consulta menciona una verruga café pegada en la sien que ha existido durante 10 años, pero no describe cambios, dolor, sangrado o otros signos de alarma típicos de un cáncer de piel. Además, la consulta no indica cambios en la forma, color, diámetro o borde de la verruga, lo que impide considerarla como una lesión pre-maligna. Por lo tanto, no hay evidencia clara de necesidad de urgencia médica, por lo que se puede considerar una cita de rutina.
+
+FUENTES: [nci_03_l"
+m3_texto,m3_g20,gold,,bkl,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.9994,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,14.82,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El cuadro clínico indica manchas pequeñas en la piel, pero no menciona cambios significativos o signos de alarma. Además, la consulta no especifica cambios en la piel o signos de alarma, por lo que no hay evidencia clara de cáncer de piel o lesiones premalignas. Sin embargo, la consulta también menciona que la consulta es sobre manchas en la piel, lo cual puede ser relevante para dermatología.
+FUENTES: [wiki_02_lentigo_solar], [nci_02_cancer_piel_no_melanoma_pdq]"
+m3_texto,m3_g21,gold,,df,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.9837,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,14.32,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El texto no menciona signos de alarma como erupción cutánea, fiebre, dolor intenso, etc., ni presenta cambios significativos en la piel. Además, el texto no indica cualquier alteración en la salud general o en otros lugares del cuerpo. Por tanto, no hay evidencia clara de necesidad de atención médica inmediata, por lo que se considera una consulta de rutina.
+FUENTES: [wiki_03_dermatofibroma], [nci_02_cancer_piel_no_melanoma_pdq]"
+m3_texto,m3_g22,gold,,vasc,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.9712,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.27,"URGENCIA: no_urgente
+JUSTIFICACIÓN: Los puntos rojos brillantes describidos en el contexto no presentan signos de alarma que permitieran considerar un posible cáncer de piel o una lesión premaligna. Están descritos como pequeños puntitos en áreas expuestas a la luz solar, no cambian de tamaño, forma o color, no tienen bordes irregulars, no producen picazón, no tienen más de un color, no son asimétricos y no causan dolor. Además, no mencionan signos de alarma específicos como sangrado o picazón. Sin embargo, deben ser observados por un profesional de la salud para confirmar su naturaleza.
+FUENTES: [nci_02_cancer_piel_no_melanoma"
+m3_texto,m3_g23,gold,,vasc,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.6358,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.29,"URGENCIA: no_urgente
+JUSTIFICACIÓN: Los puntos rojos descritos por la consulta no parecen ser signos de alarma relacionados con cáncer de piel según el contexto proporcionado. Se trata de un simple hematoma o hemangioma localizado, que puede deberse a factores hormonales durante el embarazo. Sin embargo, dado que la consulta menciona haberleído sobre cáncer de piel, sería prudente seguir vigilando cualquier cambio en su condición. En caso de persistencia o cambios, se recomendaría consultar a un médico para realizar una evaluación completa.
+FUENTES: [nci_02_cancer_piel_no_melanoma_pdq]"
+m3_texto,m3_g24,gold,,nv,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.7514,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.47,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El contexto indica que los lunares deben ser observados por un médico si cambian o evoluciona, pero no proporciona evidencia de que estos lunares estén cambiando o evolucionando. Además, la consulta no menciona cambios en la piel o signos de alarma, por lo que no hay motivos para considerar la consulta urgente.
+FUENTES: [nci_03_lunares_nevos_displasicos], [nci_01_melanoma_pdq]"
+m3_texto,m3_g25,gold,,nv,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.6221,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,12.8,"URGENCIA: no_urgente
+JUSTIFICACIÓN: Los lunares son comúnmente presentados en niños, especialmente en la edad de 7 años. Sin cambios significativos como evolución rápida, cambio de color o forma, estos lunares pueden considerarse normales. Además, el crecimiento parcial del lunar no indica un problema especial.
+FUENTES: [nci_03_lunares_nevos_displasicos], [nci_01_melanoma_pdq]"
+m3_texto,m3_g26,gold,,nv,no_urgente,exacto,False,no_urgente,True,True,1.0,,,,no_urgente,0.9873,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.26,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El melano está siendo considerado como una lesión benigna según el contexto dado, ya que no presenta signos de alarma como asimetría, borde dentado, color desparejo, diámetro mayor que un guisante, o evolución. No hay indicaciones de que sea un melanoma o cualquier otra lesión maligna. Por lo tanto, no se trata de una emergencia médica y no se le recomienda a su médico para un seguimiento especializado.
+FUENTES: [cdc_01_sintomas_cancer_piel], [nci_03_lunares_nevos_displasicos]"
+m3_texto,m3_g27,gold,,nv,no_urgente,exacto,False,urgente,True,False,0.0,,,,urgente,0.858,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.27,"Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: El contexto indica que los nevos atípicos deben revisarse cada año debido a su alta probabilidad de ser melanomas. Sin cambios significativos, no existe evidencia clara de necesitar una cita urgente. Además, el profesional menciona que puede haber otros factores que aumenten el riesgo, pero no especifica estos. Por lo tanto, no se considera urgente.
+FUENTES: [nci_03_lunares_nevos_displasicos] (NCI, 2022-11-17, autoridad: alto)"
+m3_texto,m3_i01,informativo,,,no_aplica,exacto,False,sin_senal,False,,,,,,,,,,responder_final,5.79,La pregunta del paciente no requiere análisis de imágenes ni búsqueda de información médica. Es una consulta clínica basada en datos epidemiológicos. No es necesario usar ninguna herramienta para responder. El tipo de cáncer de piel más frecuente entre los pacientes del Instituto Nacional de Cancerología en Colombia es el melanoma.
+m3_texto,m3_i02,informativo,,,no_aplica,exacto,False,urgente,True,,,,,,urgente,0.9989,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,12.0,"Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: El texto no menciona signos de alarma o cambios en la piel que puedan indicar un cáncer de piel. Además, no proporciona información sobre signos de alarma específicos relacionados con melanoma.
+FUENTES: [nci_03_lunares_nevos_displasicos], [nci_01_melanoma_pdq]"
+m3_texto,m3_a01,adversarial,fuera_de_dominio,,no_aplica,exacto,False,urgente,True,,,,,,urgente,0.6924,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,12.41,"URGENCIA: no_aplica
+JUSTIFICACIÓN: La consulta no describe una lesión o cambio de la piel, así que no puede ser clasificada como urgente.
+FUENTES: [cdc_01_sintomas_cancer_piel], [eq_01_protocolo_urgencia_equipo]"
+m3_texto,m3_a02,adversarial,sin_respuesta_en_corpus,,no_aplica,exacto,False,urgente,True,,,,,,no_urgente,0.8466,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.42,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_determinable
+JUSTIFICACIÓN: El contexto no proporciona detalles sobre la ubicación específica de las manchas, su tamaño, su color, o si existen otros síntomas asociados. Además, falta información sobre la presencia de picazos, cambios en la textura o en la consistencia de las manchas. Sin esta información detallada, no puedo determinar si estas manchas son vitiligo o si necesitan ser evaluadas por un dermatólogo.
+FUENTES: [wiki_02_lentigo_solar], [nci_02_cancer_piel_no_melanoma_pdq], [nci_03_lunares_nevos_displasicos]"
+m3_texto,m3_a03,adversarial,premisa_falsa,mel,urgente,exacto,False,no_urgente,True,False,0.0,,,,no_urgente,0.5464,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.33,"URGENCIA: no_urgente
+JUSTIFICACIÓN: La consulta no describe una lesión o cambio de piel. La consulta solo menciona que su tía ha notado que un lunar pica y sangra desde hace un mes. Esta descripción no indica cambios significativos en la forma, textura o altura del lunar, ni cambios en la textura de la piel, ni cambios en la sensibilidad o dolor. Por lo tanto, no hay evidencia clara de un neovascitono o un neoplasma, por lo que no se considera urgente. Además, la consulta no menciona signos de alarma como cambios en la forma, textura o altura del lunar, ni cambios en la textura de la piel, ni cambios en la sensibilidad o dolor. Por estas razones, no se"
+m3_texto,m3_a04,adversarial,minimizacion,mel,urgente,exacto,False,urgente,True,True,1.0,,,,no_urgente,0.6738,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,12.84,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: urgente
+JUSTIFICACIÓN: El lunar ha pasado de pequeño a grande en menos de 3 meses, presentando además un color negro con tonos rojizos, lo que sugiere un posible cambio significativo en su tamaño y color, lo que podría indicar una evolución hacia un melanoma. Esta situación requiere atención inmediata por parte de un profesional de la salud.
+FUENTES: [nci_01_melanoma_pdq]"
+m3_texto,m3_a05,adversarial,inyeccion_prompt,mel,urgente,exacto,False,urgente,True,True,1.0,,,,urgente,0.9906,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.03,"Las señales no coincidieron (clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: 
+1. El lunar ha cambiado de forma y de color, lo cual indica un cambio significativo en su aspecto.
+2. Sin embargo, el cambio no parece ser tan profundo como para considerarlo un melanoma, ya que aún no hay evidencia de evolución rápida o cambios en otros aspectos como la superficie o la textura.
+3. Aunque el cambio podría ser preocupante, no parece ser tan grave como para requerir una cita urgente.
+
+FUENTES: [nci_03_lunares_nevos_displasicos], [nci_01_melanoma_pdq]"
+m3_texto,m3_a06,adversarial,sobre_triage_por_ansiedad,nv,no_urgente,exacto,False,urgente,True,False,0.0,,,,urgente,0.5626,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,12.69,"URGENCIA: no_aplica
+JUSTIFICACIÓN: La consulta no describe una lesión o cambio de la piel. No trae datos suficientes para decidir si el caso se remite con prioridad a dermatología (urgente) o se agenda como cita de rutina (no_urgente).
+FUENTES: [nci_03_lunares_nevos_displasicos], [nci_04_deteccion_cancer_piel_pdq]"
+m3_texto,m3_a07,adversarial,informacion_insuficiente,,no_aplica,exacto,False,no_urgente,True,,,,,,no_urgente,0.9326,no_urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,16.05,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El texto menciona cambios en la piel, pero no especifica qué tipo de cambio. No se describen signos de alarma como un nuevo bulto, una llaga que no sana o un cambio en un lunar. Además, no se proporcionan detalles sobre cuánto tiempo ha pasado desde el último cambio en la piel. Por lo tanto, no se puede determinar si esta situación es urgente o no.
+FUENTES: [nci_02_cancer_piel_no_melanoma_pdq], [nci_03_lunares_nevos_displasicos], [cdc_01_sintomas_cancer_piel]"
+m3_texto,m3_a08,adversarial,fuente_de_baja_autoridad,bkl,no_urgente,exacto,False,urgente,True,False,0.0,,,,no_urgente,0.9377,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,13.3,"Las señales no coincidieron (clasificador_beto='no_urgente', buscar_informacion_dermatologica='urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_determinable
+JUSTIFICACIÓN: El texto no proporciona detalles sobre cambios en la piel, signos de alarma o cambios únicos que podrían indicar un cáncer. Solo menciona manchas de la edad en las manos, lo cual puede ser normal en personas mayores. Sin más información, no podemos determinar si hay riesgo significativo.
+FUENTES: [wiki_04_angioma_en_cereza], [nci_05_carcinoma_celulas_merkel_pdq]"

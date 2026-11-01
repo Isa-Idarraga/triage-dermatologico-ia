@@ -1,0 +1,52 @@
+{
+  "config": "4bit",
+  "entorno": {
+    "gpu": "Tesla T4",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "bitsandbytes": "0.50.2"
+  },
+  "gpu_gb": {
+    "tras_cargar_los_4_modelos": 4.368,
+    "pico_en_las_corridas": 5.752
+  },
+  "cerebro": {
+    "dtype": "torch.float16",
+    "pesos_gpu_gb": 1.872,
+    "guardado_gb": 2.034,
+    "cuantizado": true
+  },
+  "generador": {
+    "dtype": "torch.float16",
+    "pesos_gpu_gb": 1.045,
+    "guardado_gb": 1.121,
+    "cuantizado": true
+  },
+  "latencia_todas_las_corridas": {
+    "n": 57,
+    "p50_s": 14.82,
+    "p95_s": 18.12,
+    "media_s": 14.52
+  },
+  "latencia_por_corrida": {
+    "con_foto": {
+      "n": 10,
+      "p50_s": 16.53,
+      "p95_s": 26.09,
+      "media_s": 14.46
+    },
+    "sin_foto": {
+      "n": 10,
+      "p50_s": 14.35,
+      "p95_s": 17.28,
+      "media_s": 14.99
+    },
+    "m3_texto": {
+      "n": 37,
+      "p50_s": 14.82,
+      "p95_s": 16.39,
+      "media_s": 14.41
+    }
+  },
+  "limite": null
+}
