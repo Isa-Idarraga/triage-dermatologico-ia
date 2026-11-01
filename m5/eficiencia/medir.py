@@ -73,6 +73,17 @@ def medir(config, limite=None):
     import pandas as pd
     from importlib.metadata import PackageNotFoundError, version
 
+    # El harness del PR #22 pone "sin_senal" en etiqueta_predicha y metrica_dominio (M2) no conoce esa
+    # etiqueta (KeyError al armar el resumen). Para el recall de urgentes, un urgente sin señal es un
+    # urgente perdido, igual que en M4 donde ese caso contaba como no_urgente.
+    d3_original = h.metrica_dominio
+
+    def d3_con_sin_senal(casos, salidas):
+        return d3_original(casos, [{**s, "etiqueta_predicha": "no_urgente" if s["etiqueta_predicha"] == "sin_senal"
+                                    else s["etiqueta_predicha"]} for s in salidas])
+
+    h.metrica_dominio = d3_con_sin_senal
+
     destino = os.path.join(CARPETA, config)
     os.makedirs(destino, exist_ok=True)
     h.SALIDA_PARCIAL = destino + "/scorecard_{corrida}.csv"
