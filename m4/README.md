@@ -62,7 +62,7 @@ Usamos el harness de M2 (`metrica_clasica`, `metrica_dominio`) y extendimos `cal
 
 ## 6 · Límites y ética
 - **Sugiere, no diagnostica.** La decisión de remitir es del enfermero o del médico.
-- **Válvula.** Atrapó 40/40 fotos degradadas en la prueba del componente, y en el sistema completo atrapó img_06. Pero no detecta "esto no es piel": 10/10 imágenes de ruido salieron urgente, y la hoja de papel (img_07) pasó como lesión.
+- **Válvula.** Atrapó las 30 fotos degradadas distintas de la prueba del componente (desenfoque, 48 px, casi negra) y la imagen gris lisa, y en el sistema completo atrapó img_06. Pero no detecta "esto no es piel": una imagen de ruido (la misma para las 10 fotos base) salió urgente, y la hoja de papel (img_07) pasó como lesión.
 - **Piel oscura.** HAM10000 casi no la tiene, así que la medimos con el ISIC Archive. En lesiones benignas, `ver()` da menos falsas alarmas (0/58 contra 8/58 en piel clara), pero puntúa mucho más bajo (score medio 0.05 contra 0.22), lo que podría hacer que se le escape un cáncer. Solo había 7 cánceres en piel oscura (detectó 4) y ninguno en dermatoscopia, así que el sesgo no está descartado: el sistema no debería usarse con pacientes de piel oscura sin una evaluación con más casos malignos ([`eval_set/piel_oscura/`](eval_set/piel_oscura/README.md)).
 - **Foto de celular ≠ dermatoscopia.** `ver()` se entrenó con dermatoscopias. En fotos de celular (PAD-UFES-20) detectó 24 de 60 cánceres y queratosis actínicas (40 %). Es su límite más grande.
 - **Las justificaciones no describen la foto.** El texto puede inventar rasgos visuales (img_07).
