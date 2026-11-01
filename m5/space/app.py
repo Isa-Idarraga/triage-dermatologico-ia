@@ -17,6 +17,20 @@ import os
 
 import gradio as gr
 
+try:
+    import spaces
+
+    @spaces.GPU
+    def _zerogpu_placeholder():
+        """Nunca se llama -- el tier gratis de Spaces corre en hardware ZeroGPU y
+        mata la app si no detecta ninguna funcion @spaces.GPU al arrancar. Esta
+        vitrina no usa GPU para nada (ver casos_precalculados.json); esto solo
+        pasa ese chequeo sin gastar cupo real (ZeroGPU asigna hardware recien
+        cuando la funcion se invoca, y esta nunca se invoca)."""
+        return None
+except ImportError:
+    pass
+
 _AQUI = os.path.dirname(os.path.abspath(__file__))
 
 with open(os.path.join(_AQUI, "casos_precalculados.json"), encoding="utf-8") as f:
