@@ -6,7 +6,7 @@
       "titulo": "Síntoma clásico de alarma, sin foto",
       "pregunta": "Tengo un lunar que me cambió de color y de forma en los últimos meses.",
       "imagen": null,
-      "decision_md": "## 🔴 Decisión sugerida: **URGENTE**\nSeñal: clasificador_beto=urgente, buscar_informacion_dermatologica=urgente",
+      "decision_md": "## Referir con prioridad a dermatología\nPesaron: el texto del síntoma (urgente), las guías clínicas (urgente).\n\n_Señal: clasificador_beto=urgente, buscar_informacion_dermatologica=urgente_\n\n_Sugerencia de apoyo. La decisión es del profesional._",
       "foto_md": "### Foto\nNo evaluable: no se usó.",
       "evidencia_md": "### Evidencia de las guías\nURGENCIA: urgente\nJUSTIFICACIÓN: El lunar ha cambiado de color y forma, lo que indica un posible cambio hacia un melanoma. Según el contexto proporcionado por la CDC, cualquier cambio en la piel debe ser evaluado por un médico rápidamente.\nFUENTES: [cdc_01_sintomas_cancer_piel], [nci_03_lunares_nevos_displasicos]\n\n**Fuentes:** cdc_01_sintomas_cancer_piel, nci_03_lunares_nevos_displasicos"
     },
@@ -15,7 +15,7 @@
       "titulo": "Foto de nevus benigno -- la regla de seguridad escala igual",
       "pregunta": "Le adjunto una foto de la lesión, ¿debería verla pronto?",
       "imagen": "imagenes/ISIC_0024876.jpg",
-      "decision_md": "## 🔴 Decisión sugerida: **URGENTE**\nSeñal: ver_imagen=no_urgente, clasificador_beto=urgente, buscar_informacion_dermatologica=no_urgente",
+      "decision_md": "## Referir con prioridad a dermatología\nPesaron: la foto (no urgente), el texto del síntoma (urgente), las guías clínicas (no urgente).\n\n_Señal: ver_imagen=no_urgente, clasificador_beto=urgente, buscar_informacion_dermatologica=no_urgente_\n\n_Sugerencia de apoyo. La decisión es del profesional._",
       "foto_md": "### Foto\nClase: **no_urgente** · score 0.157 · calidad: nitidez 27.2 · desviacion 18.3",
       "evidencia_md": "### Evidencia de las guías\nURGENCIA: no_urgente\nJUSTIFICACIÓN: La consulta no proporciona detalles específicos sobre la lesión ni descripción clínica detallada. Sin más información, no puedo determinar si la lesión es benigna o precaria. El protocolo interno menciona patrones típicos de lesiones premalignas como queratosis actinica y carcinoma basocelular, pero no especifica cuándo debe ser vista. Por lo tanto, la lesión parece estar en un rango medio entre benigna y pre-maligna, lo que hace difícil determinar si es urgente o no.\nFUENTES: [eq_01_protocolo_urgencia_equipo], [cdc_01_sintomas_cancer_piel]\n\n**Fuentes:** eq_01_protocolo_urgencia_equipo, cdc_01_sintomas_cancer_piel\n\n_Nota: esta evidencia es texto de guías clínicas -- no describe su foto._",
       "lectura": "ver_imagen y el RAG acertaron en 'no_urgente' (el nevus es benigno, confirmado por biopsia). Solo clasificador_beto forzó 'urgente' porque el texto es vago. La regla de seguridad del equipo (si cualquiera dice urgente, gana urgente) escaló un caso benigno a propósito -- preferimos falsos positivos a falsos negativos en triage."
@@ -25,8 +25,8 @@
       "titulo": "Foto borrosa -- no cuenta como 'no urgente'",
       "pregunta": "Tengo una mancha rara en la espalda, no sé si es grave.",
       "imagen": "imagenes/img_06.jpg",
-      "decision_md": "## 🔴 Decisión sugerida: **URGENTE**\nSeñal: clasificador_beto=no_urgente, buscar_informacion_dermatologica=urgente",
-      "foto_md": "### Foto\n⚠️ No evaluable (imagen desenfocada). Esto **no** equivale a 'no urgente'.",
+      "decision_md": "## Referir con prioridad a dermatología\nPesaron: el texto del síntoma (no urgente), las guías clínicas (urgente).\n\n_Señal: clasificador_beto=no_urgente, buscar_informacion_dermatologica=urgente_\n\n_Sugerencia de apoyo. La decisión es del profesional._",
+      "foto_md": "### Foto\nNo evaluable (imagen desenfocada). Esto **no** equivale a 'no urgente'.",
       "evidencia_md": "### Evidencia de las guías\n(resumen) El RAG marcó este caso como urgente según el protocolo interno -- ver el detalle completo en m4/README.md sección 6 (la válvula de calidad de la foto).",
       "lectura": "ver() detecta que la foto está desenfocada y se abstiene (etiqueta=None) en vez de arriesgar un 'no evaluable' leído como benigno. El veredicto final sigue siendo URGENTE porque el RAG lo marcó así de forma independiente -- la foto nunca resta evidencia, solo puede sumarla."
     }
