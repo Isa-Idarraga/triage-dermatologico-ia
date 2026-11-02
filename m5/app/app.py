@@ -90,21 +90,29 @@ def _interpretar(resultado):
 
 _SUGERENCIA_APOYO = "_Sugerencia de apoyo: la decisión final es del profesional._"
 
+# Para pintar la tarjeta según el veredicto en la UI (ver _consultar_evento): el texto
+# siempre lleva icono + palabra clínica, nunca solo color, así que la clase CSS se
+# puede leer del mismo icono en vez de cambiar el contrato de consultar() (ver abajo).
+_CLASE_POR_ICONO = {"🔴": "tarjeta-urgente", "🟢": "tarjeta-no-urgente", "🟠": "tarjeta-sin-senal"}
+
+
+def _clase_decision(texto_decision):
+    for icono, clase in _CLASE_POR_ICONO.items():
+        if icono in texto_decision:
+            return clase
+    return "tarjeta-sin-senal"
+
 
 def _bloque_decision(interpretacion):
-    """Devuelve (texto, clase_css) -- la clase pinta la tarjeta según el veredicto
-    (nunca solo el color: siempre lleva icono + palabra clínica también)."""
     if interpretacion["veredicto"] is None:
-        texto = f"## 🟠 Sin señal: revisión manual\nNinguna herramienta pudo dar un veredicto.\n\n{_SUGERENCIA_APOYO}"
-        return texto, "tarjeta-sin-senal"
+        return f"## 🟠 Sin señal: revisión manual\nNinguna herramienta pudo dar un veredicto.\n\n{_SUGERENCIA_APOYO}"
     veredicto = interpretacion["veredicto"]
     if veredicto == "urgente":
-        icono, texto_clinico, clase = "🔴", "Referir con prioridad", "tarjeta-urgente"
+        icono, texto_clinico = "🔴", "Referir con prioridad"
     else:
-        icono, texto_clinico, clase = "🟢", "Puede esperar cita de rutina", "tarjeta-no-urgente"
+        icono, texto_clinico = "🟢", "Puede esperar cita de rutina"
     disparo = ", ".join(f"{n}={v}" for n, v in interpretacion["señales"].items())
-    texto = f"## {icono} {texto_clinico}\nSeñal: {disparo}\n\n{_SUGERENCIA_APOYO}"
-    return texto, clase
+    return f"## {icono} {texto_clinico}\nSeñal: {disparo}\n\n{_SUGERENCIA_APOYO}"
 
 
 def _bloque_foto(resultado, hay_foto):
@@ -140,9 +148,11 @@ def _bloque_evidencia(resultado, hay_foto):
 
 
 def consultar(sintoma, foto):
+    """Texto plano, sin envolver en componentes de Gradio -- los notebooks y
+    cualquier prueba llaman esto directo y comparan substrings sobre el resultado.
+    El wrapper de UI es _consultar_evento(), más abajo."""
     if not sintoma or not sintoma.strip():
-        aviso = "Escriba el síntoma del paciente antes de consultar."
-        return gr.Markdown(aviso, elem_classes=["tarjeta-decision", "tarjeta-sin-senal"]), "", ""
+        return "Escriba el síntoma del paciente antes de consultar.", "", ""
     t0 = time.perf_counter()
     resultado = sistema_multimodal(sintoma, imagen=foto)
     latencia = round(time.perf_counter() - t0, 2)
@@ -159,12 +169,19 @@ def consultar(sintoma, foto):
         )
     except Exception as e:
         print(f"log_consulta falló (no bloquea la respuesta): {e}")
-    texto_decision, clase_decision = _bloque_decision(interpretacion)
     return (
-        gr.Markdown(texto_decision, elem_classes=["tarjeta-decision", clase_decision]),
+        _bloque_decision(interpretacion),
         _bloque_foto(resultado, hay_foto),
         _bloque_evidencia(resultado, hay_foto),
     )
+
+
+def _consultar_evento(sintoma, foto):
+    """Wrapper solo para el botón de Gradio: llama a consultar() (texto plano,
+    sin tocar) y pinta la tarjeta de decisión según su icono."""
+    texto_decision, foto_md, evidencia_md = consultar(sintoma, foto)
+    tarjeta = gr.Markdown(texto_decision, elem_classes=["tarjeta-decision", _clase_decision(texto_decision)])
+    return tarjeta, foto_md, evidencia_md
 
 
 # Paleta y tipografía: guía de diseño clínico-accesible (skill ui-ux-pro-max --
@@ -211,7 +228,7 @@ def construir_app():
         decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
         foto_md = gr.Markdown()
         evidencia_md = gr.Markdown()
-        boton.click(consultar, inputs=[sintoma, foto], outputs=[decision_md, foto_md, evidencia_md])
+        boton.click(_consultar_evento, inputs=[sintoma, foto], outputs=[decision_md, foto_md, evidencia_md])
 
         with gr.Tab("Estado"):
             estado_json = gr.JSON()
