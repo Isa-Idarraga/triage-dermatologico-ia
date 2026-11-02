@@ -89,6 +89,13 @@ def etiqueta_final(salida):
     return "urgente" if "urgente" in etiquetas else "no_urgente"
 
 
+def ruta_cierre(salida):
+    """Cómo cerró el agente: responder_final, sintesis_por_repeticion,
+    sintesis_pasos_agotados o sin_conclusion (último marcador de pasos_debug)."""
+    cierres = [p["cierre"] for p in salida.get("pasos_debug", []) if isinstance(p, dict) and "cierre" in p]
+    return cierres[-1] if cierres else None
+
+
 def calificar(ejemplo, salida, hay_foto):
     """1 / 0 según el criterio declarado del caso; None si el criterio no aplica
     (casos 'no_aplica' de M3 con criterio exacto)."""
@@ -137,7 +144,7 @@ def correr(nombre, limite=None):
         latencia = round(time.perf_counter() - t0, 2)
 
         etq = etiqueta_final(r)
-        salida = {**r, "etiqueta_predicha": etq or "no_urgente"}
+        salida = {**r, "etiqueta_predicha": etq or "sin_senal"}
         d1 = metrica_clasica(c, salida)
         det = r.get("detalle_tools", {})
         ver = det.get("ver_imagen", {})
@@ -162,6 +169,7 @@ def correr(nombre, limite=None):
             "confianza_beto": beto.get("confianza"),
             "etiqueta_rag": det.get("buscar_informacion_dermatologica", {}).get("etiqueta"),
             "tools_usadas": ",".join(r.get("tools_usadas", [])),
+            "ruta_cierre": ruta_cierre(r),
             "latencia_s": latencia,
             "respuesta": r.get("respuesta"),
         })
@@ -240,6 +248,25 @@ def efecto_foto(df_con, df_sin):
     return salida
 
 
+def latencia_pareada(df_con, df_sin):
+    """Costo de la foto sobre los MISMOS casos: con_foto frente a sin_foto,
+    solo los casos que de verdad llevaron foto."""
+    con = df_con[df_con["hay_foto"].map(_bool)].set_index("id")["latencia_s"].astype(float)
+    sin = df_sin.set_index("id")["latencia_s"].astype(float)
+    ids = con.index.intersection(sin.index)
+    if not len(ids):
+        return None
+    d = con[ids] - sin[ids]
+    return {
+        "n": int(len(ids)),
+        "con_foto_media": round(float(con[ids].mean()), 2),
+        "sin_foto_media": round(float(sin[ids].mean()), 2),
+        "delta_media_s": round(float(d.mean()), 2),
+        "delta_mediana_s": round(float(d.median()), 2),
+        "delta_pct": round(float(d.mean() / sin[ids].mean() * 100), 1),
+    }
+
+
 def _subconjunto(df, criterio, solo_imagen=True):
     g = df[df["tipo_criterio"] == criterio]
     if solo_imagen:
@@ -262,6 +289,7 @@ def armar():
         resumen["cambios_vs_m3"] = cambios_m3(dfs["m3_texto"])
     if "con_foto" in dfs and "sin_foto" in dfs:
         resumen["foto_cambio_veredicto"] = efecto_foto(dfs["con_foto"], dfs["sin_foto"])
+        resumen["latencia_pareada_foto"] = latencia_pareada(dfs["con_foto"], dfs["sin_foto"])
     if "con_foto" in dfs:
         c = dfs["con_foto"]
         resumen["fallos_con_foto"] = c[c["puntaje_criterio"].astype(float) == 0][
@@ -288,6 +316,11 @@ def armar():
     if "m3_texto" in dfs and "con_foto" in dfs:
         L.append(f"| Latencia media por caso (s) | {resumen['corridas']['m3_texto']['latencia_s_media']} "
                  f"| {resumen['corridas']['con_foto']['latencia_s_media']} |")
+    lp = resumen.get("latencia_pareada_foto")
+    if lp:
+        L.append(f"| Latencia pareada, mismos {lp['n']} casos con foto (s, media) | {lp['sin_foto_media']} "
+                 f"| {lp['con_foto_media']} (delta {lp['delta_media_s']:+} s, {lp['delta_pct']:+} %; "
+                 f"mediana {lp['delta_mediana_s']:+} s) |")
     L.append("| Peor caso | *(escribir a mano)* | *(escribir a mano)* |")
     with open(SALIDA_TABLA, "w", encoding="utf-8") as f:
         f.write("\n".join(L) + "\n")
@@ -296,7 +329,7 @@ def armar():
     print("\nResumen por corrida:")
     for n, r in resumen["corridas"].items():
         print(f"  {n}: {r}")
-    for clave in ("cambios_vs_m3", "foto_cambio_veredicto", "fallos_con_foto"):
+    for clave in ("cambios_vs_m3", "foto_cambio_veredicto", "latencia_pareada_foto", "fallos_con_foto"):
         if clave in resumen:
             print(f"\n{clave}: {resumen[clave]}")
     print(f"\nEscritos: {SALIDA_CSV}, {SALIDA_RESUMEN}, {SALIDA_TABLA}")
