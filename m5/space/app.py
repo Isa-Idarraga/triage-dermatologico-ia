@@ -40,15 +40,13 @@ _CASOS = {c["id"]: c for c in _DATA["casos"]}
 _OPCIONES = [(c["titulo"], c["id"]) for c in _DATA["casos"]]
 
 
-_CLASE_POR_ICONO = {"🔴": "tarjeta-urgente", "🟢": "tarjeta-no-urgente", "🟠": "tarjeta-sin-senal", "🔶": "tarjeta-sin-senal"}
-
-
 def _clase_decision(decision_md):
-    """La tarjeta de cada caso ya viene con un icono de veredicto al inicio del texto
-    (casos_precalculados.json) -- se usa para pintar el mismo color que en m5/app/app.py."""
-    for icono, clase in _CLASE_POR_ICONO.items():
-        if icono in decision_md:
-            return clase
+    """Misma regla que _clase_decision() en m5/app/app.py: el texto clínico de la
+    decisión (no un ícono) dice de qué color pintar la tarjeta."""
+    if "Referir con prioridad" in decision_md:
+        return "tarjeta-urgente"
+    if "Puede esperar" in decision_md:
+        return "tarjeta-no-urgente"
     return "tarjeta-sin-senal"
 
 
@@ -73,6 +71,14 @@ _CSS = """
 
 .gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
 
+/* Texto base grande y legible, igual que en m5/app/app.py. */
+.gradio-container { font-size: 18px; }
+.gradio-container .prose, .gradio-container p, .gradio-container li,
+.gradio-container label span {
+    font-size: 1rem !important;
+    line-height: 1.6;
+}
+
 /* Glow de fondo muy tenue: sin esto el backdrop-filter: blur() de las tarjetas
    no tiene nada detrás que difuminar (sobre un fondo plano, blur no se nota). */
 .gradio-container {
@@ -84,6 +90,8 @@ _CSS = """
 }
 
 .tarjeta-decision, .tarjeta-secundaria {
+    width: 100%;
+    box-sizing: border-box;
     border-radius: 14px;
     padding: 16px 20px;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -103,8 +111,23 @@ _CSS = """
 .tarjeta-no-urgente  { border-left-color: #059669; background-color: rgba(236, 253, 245, 0.8); }
 .tarjeta-sin-senal   { border-left-color: #D97706; background-color: rgba(255, 251, 235, 0.8); }
 
+/* La decisión es el elemento más importante de la vista: grande y en negrita,
+   igual que en m5/app/app.py. */
+.tarjeta-decision h2 { font-size: 32px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.25; }
+
 .tarjeta-secundaria { background-color: rgba(248, 250, 252, 0.8); height: 100%; }
-.tarjeta-secundaria h3 { margin-top: 0; }
+.tarjeta-secundaria h3 { font-size: 20px; margin-top: 0; }
+
+/* Objetivo táctil mínimo (44px), igual que en m5/app/app.py. */
+.gradio-container button { min-height: 44px; font-size: 1rem; }
+
+/* Responsive: en pantallas angostas (celular) las filas de dos columnas pasan
+   a una sola columna, y se recorta el padding para no desbordar el ancho. */
+@media (max-width: 640px) {
+    .gradio-container { padding-left: 8px !important; padding-right: 8px !important; }
+    .tarjeta-decision, .tarjeta-secundaria { padding: 12px 14px; }
+    .tarjeta-decision h2 { font-size: 28px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
     .tarjeta-decision, .tarjeta-secundaria { transition: none; }
@@ -114,24 +137,27 @@ _CSS = """
 _TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
 
 
+_NOTEBOOK_URL = "https://github.com/Isa-Idarraga/triage-dermatologico-ia/blob/juanes-m5/notebooks/M5_app_kaggle.ipynb"
+
+
 def construir_app():
     with gr.Blocks(title="Triage dermatológico -- vitrina", theme=_TEMA, css=_CSS) as demo:
         gr.Markdown(
-            "# 🩺 Triage dermatológico -- vitrina\n"
+            "# Triage dermatológico -- vitrina\n"
             "Esta página muestra **casos ya corridos** en GPU T4 (no corre los modelos "
-            "aquí, esta máquina es CPU). Para probar el sistema en vivo con tu propio "
-            "síntoma y foto, usa el link de la demo del jueves (Gradio sobre Kaggle T4)."
+            f"aquí, esta máquina es CPU). Para probar el sistema en vivo, corre el "
+            f"[notebook de Kaggle]({_NOTEBOOK_URL}) (T4 + Internet, ~3 min)."
         )
         selector = gr.Dropdown(
             choices=_OPCIONES, value=_OPCIONES[0][1], label="Caso ensayado",
         )
         pregunta_md = gr.Markdown()
-        with gr.Row():
+        decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
+        with gr.Row(equal_height=True):
             imagen = gr.Image(label="Foto de la lesión", interactive=False)
-            decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
-        with gr.Row():
-            foto_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
-            evidencia_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
+            with gr.Column():
+                foto_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
+        evidencia_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
 
         selector.change(
             mostrar_caso, inputs=[selector],
