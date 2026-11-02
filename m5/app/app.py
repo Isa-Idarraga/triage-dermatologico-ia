@@ -230,29 +230,54 @@ def consultar(sintoma, foto):
 
 # --- Vista principal (lo que ve el profesional) ------------------------------
 # Lenguaje clínico, sin nombres de herramientas ni scores. Todo sale del mismo
-# resultado de sistema_multimodal(); aquí solo se traduce y se maqueta.
+# resultado de sistema_multimodal(); aquí solo se traduce y se maqueta. Los
+# títulos se redactan como sugerencia ("Se sugiere..."): la herramienta apoya
+# al profesional, no le da una orden.
 
-def _unir(nombres):
-    return nombres[0] if len(nombres) == 1 else ", ".join(nombres[:-1]) + " y " + nombres[-1]
+_APOYO_HTML = "Apoyo a la decisión: la valoración y la decisión final son del profesional."
 
 
 def _decision_clinica(interpretacion):
-    """(tono, título, por qué). El tono solo elige el color; el título siempre
-    dice la decisión con palabras, así nunca depende solo del color."""
+    """(tono, título, por qué). El tono es el del veredicto FINAL del sistema
+    (misma regla que etiqueta_final() en m4/harness_m4.py); lo que dijo cada
+    señal por separado se ve en _html_senales(). El título siempre dice la
+    sugerencia con palabras, así nunca depende solo del color."""
     señales = interpretacion["señales"]
-    urgentes = [_NOMBRE_SEÑAL.get(n, n) for n, v in señales.items() if v == "urgente"]
-    tranquilas = [_NOMBRE_SEÑAL.get(n, n) for n, v in señales.items() if v != "urgente"]
     veredicto = interpretacion["veredicto"]
     if veredicto is None:
-        return ("sin-senal", "Sin señal suficiente: revisión manual",
+        return ("sin-senal", "Sin señal suficiente: se sugiere revisión manual",
                 "Ninguna fuente (texto, foto o guías) dio una señal clara. "
                 "Esto no significa que el caso pueda esperar.")
     if veredicto == "urgente":
-        por_que = f"Indicaron urgencia: {_unir(urgentes)}."
-        if tranquilas:
-            por_que += f" No la indicaron: {_unir(tranquilas)}. Si una señal indica urgencia, se prioriza referir."
-        return "urgente", "Referir con prioridad a dermatología", por_que
-    return "rutina", "Puede esperar cita de rutina", f"Ninguna señal indicó urgencia ({_unir(tranquilas)})."
+        if all(v == "urgente" for v in señales.values()):
+            por_que = "Todas las señales disponibles indican urgencia."
+        else:
+            por_que = ("Las señales no coinciden. Cuando al menos una indica urgencia, el sistema "
+                       "se inclina por referir para no dejar pasar un caso grave.")
+        return "urgente", "Se sugiere referir con prioridad a dermatología", por_que
+    return "rutina", "Se sugiere cita de rutina", "Ninguna de las señales disponibles indicó urgencia."
+
+
+# Nombre corto de cada señal para su marca en la tarjeta.
+_ETIQUETA_SEÑAL = {
+    "clasificador_beto": "Texto del síntoma",
+    "ver_imagen": "Foto",
+    "buscar_informacion_dermatologica": "Guías clínicas",
+}
+
+
+def _html_senales(señales):
+    """Una marca por señal, con el color de lo que dijo ESA señal (verde = no
+    urgente, rojo = urgente) y la palabra escrita, no solo el color."""
+    if not señales:
+        return ""
+    marcas = "".join(
+        f'<li class="senal senal-{"urgente" if v == "urgente" else "rutina"}">'
+        f'<span class="senal-punto" aria-hidden="true"></span>'
+        f'{html.escape(_ETIQUETA_SEÑAL.get(n, n))}: <strong>{html.escape(v.replace("_", " "))}</strong></li>'
+        for n, v in señales.items()
+    )
+    return f'<ul class="senales" aria-label="Qué indicó cada señal">{marcas}</ul>'
 
 
 def _foto_clinica(resultado, hay_foto):
@@ -300,8 +325,9 @@ def _html_resultado(resultado, interpretacion, hay_foto):
 <section class="resultado" aria-live="polite">
   <div class="decision tono-{tono}">
     <h2>{html.escape(titulo)}</h2>
+    {_html_senales(interpretacion["señales"])}
     <p class="por-que">{html.escape(por_que)}</p>
-    <p class="apoyo">Sugerencia de apoyo. La decisión es del profesional.</p>
+    <p class="apoyo">{_APOYO_HTML}</p>
   </div>
   <div class="bloque">
     <h3>Foto</h3>
@@ -370,14 +396,65 @@ def _resumen_estado():
     return "\n\n".join(lineas)
 
 
-# Marca del producto: una lesión dibujada dentro de un recuadro, en vez de una letra.
+# Marca del producto: una lesión dibujada dentro de un recuadro, en vez de una
+# letra. Los colores salen de variables CSS para que se invierta en modo oscuro.
 _MARCA_SVG = (
-    '<svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">'
-    '<rect width="36" height="36" rx="8" fill="#1d1f20"/>'
-    '<circle cx="18" cy="18" r="10" fill="none" stroke="#ffffff" stroke-width="2"/>'
+    '<svg class="logo" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">'
+    '<rect class="logo-fondo" width="36" height="36" rx="8"/>'
+    '<circle class="logo-trazo" cx="18" cy="18" r="10" fill="none" stroke-width="2"/>'
     '<ellipse cx="19.5" cy="16.8" rx="4.2" ry="3.4" fill="#e9a48f"/>'
     '</svg>'
 )
+
+
+# Interruptor claro/oscuro: lo maneja _JS_TEMA (un solo listener en document, así
+# sigue funcionando aunque el encabezado se vuelva a pintar en demo.load).
+# Control de dos opciones (Claro | Oscuro) con un fondo que se desliza bajo la
+# opción activa: dice para qué es y en qué modo se está.
+_INTERRUPTOR_TEMA = (
+    '<button type="button" class="interruptor-tema" aria-label="Cambiar a modo oscuro" aria-pressed="false" '
+    'title="Cambiar entre modo claro y oscuro">'
+    '<span class="indicador" aria-hidden="true"></span>'
+    '<span class="opcion opcion-claro">'
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/>'
+    '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+    'Claro</span>'
+    '<span class="opcion opcion-oscuro">'
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>'
+    'Oscuro</span>'
+    '</button>'
+)
+
+# Aplica la preferencia guardada (si no hay, Gradio ya siguió el modo del
+# dispositivo) y alterna la clase .dark de <body>, que es la que usa el tema.
+_JS_TEMA = """
+() => {
+  const sincronizar = () => {
+    const oscuro = document.body.classList.contains('dark');
+    document.querySelectorAll('.interruptor-tema').forEach((b) => {
+      b.setAttribute('aria-pressed', String(oscuro));
+      b.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+    });
+  };
+  let guardado = null;
+  try { guardado = localStorage.getItem('triage-tema'); } catch (e) {}
+  if (guardado) document.body.classList.toggle('dark', guardado === 'oscuro');
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.interruptor-tema')) return;
+    const oscuro = !document.body.classList.contains('dark');
+    document.body.classList.toggle('dark', oscuro);
+    try { localStorage.setItem('triage-tema', oscuro ? 'oscuro' : 'claro'); } catch (e) {}
+    sincronizar();
+  });
+  new MutationObserver(sincronizar).observe(document.body, { childList: true, subtree: true });
+  sincronizar();
+  // La entrada de los recuadros (.entrada) es solo al abrir la página: pasado
+  // ese momento se marca el body y nada más vuelve a "entrar" al re-pintarse.
+  setTimeout(() => document.body.classList.add('ya-cargo'), 900);
+}
+"""
 
 
 def _html_encabezado(estado=None):
@@ -390,10 +467,13 @@ def _html_encabezado(estado=None):
     {_MARCA_SVG}
     <div>
       <h1>Triage dermatológico</h1>
-      <p>Apoyo a la decisión de referencia · versión {html.escape(_version_tag())}</p>
+      <p>Herramienta de apoyo a la decisión para personal médico de triage. No diagnostica. · versión {html.escape(_version_tag())}</p>
     </div>
   </div>
-  <p class="estado {clase}"><span class="punto" aria-hidden="true"></span>{html.escape(texto)}</p>
+  <div class="acciones">
+    <p class="estado {clase}"><span class="punto" aria-hidden="true"></span>{html.escape(texto)}</p>
+    {_INTERRUPTOR_TEMA}
+  </div>
 </header>"""
 
 
@@ -431,148 +511,240 @@ def _consultar_evento(sintoma, foto):
 # Diseño: herramienta clínica de trabajo, no página de demo. Superficies planas
 # separadas por un borde de 1px (sin vidrio, sin degradados, sin sombras en
 # reposo); el color solo aparece en la decisión, que es lo único que significa
-# algo. Botón principal casi negro, para que el rojo quede reservado a "urgente".
-# Atkinson Hyperlegible: diseñada para baja visión, legible con prisa.
-_TINTA = "#111418"
-_TINTA_SUAVE = "#4b535c"
-_BORDE = "#e3e6ea"
-_FONDO = "#f4f5f7"
+# algo. Botón principal neutro (casi negro en claro, casi blanco en oscuro), para
+# que el rojo quede reservado a "urgente". Atkinson Hyperlegible: diseñada para
+# baja visión, legible con prisa. Sigue el modo claro/oscuro del sistema.
+_CLARO = {"fondo": "#f4f5f7", "superficie": "#ffffff", "borde": "#e3e6ea", "control": "#cfd4da",
+          "tinta": "#111418", "suave": "#4b535c", "hover": "#f1f3f5",
+          "primario": "#1d1f20", "primario_hover": "#33373b", "primario_texto": "#ffffff"}
+_OSCURO = {"fondo": "#0f1113", "superficie": "#181a1d", "borde": "#2c3035", "control": "#3d434a",
+           "tinta": "#f1f3f5", "suave": "#aab1b9", "hover": "#23272b",
+           "primario": "#f1f3f5", "primario_hover": "#d9dde1", "primario_texto": "#111418"}
 
-_TEMA = gr.themes.Base(
-    primary_hue="neutral",
-    neutral_hue="neutral",
-    font=[gr.themes.GoogleFont("Atkinson Hyperlegible"), "system-ui", "sans-serif"],
-    radius_size="md",
-).set(
-    body_background_fill=_FONDO, body_background_fill_dark=_FONDO,
-    body_text_color=_TINTA, body_text_color_dark=_TINTA,
-    body_text_color_subdued=_TINTA_SUAVE, body_text_color_subdued_dark=_TINTA_SUAVE,
-    body_text_size="17px",
-    block_background_fill="#ffffff", block_background_fill_dark="#ffffff",
-    block_border_color=_BORDE, block_border_color_dark=_BORDE,
-    block_border_width="1px", block_radius="8px", block_shadow="none", block_shadow_dark="none",
-    block_label_background_fill="#ffffff", block_label_background_fill_dark="#ffffff",
-    block_label_text_color=_TINTA, block_label_text_color_dark=_TINTA,
-    block_label_text_size="16px", block_label_text_weight="700", block_label_border_width="0px",
-    block_title_text_color=_TINTA, block_title_text_color_dark=_TINTA,
-    block_title_text_size="16px", block_title_text_weight="700",
-    block_info_text_color=_TINTA_SUAVE, block_info_text_color_dark=_TINTA_SUAVE, block_info_text_size="15px",
-    input_background_fill="#ffffff", input_background_fill_dark="#ffffff",
-    input_border_color="#cfd4da", input_border_color_dark="#cfd4da",
-    input_border_color_focus=_TINTA, input_border_color_focus_dark=_TINTA,
-    input_radius="8px", input_text_size="17px", input_shadow="none", input_shadow_focus="none",
-    button_primary_background_fill="#1d1f20", button_primary_background_fill_dark="#1d1f20",
-    button_primary_background_fill_hover="#33373b", button_primary_background_fill_hover_dark="#33373b",
-    button_primary_text_color="#ffffff", button_primary_text_color_dark="#ffffff",
-    button_primary_border_color="#1d1f20", button_primary_border_color_dark="#1d1f20",
-    button_secondary_background_fill="#ffffff", button_secondary_background_fill_dark="#ffffff",
-    button_secondary_background_fill_hover="#f1f3f5", button_secondary_background_fill_hover_dark="#f1f3f5",
-    button_secondary_border_color="#cfd4da", button_secondary_border_color_dark="#cfd4da",
-    button_secondary_text_color=_TINTA, button_secondary_text_color_dark=_TINTA,
-    button_large_radius="8px", button_large_text_size="17px", button_large_text_weight="700",
-    button_small_radius="8px",
-    border_color_primary=_BORDE, border_color_primary_dark=_BORDE,
-    color_accent_soft="#f1f3f5", color_accent_soft_dark="#f1f3f5",
-    layout_gap="16px",
-)
 
-# Herramienta de consultorio (luz de día): se fija el modo claro aunque el
-# navegador esté en oscuro, para que contraste y colores de la decisión sean
-# siempre los revisados.
-_JS_MODO_CLARO = "() => { document.body.classList.remove('dark'); document.documentElement.classList.remove('dark'); }"
+def _tema():
+    c, o = _CLARO, _OSCURO
+    return gr.themes.Base(
+        primary_hue="neutral",
+        neutral_hue="neutral",
+        font=[gr.themes.GoogleFont("Atkinson Hyperlegible"), "system-ui", "sans-serif"],
+        radius_size="md",
+    ).set(
+        body_background_fill=c["fondo"], body_background_fill_dark=o["fondo"],
+        body_text_color=c["tinta"], body_text_color_dark=o["tinta"],
+        body_text_color_subdued=c["suave"], body_text_color_subdued_dark=o["suave"],
+        body_text_size="17px",
+        block_background_fill=c["superficie"], block_background_fill_dark=o["superficie"],
+        block_border_color=c["borde"], block_border_color_dark=o["borde"],
+        block_border_width="1px", block_radius="8px", block_shadow="none", block_shadow_dark="none",
+        block_label_background_fill=c["superficie"], block_label_background_fill_dark=o["superficie"],
+        block_label_text_color=c["tinta"], block_label_text_color_dark=o["tinta"],
+        block_label_text_size="16px", block_label_text_weight="700", block_label_border_width="0px",
+        block_title_text_color=c["tinta"], block_title_text_color_dark=o["tinta"],
+        block_title_text_size="16px", block_title_text_weight="700",
+        block_info_text_color=c["suave"], block_info_text_color_dark=o["suave"], block_info_text_size="15px",
+        input_background_fill=c["superficie"], input_background_fill_dark=o["fondo"],
+        input_border_color=c["control"], input_border_color_dark=o["control"],
+        input_border_color_focus=c["tinta"], input_border_color_focus_dark=o["tinta"],
+        input_radius="8px", input_text_size="17px", input_shadow="none", input_shadow_focus="none",
+        button_primary_background_fill=c["primario"], button_primary_background_fill_dark=o["primario"],
+        button_primary_background_fill_hover=c["primario_hover"], button_primary_background_fill_hover_dark=o["primario_hover"],
+        button_primary_text_color=c["primario_texto"], button_primary_text_color_dark=o["primario_texto"],
+        button_primary_border_color=c["primario"], button_primary_border_color_dark=o["primario"],
+        button_secondary_background_fill=c["superficie"], button_secondary_background_fill_dark=o["superficie"],
+        button_secondary_background_fill_hover=c["hover"], button_secondary_background_fill_hover_dark=o["hover"],
+        button_secondary_border_color=c["control"], button_secondary_border_color_dark=o["control"],
+        button_secondary_text_color=c["tinta"], button_secondary_text_color_dark=o["tinta"],
+        button_large_radius="8px", button_large_text_size="17px", button_large_text_weight="700",
+        button_small_radius="8px",
+        border_color_primary=c["borde"], border_color_primary_dark=o["borde"],
+        color_accent_soft=c["hover"], color_accent_soft_dark=o["hover"],
+        layout_gap="16px",
+    )
 
-_CSS = f"""
-.gradio-container {{ max-width: 1240px !important; margin: 0 auto !important; }}
-.gradio-container ::selection {{ background: #d7dde4; }}
 
-/* Encabezado: marca + nombre a la izquierda, estado a la derecha. */
-.encabezado {{ display: flex; align-items: center; justify-content: space-between; gap: 16px;
-               flex-wrap: wrap; padding: 4px 0 8px; }}
-.encabezado .marca {{ display: flex; align-items: center; gap: 12px; }}
-.encabezado h1 {{ font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; color: {_TINTA}; }}
-.encabezado .marca p {{ margin: 2px 0 0; font-size: 15px; color: {_TINTA_SUAVE}; }}
-.encabezado .estado {{ display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 15px;
-                       color: {_TINTA}; background: #ffffff; border: 1px solid {_BORDE};
-                       border-radius: 999px; padding: 6px 12px; }}
-.encabezado .punto {{ width: 8px; height: 8px; border-radius: 50%; background: #9aa1a9; }}
-.estado-ok .punto {{ background: #1f7a48; }}
-.estado-cargando .punto {{ background: #b45309; }}
-.estado-error .punto {{ background: #c4242a; }}
+_TEMA = _tema()
 
-.nota-espera, .nota-espera p {{ color: {_TINTA_SUAVE} !important; font-size: 15px !important; margin: 0; }}
-
-/* Tarjeta de resultado: una sola superficie, secciones separadas por una
-   línea; la decisión es el único bloque con color. */
-.resultado {{ background: #ffffff; border: 1px solid {_BORDE}; border-radius: 8px; overflow: hidden;
-             color: {_TINTA}; animation: aparecer 220ms cubic-bezier(0.23, 1, 0.32, 1); }}
-.resultado h2 {{ margin: 0; }}
-.resultado p {{ margin: 0; font-size: 17px; line-height: 1.55; color: {_TINTA}; }}
-.resultado .decision {{ padding: 24px; display: grid; gap: 10px; }}
-.resultado .decision h2 {{ font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; }}
-.resultado .decision .apoyo {{ font-size: 15px; color: {_TINTA_SUAVE}; }}
-.resultado .bloque {{ padding: 20px 24px; border-top: 1px solid {_BORDE}; display: grid; gap: 8px; }}
-.resultado .bloque h3 {{ margin: 0; font-size: 18px; font-weight: 700; color: {_TINTA}; }}
-.resultado .bloque .fuentes, .resultado .bloque .nota {{ font-size: 15px; color: {_TINTA_SUAVE}; }}
-.resultado .bloque .aviso {{ background: #fff4d6; color: #7a3d00; border-radius: 6px; padding: 10px 12px; }}
-
-/* Colores de la decisión: fondo pálido y texto oscuro del mismo tono (≥7:1). */
-.tono-urgente {{ background: #fdecea; }}
-.tono-urgente h2 {{ color: #8a1c1c; }}
-.tono-rutina {{ background: #e3f4e9; }}
-.tono-rutina h2 {{ color: #0f4d2c; }}
-.tono-sin-senal {{ background: #fff1cc; }}
-.tono-sin-senal h2 {{ color: #7a3d00; }}
-
-.resultado-vacio, .resultado-error {{ padding: 24px; display: grid; gap: 8px; }}
-.resultado-vacio h2, .resultado-error h2 {{ font-size: 20px; font-weight: 700; }}
-.resultado-vacio p {{ color: {_TINTA_SUAVE}; }}
-.resultado-error h2 {{ color: #8a1c1c; }}
-
-.resultado-cargando .cargando-texto {{ font-weight: 700; }}
-.resultado-cargando .barra {{ display: block; height: 14px; width: 100%; border-radius: 4px;
-                              background: #e9ecef; animation: latido 1.2s ease-in-out infinite alternate; }}
-.resultado-cargando .barra-titulo {{ height: 32px; width: 70%; }}
-.resultado-cargando .barra-corta {{ width: 45%; }}
-
-@keyframes aparecer {{ from {{ opacity: 0; transform: translateY(4px); }} }}
-@keyframes latido {{ from {{ opacity: 1; }} to {{ opacity: 0.45; }} }}
-
-/* Botones: alto táctil de 48px y respuesta al presionar. */
-.gradio-container button {{ min-height: 48px; transition: transform 120ms ease-out, background-color 150ms ease-out; }}
-.gradio-container button:active:not(:disabled) {{ transform: scale(0.98); }}
-.gradio-container button:focus-visible {{ outline: 2px solid {_TINTA}; outline-offset: 2px; }}
-.gradio-container button:disabled {{ opacity: 1; background: #5b6168 !important; color: #ffffff !important; cursor: progress; }}
-
-/* Acordeones (Detalle técnico, Estado): mismo peso que las etiquetas de los campos. */
-.gradio-container .label-wrap span {{ font-size: 16px; font-weight: 700; color: {_TINTA}; }}
-
-/* Es una herramienta clínica, no una demo: sin el pie "Construido con Gradio". */
-footer {{ display: none !important; }}
-
-/* Ejemplos de un clic: botones secundarios discretos. */
-#ejemplos button {{ background: #ffffff; border: 1px solid #cfd4da; border-radius: 8px; color: {_TINTA};
-                    font-size: 15px; min-height: 44px; }}
-#ejemplos button:hover {{ background: #f1f3f5; }}
-
-@media (max-width: 640px) {{
-    .gradio-container {{ padding-left: 16px !important; padding-right: 16px !important; }}
-    .resultado .decision {{ padding: 20px 16px; }}
-    .resultado .decision h2 {{ font-size: 28px; }}
-    .resultado .bloque {{ padding: 16px; }}
-    .encabezado .estado {{ font-size: 14px; }}
-}}
-
-@media (prefers-reduced-motion: reduce) {{
-    .resultado, .resultado-cargando .barra {{ animation: none; }}
-    .gradio-container button {{ transition: none; }}
-    .gradio-container button:active:not(:disabled) {{ transform: none; }}
-}}
+# Colores propios de la tarjeta y el encabezado. Gradio marca el modo oscuro con
+# la clase .dark en <body>; las mismas variables cambian ahí. Cada par fondo/texto
+# de la decisión pasa 7:1 de contraste en los dos modos.
+_CSS_COLORES = """
+:root {
+  --fondo: #f4f5f7; --superficie: #ffffff; --superficie-2: #f9fafb; --borde: #e3e6ea; --control: #cfd4da;
+  --tinta: #111418; --tinta-suave: #4b535c; --hover: #f1f3f5; --seleccion: #d7dde4; --barra: #e9ecef;
+  --primario: #1d1f20; --primario-hover: #33373b; --primario-texto: #ffffff;
+  --urg-fondo: #fdecea; --urg-tinta: #8a1c1c;
+  --rut-fondo: #e3f4e9; --rut-tinta: #0f4d2c;
+  --sin-fondo: #fff1cc; --sin-tinta: #7a3d00;
+  --ok: #1f7a48; --cargando: #b45309; --error: #c4242a;
+  --punto-urg: #c4242a; --punto-rut: #1f7a48;
+}
+.dark {
+  --fondo: #0f1113; --superficie: #181a1d; --superficie-2: #1e2124; --borde: #2c3035; --control: #3d434a;
+  --tinta: #f1f3f5; --tinta-suave: #aab1b9; --hover: #23272b; --seleccion: #3a4048; --barra: #2a2e33;
+  --primario: #f1f3f5; --primario-hover: #d9dde1; --primario-texto: #111418;
+  --urg-fondo: #3b1a1a; --urg-tinta: #ffb4ab;
+  --rut-fondo: #13301f; --rut-tinta: #8fe0b0;
+  --sin-fondo: #3a2c0c; --sin-tinta: #ffd27a;
+  --ok: #4fc283; --cargando: #f0a54a; --error: #ff8a80;
+  --punto-urg: #ff8a80; --punto-rut: #4fc283;
+}
 """
+
+_CSS_COMPARTIDO = """
+.gradio-container { max-width: 1240px !important; margin: 0 auto !important; }
+.gradio-container ::selection { background: var(--seleccion); }
+
+.encabezado { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+              flex-wrap: wrap; padding: 4px 0 8px; }
+.encabezado .marca { display: flex; align-items: center; gap: 12px; }
+.encabezado h1 { font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; color: var(--tinta); }
+.encabezado .marca p { margin: 2px 0 0; font-size: 15px; color: var(--tinta-suave); }
+.logo { flex: none; }
+.logo-fondo { fill: var(--primario); }
+.logo-trazo { stroke: var(--primario-texto); }
+
+.resultado { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; overflow: hidden;
+             color: var(--tinta); }
+/* Al abrir la página (antes de body.ya-cargo): los recuadros entran una sola vez,
+   escalonados de arriba abajo, en menos de medio segundo en total. */
+body:not(.ya-cargo) .entrada { animation: entrar 420ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+body:not(.ya-cargo) .entrada-2 { animation-delay: 70ms; }
+body:not(.ya-cargo) .entrada-3 { animation-delay: 140ms; }
+body:not(.ya-cargo) .entrada-4 { animation-delay: 210ms; }
+/* Gradio repite elem_classes en el div interno: que no se anime dos veces. */
+body:not(.ya-cargo) .entrada .entrada { animation: none; }
+
+/* Cada resultado nuevo entra por secciones (decisión, foto, evidencia): se lee
+   en el orden en que importa. No depende de body.ya-cargo a propósito: si lo
+   hiciera, al añadirse esa clase la tarjeta ya visible volvería a animarse. */
+.resultado > * { animation: entrar 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.resultado > *:nth-child(2) { animation-delay: 70ms; }
+.resultado > *:nth-child(3) { animation-delay: 140ms; }
+.resultado h2 { margin: 0; }
+.resultado p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--tinta); }
+.resultado .decision { padding: 24px; display: grid; gap: 10px; }
+.resultado .decision h2 { font-size: 30px; font-weight: 700; line-height: 1.18; letter-spacing: -0.01em; }
+.resultado .decision .apoyo { font-size: 15px; color: var(--tinta-suave); }
+.resultado .bloque { padding: 20px 24px; border-top: 1px solid var(--borde); display: grid; gap: 8px; }
+.resultado .bloque h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--tinta); }
+.resultado .bloque .fuentes, .resultado .bloque .nota { font-size: 15px; color: var(--tinta-suave); }
+.resultado .bloque .aviso { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 6px; padding: 10px 12px; }
+
+/* Marcas por señal: fondo neutro (para que se lean igual sobre cualquier tono
+   de la decisión), punto del color de lo que dijo esa señal y la palabra. */
+.senales { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.senal { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px;
+         background: var(--superficie); border: 1px solid var(--borde); font-size: 15px; color: var(--tinta);
+         white-space: nowrap; }
+.senal strong { font-weight: 700; }
+.senal-punto { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.senal-urgente .senal-punto { background: var(--punto-urg); }
+.senal-rutina .senal-punto { background: var(--punto-rut); }
+
+.tono-urgente { background: var(--urg-fondo); }
+.tono-urgente h2 { color: var(--urg-tinta); }
+.tono-rutina { background: var(--rut-fondo); }
+.tono-rutina h2 { color: var(--rut-tinta); }
+.tono-sin-senal { background: var(--sin-fondo); }
+.tono-sin-senal h2 { color: var(--sin-tinta); }
+
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
+
+.gradio-container .label-wrap span { font-size: 16px; font-weight: 700; color: var(--tinta); }
+footer { display: none !important; }
+
+/* Interruptor claro/oscuro: dos opciones con texto e ícono; un fondo se
+   desliza bajo la activa. */
+.acciones { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.gradio-container .interruptor-tema { position: relative; flex: none; display: inline-grid;
+    grid-template-columns: 1fr 1fr; align-items: center; height: 40px; min-height: 0; padding: 3px;
+    border-radius: 999px; border: 1px solid var(--control); background: var(--superficie); cursor: pointer;
+    transition: border-color 200ms ease-out; }
+.gradio-container .interruptor-tema:hover { border-color: var(--tinta-suave); }
+.gradio-container .interruptor-tema:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.interruptor-tema .indicador { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
+    border-radius: 999px; background: var(--tinta); transition: transform 280ms cubic-bezier(0.23, 1, 0.32, 1); }
+.dark .interruptor-tema .indicador { transform: translateX(100%); }
+.interruptor-tema .opcion { position: relative; z-index: 1; display: inline-flex; align-items: center;
+    justify-content: center; gap: 6px; height: 100%; padding: 0 12px; font-size: 14px; font-weight: 700;
+    color: var(--tinta-suave); transition: color 200ms ease-out; }
+/* Gradio pinta los SVG de los botones con su propio color: aquí el ícono
+   sigue el color del texto de su opción. */
+.interruptor-tema .opcion svg { color: inherit !important; flex: none; }
+.interruptor-tema .opcion svg * { color: inherit !important; }
+.interruptor-tema .opcion svg, .interruptor-tema .opcion svg * { stroke: currentColor !important; fill: none !important; }
+.interruptor-tema .opcion-claro { color: var(--superficie); }
+.dark .interruptor-tema .opcion-claro { color: var(--tinta-suave); }
+.dark .interruptor-tema .opcion-oscuro { color: var(--superficie); }
+.interruptor-tema:active .indicador { transform: scale(0.96); }
+.dark .interruptor-tema:active .indicador { transform: translateX(100%) scale(0.96); }
+
+@media (max-width: 640px) {
+    .gradio-container { padding-left: 16px !important; padding-right: 16px !important; }
+    .resultado .decision { padding: 20px 16px; }
+    .resultado .decision h2 { font-size: 26px; }
+    .resultado .bloque { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .resultado > *, body:not(.ya-cargo) .entrada { animation: none; }
+    .interruptor-tema, .interruptor-tema .indicador, .interruptor-tema .opcion { transition: none; }
+}
+"""
+
+_CSS_APP = """
+.encabezado .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 15px;
+                      color: var(--tinta); background: var(--superficie); border: 1px solid var(--borde);
+                      border-radius: 999px; padding: 6px 12px; }
+.encabezado .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--tinta-suave); }
+.estado-ok .punto { background: var(--ok); }
+.estado-cargando .punto { background: var(--cargando); animation: latido 0.9s ease-in-out infinite alternate; }
+.estado-error .punto { background: var(--error); }
+
+.nota-espera, .nota-espera p { color: var(--tinta-suave) !important; font-size: 15px !important; margin: 0; }
+
+.resultado-vacio, .resultado-error { padding: 24px; display: grid; gap: 8px; }
+.resultado-vacio h2, .resultado-error h2 { font-size: 20px; font-weight: 700; }
+.resultado-vacio p { color: var(--tinta-suave); }
+.resultado-error h2 { color: var(--urg-tinta); }
+
+.resultado-cargando .cargando-texto { font-weight: 700; }
+.resultado-cargando .barra { display: block; height: 14px; width: 100%; border-radius: 4px;
+                             background: var(--barra); animation: latido 1.2s ease-in-out infinite alternate; }
+.resultado-cargando .barra-titulo { height: 30px; width: 70%; }
+.resultado-cargando .barra-corta { width: 45%; }
+@keyframes latido { from { opacity: 1; } to { opacity: 0.45; } }
+
+/* Botones: alto táctil de 48px y respuesta al presionar. El encabezado de los
+   acordeones también es un <button> (.label-wrap): se excluye, si no crece,
+   la flecha se sale y aparece un scroll horizontal. */
+.gradio-container button:not(.label-wrap):not(.interruptor-tema) { min-height: 48px; transition: transform 120ms ease-out, background-color 150ms ease-out; }
+.gradio-container button:not(.label-wrap):not(.interruptor-tema):active:not(:disabled) { transform: scale(0.98); }
+.gradio-container button:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.gradio-container button:not(.label-wrap):not(.interruptor-tema):disabled { opacity: 1; background: var(--tinta-suave) !important;
+                                                     color: var(--superficie) !important; cursor: progress; }
+
+#ejemplos button { background: var(--superficie); border: 1px solid var(--control); border-radius: 8px;
+                   color: var(--tinta); font-size: 15px; min-height: 44px; }
+#ejemplos button:hover { background: var(--hover); }
+
+@media (max-width: 640px) { .encabezado .estado { font-size: 14px; } }
+@media (prefers-reduced-motion: reduce) {
+    .resultado-cargando .barra, .estado-cargando .punto { animation: none; }
+    .gradio-container button:not(.label-wrap):not(.interruptor-tema) { transition: none; }
+    .gradio-container button:not(.label-wrap):not(.interruptor-tema):active:not(:disabled) { transform: none; }
+}
+"""
+
+_CSS = _CSS_COLORES + _CSS_COMPARTIDO + _CSS_APP
 
 
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico", theme=_TEMA, css=_CSS, js=_JS_MODO_CLARO) as demo:
-        encabezado = gr.HTML(_html_encabezado(), padding=False)
+    with gr.Blocks(title="Triage dermatológico", theme=_TEMA, css=_CSS, js=_JS_TEMA) as demo:
+        # La clase de entrada va en el bloque (que persiste), no en el <header>:
+        # demo.load lo vuelve a pintar y la animación arrancaría dos veces.
+        encabezado = gr.HTML(_html_encabezado(), padding=False, elem_classes=["entrada"])
 
         # render=False: se crean aquí para poder referenciarlos en gr.Examples
         # (columna izquierda) y se ubican en la columna derecha con .render().
@@ -582,7 +754,7 @@ def construir_app():
         # Dos columnas en escritorio (consulta | resultado); en el celular
         # Gradio las apila porque no caben dos de 320px de ancho mínimo.
         with gr.Row(equal_height=False):
-            with gr.Column(scale=5, min_width=320):
+            with gr.Column(scale=5, min_width=320, elem_classes=["entrada", "entrada-2"]):
                 sintoma = gr.Textbox(
                     label="Síntoma del paciente", lines=4,
                     placeholder="Describa la lesión: tiempo de evolución, cambios de color o tamaño, sangrado, picor",
@@ -610,7 +782,7 @@ def construir_app():
                         "Foto borrosa (no evaluable)",
                     ],
                 )
-            with gr.Column(scale=7, min_width=320):
+            with gr.Column(scale=7, min_width=320, elem_classes=["entrada", "entrada-3"]):
                 resultado_html.render()
                 with gr.Accordion("Detalle técnico", open=False):
                     detalle_md.render()
@@ -624,7 +796,7 @@ def construir_app():
             _finalizar_consulta, outputs=[boton],
         )
 
-        with gr.Accordion("Estado del sistema", open=False):
+        with gr.Accordion("Estado del sistema", open=False, elem_classes=["entrada", "entrada-4"]):
             estado_md = gr.Markdown()
             gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
 
