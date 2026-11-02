@@ -42,7 +42,19 @@ with open(os.path.join(_AQUI, "casos_precalculados.json"), encoding="utf-8") as 
 _CASOS = {c["id"]: c for c in _DATA["casos"]}
 _OPCIONES = [(c["titulo"], c["id"]) for c in _DATA["casos"]]
 
-_NOTEBOOK_URL = "https://github.com/Isa-Idarraga/triage-dermatologico-ia/blob/main/notebooks/M5_app_kaggle.ipynb"
+# Adónde lleva el botón del encabezado, sin tocar código: se configura en el
+# Space (Settings -> Variables and secrets -> New variable).
+#   ENLACE_VIVO   el link gradio.live de la sesión de Kaggle abierta (el día de la
+#                 demo); cambia en cada sesión, por eso no va fijo aquí.
+#   ENLACE_KAGGLE el notebook público en Kaggle (kaggle.com/code/...), fijo.
+# Sin ninguna de las dos, cae al notebook en GitHub.
+_NOTEBOOK_GITHUB = "https://github.com/Isa-Idarraga/triage-dermatologico-ia/blob/main/notebooks/M5_app_kaggle.ipynb"
+if os.environ.get("ENLACE_VIVO"):
+    _ENLACE, _ENLACE_TEXTO = os.environ["ENLACE_VIVO"], "Probar en vivo"
+elif os.environ.get("ENLACE_KAGGLE"):
+    _ENLACE, _ENLACE_TEXTO = os.environ["ENLACE_KAGGLE"], "Abrir en Kaggle"
+else:
+    _ENLACE, _ENLACE_TEXTO = _NOTEBOOK_GITHUB, "Ver el notebook"
 
 
 # --- Vista clínica, reconstruida desde el texto técnico guardado ---------------
@@ -246,7 +258,7 @@ _HTML_ENCABEZADO = f"""
     </div>
   </div>
   <div class="acciones">
-    <a class="enlace-vivo" href="{_NOTEBOOK_URL}" target="_blank" rel="noopener">Probar en vivo en Kaggle</a>
+    <a class="enlace-vivo" href="{html.escape(_ENLACE, quote=True)}" target="_blank" rel="noopener">{_ENLACE_TEXTO}</a>
     {_INTERRUPTOR_TEMA}
   </div>
 </header>
