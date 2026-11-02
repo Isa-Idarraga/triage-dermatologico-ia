@@ -80,9 +80,25 @@ _CSS = """
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
     transition: border-color 200ms ease, background-color 200ms ease;
 }
+/* El fondo de la tarjeta es siempre claro, en modo claro u oscuro, para que el
+   color del veredicto se note igual -- por eso el texto se fija en oscuro
+   también siempre: en modo oscuro el tema pone el texto en blanco por defecto,
+   lo que lo deja invisible sobre este fondo claro. */
+.tarjeta-decision, .tarjeta-decision * { color: #0F172A !important; }
 .tarjeta-urgente     { border-left-color: #DC2626; background: #FEF2F2; }
 .tarjeta-no-urgente  { border-left-color: #059669; background: #ECFDF5; }
 .tarjeta-sin-senal   { border-left-color: #D97706; background: #FFFBEB; }
+
+.tarjeta-secundaria {
+    border-radius: 14px;
+    padding: 16px 20px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    height: 100%;
+}
+.tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
+.tarjeta-secundaria h3 { margin-top: 0; }
 
 @media (prefers-reduced-motion: reduce) {
     .tarjeta-decision { transition: none; }
@@ -106,10 +122,10 @@ def construir_app():
         pregunta_md = gr.Markdown()
         with gr.Row():
             imagen = gr.Image(label="Foto de la lesión", interactive=False)
-            with gr.Column():
-                decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
-                foto_md = gr.Markdown()
-        evidencia_md = gr.Markdown()
+            decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
+        with gr.Row():
+            foto_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
+            evidencia_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
 
         selector.change(
             mostrar_caso, inputs=[selector],
