@@ -120,6 +120,7 @@
     }
   ],
   "fotos_degradadas": {
+    "nota": "Las filas 'ruido' y 'gris liso' son una sola imagen cada una repetida 10 veces (misma semilla y mismo tamaño en las 10 fotos base); los 10 de esas filas no son pruebas independientes. Desenfoque, 48 px y casi negra sí son 10 imágenes distintas.",
     "no_evaluable": {
       "desenfoque fuerte": 10,
       "muy pequeña (48 px)": 10,

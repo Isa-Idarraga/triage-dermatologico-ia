@@ -391,8 +391,11 @@ def cargar_generador():
         mayor, menor = (int(x) for x in transformers.__version__.split(".")[:2])
         # transformers >= 4.56 renombró torch_dtype -> dtype
         arg_dtype = "dtype" if (mayor, menor) >= (4, 56) else "torch_dtype"
-        _gen_model = AutoModelForCausalLM.from_pretrained(GEN_MODEL, revision=GEN_REVISION, **{arg_dtype: dtype})
-        _gen_model = _gen_model.to(device).eval()
+        import cuantizacion  # M5: interruptor opcional (4 bits); apagado = igual que antes
+        kw = {arg_dtype: dtype}
+        kw.update(cuantizacion.kwargs_carga("generador"))
+        _gen_model = AutoModelForCausalLM.from_pretrained(GEN_MODEL, revision=GEN_REVISION, **kw)
+        _gen_model = cuantizacion.mover(_gen_model, device, "generador").eval()
     return _gen_tok, _gen_model
 
 

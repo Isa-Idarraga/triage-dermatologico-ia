@@ -256,9 +256,11 @@ def _cargar_cerebro():
     _tokenizer_agente = AutoTokenizer.from_pretrained(
         MODEL_ID_AGENTE, revision=MODEL_REVISION_AGENTE
     )
+    import cuantizacion  # M5: interruptor opcional (4 bits / fp16); apagado = igual que antes
     _modelo_agente = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID_AGENTE, revision=MODEL_REVISION_AGENTE
-    ).to(device)
+        MODEL_ID_AGENTE, revision=MODEL_REVISION_AGENTE, **cuantizacion.kwargs_carga("cerebro")
+    )
+    _modelo_agente = cuantizacion.mover(_modelo_agente, device, "cerebro")
     _modelo_agente.eval()
 
 

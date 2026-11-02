@@ -1,0 +1,29 @@
+corrida,id,tipo,categoria_adversarial,categoria_ham10000,esperado,tipo_criterio,hay_foto,etiqueta_predicha,senal_disponible,acierto_d1,puntaje_criterio,etiqueta_ver,score_ver,ver_no_evaluable,etiqueta_beto,confianza_beto,etiqueta_rag,tools_usadas,ruta_cierre,latencia_s,respuesta
+con_foto,img_01,gold,,mel,urgente,exacto,True,urgente,True,True,1,urgente,0.9147,False,,,urgente,"ver_imagen,buscar_informacion_dermatologica",sintesis_pasos_agotados,17.13,"URGENCIA: urgente
+JUSTIFICACIÓN: El lunar muestra todos los signos de alarma mencionados en el contexto, específicamente cambia de tamaño, forma o color, tiene bordes irregulares, y tiene más de un color. Estos son claramente indicativos de un melanoma, que es un tipo específico de cáncer de piel. Por lo tanto, debe ser remitido a dermatología con urgencia.
+FUENTES: [nci_01_melanoma_pdq], [cdc_01_sintomas_cancer_piel]"
+con_foto,img_02,gold,,nv,no_urgente,exacto,True,no_urgente,True,True,1,no_urgente,0.1416,False,,,no_urgente,"ver_imagen,buscar_informacion_dermatologica",responder_final,17.88,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El lunar es de un solo color y no muestra asimetría, borde dentado, color desparejo o diámetro mayor que un guisante. No hay evidencia de evolución. Según el protocolo interno, este tipo de lunar no requiere tratamiento inmediato y puede esperar a una cita de rutina.
+FUENTES: [nci_03_lunares_nevos_displasicos], [eq_01_protocolo_urgencia_equipo]"
+con_foto,img_03,gold,,nv,no_urgente,exacto,True,sin_senal,False,False,0,,,,,,,,sin_conclusion,5.36,No se llegó a una conclusión clara dentro del número de pasos permitido; se recomienda revisión manual.
+con_foto,img_04,gold,,mel,urgente,exacto,True,urgente,True,True,1,urgente,0.6757,False,,,no_urgente,"ver_imagen,buscar_informacion_dermatologica",sintesis_pasos_agotados,17.89,"Las señales no coincidieron (ver_imagen='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: El lunar en la pierna parece ser una lesión benigna, ya que está presente desde hace años y no causa molestias. Según el protocolo interno, estos tipos de lesiones son considerados no urgentes debido a su naturaleza benigna. Sin más cambios o signos de alarma, esta lesión no requiere tratamiento inmediato y podría ser evaluado por un dermatólogo en una cita regular.
+FUENTES: [nci_02_cancer_piel_no_melanoma_pdq], [eq_01_protocolo_urgencia_equipo]"
+con_foto,img_05,gold,,mel,urgente,exacto,True,no_urgente,True,False,0,no_urgente,0.2551,False,,,no_urgente,"ver_imagen,buscar_informacion_dermatologica",responder_final,25.64,"URGENCIA: no_urgente
+JUSTIFICACIÓN: El nevo displásico mencionado en el contexto no se identifica en la consulta. No hay cambios en la forma, textura o color del lunar, ni signos de alarma como dolor, sangrado o picazón. Además, no se describen signos de alarma como bordes irregulars, múltiples colores o anormales cambios en la forma. Por lo tanto, no se considera una lesión cancerosa o pre-cancerosa, por lo que se puede considerar una lesión benigna o precancerosa, lo cual indica que no es urgente. 
+FUENTES: [nci_01_melanoma_pdq], [eq_01_protocolo_urgencia_equipo]"
+con_foto,img_06,adversarial,foto_desenfocada,akiec,no_evaluable,valvula,True,sin_senal,False,,1,,,True,,,,ver_imagen,sintesis_pasos_agotados,6.2,"SIN SEÑAL: ninguna herramienta pudo dar un veredicto; se recomienda revisión manual.
+
+Aviso sobre la foto: no se pudo evaluar automáticamente (imagen desenfocada). Esto NO equivale a 'no urgente'."
+con_foto,img_07,adversarial,no_es_piel,,no_evaluable,valvula,True,sin_senal,False,,0,,,,,,,,sin_conclusion,6.0,No se llegó a una conclusión clara dentro del número de pasos permitido; se recomienda revisión manual.
+con_foto,img_08,gold,,mel,urgente,llamada_correcta,False,urgente,True,True,1,,,,urgente,0.9968,urgente,"clasificador_beto,buscar_informacion_dermatologica",sintesis_por_repeticion,15.93,"URGENCIA: urgente
+JUSTIFICACIÓN: El paciente presenta signos de alarma relacionados con cáncer de piel, específicamente un melanoma. Los signos mencionados incluyen cambios en el tamaño, forma y color del lunar, así como bordes irregulares y múltiples tonos de color. Estos síntomas son claramente asociados con un melanoma, lo que indica una urgencia médica inmediata.
+FUENTES: [nci_01_melanoma_pdq], [nci_02_cancer_piel_no_melanoma_pdq]"
+con_foto,img_09,gold,,,no_urgente,exacto,True,urgente,True,False,0,no_urgente,0.0085,False,urgente,0.9837,no_urgente,"ver_imagen,clasificador_beto,buscar_informacion_dermatologica",responder_final,26.46,"Las señales no coincidieron (ver_imagen='no_urgente', clasificador_beto='urgente', buscar_informacion_dermatologica='no_urgente'). Por seguridad clínica, el veredicto final es 'urgente' -- se prioriza no dejar pasar un caso potencialmente grave.
+
+Detalle de la búsqueda de evidencia: URGENCIA: no_urgente
+JUSTIFICACIÓN: El paciente tiene una lesión que ha estado presente durante varios años y no ha cambiado, lo cual indica que puede ser una lesión benigna. Según el protocolo interno del equipo, lesiones vasculares o lesiones que no han cambiado significativamente pueden ser consideradas como lesiones de rutina. Además, dado que el paciente es de piel oscura, hay un mayor riesgo de melanoma avanzado, pero esta lesión parece ser una lesión vascular o benigna, lo que le permitirá esperar a una cita de rutina sin preocupaciones inmediatas.
+FUENTES: [eq_01_protocolo_urgencia_equipo], [nci_03_lunares_nevos_displasicos]"
+con_foto,img_10,gold,,,urgente,exacto,True,sin_senal,False,False,0,,,,,,,,sin_conclusion,6.12,No se llegó a una conclusión clara dentro del número de pasos permitido; se recomienda revisión manual.
