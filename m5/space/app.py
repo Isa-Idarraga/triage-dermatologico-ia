@@ -40,6 +40,18 @@ _CASOS = {c["id"]: c for c in _DATA["casos"]}
 _OPCIONES = [(c["titulo"], c["id"]) for c in _DATA["casos"]]
 
 
+_CLASE_POR_ICONO = {"🔴": "tarjeta-urgente", "🟢": "tarjeta-no-urgente", "🟠": "tarjeta-sin-senal", "🔶": "tarjeta-sin-senal"}
+
+
+def _clase_decision(decision_md):
+    """La tarjeta de cada caso ya viene con un icono de veredicto al inicio del texto
+    (casos_precalculados.json) -- se usa para pintar el mismo color que en m5/app/app.py."""
+    for icono, clase in _CLASE_POR_ICONO.items():
+        if icono in decision_md:
+            return clase
+    return "tarjeta-sin-senal"
+
+
 def mostrar_caso(caso_id):
     c = _CASOS[caso_id]
     imagen = os.path.join(_AQUI, c["imagen"]) if c.get("imagen") else None
@@ -48,17 +60,40 @@ def mostrar_caso(caso_id):
     return (
         pregunta_md,
         imagen,
-        c["decision_md"],
+        gr.Markdown(c["decision_md"], elem_classes=["tarjeta-decision", _clase_decision(c["decision_md"])]),
         c["foto_md"],
         c["evidencia_md"] + lectura_md,
     )
 
 
+# Misma paleta y tipografía que m5/app/app.py (skill ui-ux-pro-max -- healthcare,
+# Atkinson Hyperlegible), para que la vitrina y la app real se vean como un solo sistema.
+_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+
+.gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
+
+.tarjeta-decision {
+    border-radius: 14px;
+    padding: 16px 20px;
+    border-left: 6px solid #D97706;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    transition: border-color 200ms ease, background-color 200ms ease;
+}
+.tarjeta-urgente     { border-left-color: #DC2626; background: #FEF2F2; }
+.tarjeta-no-urgente  { border-left-color: #059669; background: #ECFDF5; }
+.tarjeta-sin-senal   { border-left-color: #D97706; background: #FFFBEB; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tarjeta-decision { transition: none; }
+}
+"""
+
 _TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
 
 
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico -- vitrina", theme=_TEMA) as demo:
+    with gr.Blocks(title="Triage dermatológico -- vitrina", theme=_TEMA, css=_CSS) as demo:
         gr.Markdown(
             "# 🩺 Triage dermatológico -- vitrina\n"
             "Esta página muestra **casos ya corridos** en GPU T4 (no corre los modelos "
@@ -72,7 +107,7 @@ def construir_app():
         with gr.Row():
             imagen = gr.Image(label="Foto de la lesión", interactive=False)
             with gr.Column():
-                decision_md = gr.Markdown()
+                decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
                 foto_md = gr.Markdown()
         evidencia_md = gr.Markdown()
 

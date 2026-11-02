@@ -88,13 +88,23 @@ def _interpretar(resultado):
     return {"veredicto": veredicto, "señales": señales, "ruta_cierre": _ruta_cierre(resultado)}
 
 
+_SUGERENCIA_APOYO = "_Sugerencia de apoyo: la decisión final es del profesional._"
+
+
 def _bloque_decision(interpretacion):
+    """Devuelve (texto, clase_css) -- la clase pinta la tarjeta según el veredicto
+    (nunca solo el color: siempre lleva icono + palabra clínica también)."""
     if interpretacion["veredicto"] is None:
-        return "## 🔶 Sin señal: revisión manual\nNinguna herramienta pudo dar un veredicto."
+        texto = f"## 🟠 Sin señal: revisión manual\nNinguna herramienta pudo dar un veredicto.\n\n{_SUGERENCIA_APOYO}"
+        return texto, "tarjeta-sin-senal"
     veredicto = interpretacion["veredicto"]
-    icono = "🔴" if veredicto == "urgente" else "🟢"
+    if veredicto == "urgente":
+        icono, texto_clinico, clase = "🔴", "Referir con prioridad", "tarjeta-urgente"
+    else:
+        icono, texto_clinico, clase = "🟢", "Puede esperar cita de rutina", "tarjeta-no-urgente"
     disparo = ", ".join(f"{n}={v}" for n, v in interpretacion["señales"].items())
-    return f"## {icono} Decisión sugerida: **{veredicto.upper()}**\nSeñal: {disparo}"
+    texto = f"## {icono} {texto_clinico}\nSeñal: {disparo}\n\n{_SUGERENCIA_APOYO}"
+    return texto, clase
 
 
 def _bloque_foto(resultado, hay_foto):
@@ -131,7 +141,8 @@ def _bloque_evidencia(resultado, hay_foto):
 
 def consultar(sintoma, foto):
     if not sintoma or not sintoma.strip():
-        return "Escriba el síntoma del paciente antes de consultar.", "", ""
+        aviso = "Escriba el síntoma del paciente antes de consultar."
+        return gr.Markdown(aviso, elem_classes=["tarjeta-decision", "tarjeta-sin-senal"]), "", ""
     t0 = time.perf_counter()
     resultado = sistema_multimodal(sintoma, imagen=foto)
     latencia = round(time.perf_counter() - t0, 2)
@@ -148,27 +159,56 @@ def consultar(sintoma, foto):
         )
     except Exception as e:
         print(f"log_consulta falló (no bloquea la respuesta): {e}")
+    texto_decision, clase_decision = _bloque_decision(interpretacion)
     return (
-        _bloque_decision(interpretacion),
+        gr.Markdown(texto_decision, elem_classes=["tarjeta-decision", clase_decision]),
         _bloque_foto(resultado, hay_foto),
         _bloque_evidencia(resultado, hay_foto),
     )
 
 
+# Paleta y tipografía: guía de diseño clínico-accesible (skill ui-ux-pro-max --
+# healthcare, Atkinson Hyperlegible por legibilidad, contraste 4.5:1). El veredicto
+# nunca se transmite solo por color: cada tarjeta lleva también icono + palabra clínica.
+_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+
+.gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
+
+.tarjeta-decision {
+    border-radius: 14px;
+    padding: 16px 20px;
+    border-left: 6px solid #D97706;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    transition: border-color 200ms ease, background-color 200ms ease;
+}
+.tarjeta-urgente     { border-left-color: #DC2626; background: #FEF2F2; }
+.tarjeta-no-urgente  { border-left-color: #059669; background: #ECFDF5; }
+.tarjeta-sin-senal   { border-left-color: #D97706; background: #FFFBEB; }
+
+.nota-espera { color: #475569; font-size: 0.9em; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tarjeta-decision { transition: none; }
+}
+"""
+
 _TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
 
 
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico -- M5", theme=_TEMA) as demo:
+    with gr.Blocks(title="Triage dermatológico -- M5", theme=_TEMA, css=_CSS) as demo:
         gr.Markdown(f"# 🩺 Triage dermatológico\nVersión: `{_version_tag()}` · sugiere, no diagnostica")
         with gr.Row():
             sintoma = gr.Textbox(
                 label="Síntoma del paciente", lines=3,
                 placeholder="Ej: lunar que cambió de color y forma en los últimos meses...",
+                info="Describa la lesión. No escriba nombre ni documento del paciente.",
             )
             foto = gr.Image(label="Foto de la lesión (opcional)", type="filepath")
         boton = gr.Button("Consultar", variant="primary")
-        decision_md = gr.Markdown()
+        gr.Markdown("⏱️ Con foto, la consulta tarda unos 15 s (medido en GPU T4).", elem_classes=["nota-espera"])
+        decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
         foto_md = gr.Markdown()
         evidencia_md = gr.Markdown()
         boton.click(consultar, inputs=[sintoma, foto], outputs=[decision_md, foto_md, evidencia_md])
