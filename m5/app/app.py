@@ -178,19 +178,18 @@ def consultar(sintoma, foto):
 
 def _consultar_evento(sintoma, foto):
     """Wrapper solo para el botón de Gradio: llama a consultar() (texto plano,
-    sin tocar), pinta la tarjeta de decisión según su icono, y revela las tres
-    tarjetas (empiezan ocultas -- ver construir_app -- para no mostrar cuadros
-    vacíos antes de la primera consulta)."""
+    sin tocar) y pinta la tarjeta de decisión según su icono.
+
+    Los 3 componentes se quedan SIEMPRE visibles (visible=True, nunca se ocultan) --
+    si no, Gradio no tiene dónde dibujar su indicador de carga nativo mientras
+    corre la consulta. En vez de ocultarlas, antes de la primera consulta (o si
+    no hay síntoma) simplemente no se les pone la clase de tarjeta, así que no
+    se ve ninguna caja vacía: solo aparece la tarjeta real cuando hay contenido."""
     texto_decision, foto_md, evidencia_md = consultar(sintoma, foto)
-    tarjeta = gr.Markdown(
-        texto_decision, elem_classes=["tarjeta-decision", _clase_decision(texto_decision)], visible=True,
-    )
-    # Si no había síntoma, consultar() devuelve "" en foto/evidencia (ver arriba) --
-    # esas dos tarjetas se quedan ocultas en vez de mostrarse vacías.
     return (
-        tarjeta,
-        gr.Markdown(foto_md, elem_classes=["tarjeta-secundaria"], visible=bool(foto_md)),
-        gr.Markdown(evidencia_md, elem_classes=["tarjeta-secundaria"], visible=bool(evidencia_md)),
+        gr.Markdown(texto_decision, elem_classes=["tarjeta-decision", _clase_decision(texto_decision)]),
+        gr.Markdown(foto_md, elem_classes=["tarjeta-secundaria"] if foto_md else []),
+        gr.Markdown(evidencia_md, elem_classes=["tarjeta-secundaria"] if evidencia_md else []),
     )
 
 
@@ -202,30 +201,43 @@ _CSS = """
 
 .gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
 
+/* Glow de fondo muy tenue: sin esto el backdrop-filter: blur() de las tarjetas
+   no tiene nada detrás que difuminar (sobre un fondo plano, blur no se nota),
+   y es lo que da el aire de "vidrio" en vez de ser solo transparencia plana. */
+.gradio-container {
+    background-image:
+        radial-gradient(circle at 15% 10%, rgba(220, 38, 38, 0.10), transparent 40%),
+        radial-gradient(circle at 85% 5%, rgba(5, 150, 105, 0.10), transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(8, 145, 178, 0.08), transparent 45%);
+    background-attachment: fixed;
+}
+
 .tarjeta-decision, .tarjeta-secundaria {
     border-radius: 14px;
     padding: 16px 20px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    /* sombra de elevación + brillo diagonal (el "sheen" que da el aire 3D de vidrio) */
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 45%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
     transition: border-color 200ms ease, background-color 200ms ease;
 }
 .tarjeta-decision { border-left: 6px solid #D97706; }
 /* El fondo es translúcido (vidrio) pero sigue siendo claro de base, en modo
    claro u oscuro -- por eso el texto se fija en oscuro también siempre: en
    modo oscuro el tema pone el texto en blanco por defecto, lo que lo deja
-   invisible sobre este fondo claro. La opacidad (0.85) deja ver un poco el
-   fondo de atrás sin bajar el contraste del texto. */
+   invisible sobre este fondo claro. La opacidad (0.8) deja ver el glow de
+   atrás sin bajar el contraste del texto. */
 .tarjeta-decision, .tarjeta-decision *, .tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
-.tarjeta-urgente     { border-left-color: #DC2626; background: rgba(254, 242, 242, 0.85); }
-.tarjeta-no-urgente  { border-left-color: #059669; background: rgba(236, 253, 245, 0.85); }
-.tarjeta-sin-senal   { border-left-color: #D97706; background: rgba(255, 251, 235, 0.85); }
+.tarjeta-urgente     { border-left-color: #DC2626; background-color: rgba(254, 242, 242, 0.8); }
+.tarjeta-no-urgente  { border-left-color: #059669; background-color: rgba(236, 253, 245, 0.8); }
+.tarjeta-sin-senal   { border-left-color: #D97706; background-color: rgba(255, 251, 235, 0.8); }
 
 /* Tarjetas secundarias (foto, evidencia): mismo vidrio que la de decisión pero
    neutras, para que no compitan de color con el veredicto y se vean como un
    solo sistema de tarjetas en vez de texto suelto apilado. */
-.tarjeta-secundaria { background: rgba(248, 250, 252, 0.85); height: 100%; }
+.tarjeta-secundaria { background-color: rgba(248, 250, 252, 0.8); height: 100%; }
 .tarjeta-secundaria h3 { margin-top: 0; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -251,10 +263,10 @@ def construir_app():
             foto = gr.Image(label="Foto de la lesión (opcional)", type="filepath")
         boton = gr.Button("Consultar", variant="primary")
         gr.Markdown("⏱️ Con foto, la consulta tarda unos 15 s (medido en GPU T4).", elem_classes=["nota-espera"])
-        decision_md = gr.Markdown(elem_classes=["tarjeta-decision"], visible=False)
+        decision_md = gr.Markdown()
         with gr.Row():
-            foto_md = gr.Markdown(elem_classes=["tarjeta-secundaria"], visible=False)
-            evidencia_md = gr.Markdown(elem_classes=["tarjeta-secundaria"], visible=False)
+            foto_md = gr.Markdown()
+            evidencia_md = gr.Markdown()
         boton.click(_consultar_evento, inputs=[sintoma, foto], outputs=[decision_md, foto_md, evidencia_md])
 
         with gr.Accordion("Estado", open=False):

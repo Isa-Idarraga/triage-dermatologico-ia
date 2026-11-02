@@ -73,13 +73,24 @@ _CSS = """
 
 .gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
 
+/* Glow de fondo muy tenue: sin esto el backdrop-filter: blur() de las tarjetas
+   no tiene nada detrás que difuminar (sobre un fondo plano, blur no se nota). */
+.gradio-container {
+    background-image:
+        radial-gradient(circle at 15% 10%, rgba(220, 38, 38, 0.10), transparent 40%),
+        radial-gradient(circle at 85% 5%, rgba(5, 150, 105, 0.10), transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(8, 145, 178, 0.08), transparent 45%);
+    background-attachment: fixed;
+}
+
 .tarjeta-decision, .tarjeta-secundaria {
     border-radius: 14px;
     padding: 16px 20px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 45%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
     transition: border-color 200ms ease, background-color 200ms ease;
 }
 .tarjeta-decision { border-left: 6px solid #D97706; }
@@ -88,11 +99,11 @@ _CSS = """
    modo oscuro el tema pone el texto en blanco por defecto, lo que lo deja
    invisible sobre este fondo claro. */
 .tarjeta-decision, .tarjeta-decision *, .tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
-.tarjeta-urgente     { border-left-color: #DC2626; background: rgba(254, 242, 242, 0.85); }
-.tarjeta-no-urgente  { border-left-color: #059669; background: rgba(236, 253, 245, 0.85); }
-.tarjeta-sin-senal   { border-left-color: #D97706; background: rgba(255, 251, 235, 0.85); }
+.tarjeta-urgente     { border-left-color: #DC2626; background-color: rgba(254, 242, 242, 0.8); }
+.tarjeta-no-urgente  { border-left-color: #059669; background-color: rgba(236, 253, 245, 0.8); }
+.tarjeta-sin-senal   { border-left-color: #D97706; background-color: rgba(255, 251, 235, 0.8); }
 
-.tarjeta-secundaria { background: rgba(248, 250, 252, 0.85); height: 100%; }
+.tarjeta-secundaria { background-color: rgba(248, 250, 252, 0.8); height: 100%; }
 .tarjeta-secundaria h3 { margin-top: 0; }
 
 @media (prefers-reduced-motion: reduce) {
