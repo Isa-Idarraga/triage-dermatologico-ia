@@ -6,4 +6,4 @@ queda escrito aquí igual.
 
 | Carpeta | Pregunta | Estado |
 |---|---|---|
-| [biopsia/](biopsia/README.md) | ¿`ver()` falla en las 40 reservadas porque todas están confirmadas por biopsia? | hipótesis escrita, sin correr |
+| [biopsia/](biopsia/README.md) | ¿`ver()` falla en las 40 reservadas porque todas están confirmadas por biopsia? | corrido: **parcial** ([resultados](biopsia/resultados/RESULTADOS.md)) |
