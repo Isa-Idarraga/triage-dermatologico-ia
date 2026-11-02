@@ -25,6 +25,7 @@ _AQUI = os.path.dirname(os.path.abspath(__file__))
 _RAIZ = os.path.normpath(os.path.join(_AQUI, "..", ".."))
 sys.path.insert(0, os.path.join(_RAIZ, "m4", "pipeline"))
 sys.path.insert(0, os.path.join(_RAIZ, "scripts"))
+sys.path.insert(0, os.path.join(_RAIZ, "m5"))
 
 import gradio as gr  # noqa: E402
 
@@ -33,8 +34,9 @@ from sistema_multimodal import sistema_multimodal  # noqa: E402
 try:
     from observabilidad import health, log_consulta  # noqa: E402
 except ImportError:
-    # m5/observabilidad.py es de María Alejandra (entrega lunes) -- hasta que
-    # exista, la app funciona igual pero sin health() ni logging real.
+    # Red de seguridad: si por algún motivo m5/observabilidad.py no está en el
+    # path (p. ej. un entorno que solo copia m5/app/), la app sigue funcionando
+    # sin health() ni logging real en vez de caerse.
     def health():
         return {"ok": None, "nota": "m5/observabilidad.py aún no está enchufado"}
 
@@ -170,11 +172,17 @@ def construir_app():
         foto_md = gr.Markdown()
         evidencia_md = gr.Markdown()
         boton.click(consultar, inputs=[sintoma, foto], outputs=[decision_md, foto_md, evidencia_md])
+
+        with gr.Tab("Estado"):
+            estado_json = gr.JSON()
+            gr.Button("Revisar estado").click(lambda: health(), outputs=estado_json)
+            demo.load(lambda: health(), outputs=estado_json)
     return demo
 
 
 if __name__ == "__main__":
-    print("health():", health())
+    print("health() antes de calentar:", health())
     _calentar()
+    print("health() después de calentar:", health())
     app = construir_app()
     app.launch(share=True)
