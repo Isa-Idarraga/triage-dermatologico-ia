@@ -16,10 +16,13 @@ Correr local o en Kaggle (T4, con link público):
     python m5/app/app.py
 """
 
+import html
 import os
+import re
 import subprocess
 import sys
 import time
+import traceback
 
 _AQUI = os.path.dirname(os.path.abspath(__file__))
 _RAIZ = os.path.normpath(os.path.join(_AQUI, "..", ".."))
@@ -119,23 +122,14 @@ def _frase_senales(señales):
     return "Pesaron: " + ", ".join(partes) + "."
 
 
-def _clase_decision(texto_decision):
-    """Para pintar la tarjeta en la UI (ver _consultar_evento): el texto clínico
-    siempre va primero en la decisión (nunca solo color), así que la clase CSS
-    se lee del mismo texto en vez de depender de un ícono aparte."""
-    if "Referir con prioridad" in texto_decision:
-        return "tarjeta-urgente"
-    if "Puede esperar" in texto_decision:
-        return "tarjeta-no-urgente"
-    return "tarjeta-sin-senal"
-
+# --- Salida técnica de consultar() -------------------------------------------
+# El notebook (notebooks/M5_app_kaggle.ipynb) hace assert sobre estos textos
+# exactos. En la UI se muestran solo dentro del acordeón "Detalle técnico".
 
 def _bloque_decision(interpretacion):
     señales = interpretacion["señales"]
     frase = _frase_senales(señales)
     disparo = ", ".join(f"{n}={v}" for n, v in señales.items())
-    # La señal técnica cruda se deja en letra pequeña debajo de la frase legible
-    # (no se quita: el notebook hace assert sobre este texto exacto).
     detalle_senal = f"\n\n_Señal: {disparo}_" if disparo else ""
     if interpretacion["veredicto"] is None:
         return f"## Sin señal suficiente: revisión manual\n{frase}\n\n{_SUGERENCIA_APOYO}"
@@ -234,14 +228,180 @@ def consultar(sintoma, foto):
     )
 
 
+# --- Vista principal (lo que ve el profesional) ------------------------------
+# Lenguaje clínico, sin nombres de herramientas ni scores. Todo sale del mismo
+# resultado de sistema_multimodal(); aquí solo se traduce y se maqueta.
+
+def _unir(nombres):
+    return nombres[0] if len(nombres) == 1 else ", ".join(nombres[:-1]) + " y " + nombres[-1]
+
+
+def _decision_clinica(interpretacion):
+    """(tono, título, por qué). El tono solo elige el color; el título siempre
+    dice la decisión con palabras, así nunca depende solo del color."""
+    señales = interpretacion["señales"]
+    urgentes = [_NOMBRE_SEÑAL.get(n, n) for n, v in señales.items() if v == "urgente"]
+    tranquilas = [_NOMBRE_SEÑAL.get(n, n) for n, v in señales.items() if v != "urgente"]
+    veredicto = interpretacion["veredicto"]
+    if veredicto is None:
+        return ("sin-senal", "Sin señal suficiente: revisión manual",
+                "Ninguna fuente (texto, foto o guías) dio una señal clara. "
+                "Esto no significa que el caso pueda esperar.")
+    if veredicto == "urgente":
+        por_que = f"Indicaron urgencia: {_unir(urgentes)}."
+        if tranquilas:
+            por_que += f" No la indicaron: {_unir(tranquilas)}. Si una señal indica urgencia, se prioriza referir."
+        return "urgente", "Referir con prioridad a dermatología", por_que
+    return "rutina", "Puede esperar cita de rutina", f"Ninguna señal indicó urgencia ({_unir(tranquilas)})."
+
+
+def _foto_clinica(resultado, hay_foto):
+    """(texto, es_aviso). es_aviso marca la foto no evaluable, que se resalta
+    porque no puede leerse como un caso tranquilo."""
+    v = resultado.get("detalle_tools", {}).get("ver_imagen")
+    if not hay_foto:
+        return "No se adjuntó foto. La sugerencia se basa en el texto y las guías.", False
+    if v is None:
+        return "La foto no se analizó en esta consulta.", False
+    if v.get("no_evaluable"):
+        motivo = v.get("motivo_no_evaluable")
+        motivo_txt = f" ({motivo})" if motivo else ""
+        return (f"No se pudo evaluar la foto{motivo_txt}. Esto no equivale a \"puede esperar\": "
+                "la sugerencia se basa solo en el texto y las guías."), True
+    if v.get("etiqueta") == "urgente":
+        return "El análisis de la foto encontró rasgos que sugieren revisar con prioridad.", False
+    return "El análisis de la foto no encontró rasgos de alarma.", False
+
+
+def _justificacion(respuesta):
+    """El RAG responde con formato 'URGENCIA: ... JUSTIFICACIÓN: ... FUENTES: ...';
+    en la vista principal solo se muestra la justificación (el texto completo
+    queda en el Detalle técnico). Si el formato no aparece, se muestra todo."""
+    m = re.search(r"JUSTIFICACI[ÓO]N:\s*(.*?)(?:\n\s*FUENTES:|\Z)", respuesta or "", re.S)
+    return (m.group(1) if m else (respuesta or "")).strip()
+
+
+def _parrafos(texto):
+    return "".join(f"<p>{html.escape(p.strip())}</p>" for p in texto.split("\n") if p.strip())
+
+
+def _html_resultado(resultado, interpretacion, hay_foto):
+    tono, titulo, por_que = _decision_clinica(interpretacion)
+    foto_txt, foto_aviso = _foto_clinica(resultado, hay_foto)
+    det = resultado.get("detalle_tools", {}).get("buscar_informacion_dermatologica")
+    if det:
+        fuentes = ", ".join(det.get("fuentes", [])) or "ninguna"
+        evidencia = (_parrafos(_justificacion(det.get("respuesta", "")))
+                     + f'<p class="fuentes">Fuentes: {html.escape(fuentes)}</p>'
+                     + '<p class="nota">Esta evidencia viene de guías clínicas; no describe la foto del paciente.</p>')
+    else:
+        evidencia = "<p>No se consultaron las guías en este caso.</p>"
+    return f"""
+<section class="resultado" aria-live="polite">
+  <div class="decision tono-{tono}">
+    <h2>{html.escape(titulo)}</h2>
+    <p class="por-que">{html.escape(por_que)}</p>
+    <p class="apoyo">Sugerencia de apoyo. La decisión es del profesional.</p>
+  </div>
+  <div class="bloque">
+    <h3>Foto</h3>
+    <p class="{'aviso' if foto_aviso else ''}">{html.escape(foto_txt)}</p>
+  </div>
+  <div class="bloque">
+    <h3>Evidencia de las guías</h3>
+    {evidencia}
+  </div>
+</section>"""
+
+
+def _html_vacio(mensaje="Escriba el síntoma, adjunte la foto si la tiene y pulse Consultar. "
+                        "La sugerencia aparece aquí."):
+    return f"""
+<section class="resultado resultado-vacio">
+  <h2>Resultado</h2>
+  <p>{html.escape(mensaje)}</p>
+</section>"""
+
+
+# Mismo esqueleto que el resultado real, con barras grises en lugar del texto:
+# el layout no salta cuando llega la respuesta.
+_HTML_CARGANDO = """
+<section class="resultado resultado-cargando" aria-busy="true">
+  <div class="decision">
+    <p class="cargando-texto">Analizando el caso…</p>
+    <span class="barra barra-titulo"></span>
+    <span class="barra"></span>
+    <span class="barra barra-corta"></span>
+  </div>
+  <div class="bloque"><h3>Foto</h3><span class="barra"></span></div>
+  <div class="bloque"><h3>Evidencia de las guías</h3><span class="barra"></span><span class="barra barra-corta"></span></div>
+</section>"""
+
+_HTML_ERROR = """
+<section class="resultado resultado-error" role="alert">
+  <h2>No se pudo completar la consulta</h2>
+  <p>Hubo un error al analizar el caso. Intente de nuevo; si se repite, revise el estado del sistema al final de la página.</p>
+</section>"""
+
+
+_ESTADO_LEGIBLE = {"ok": "Listo para atender", "calentando": "Cargando modelos", "error": "Error al revisar"}
+
+
+def _resumen_estado():
+    """health() en texto legible. Los datos son los mismos que devuelve health()."""
+    h = health()
+    if not isinstance(h, dict):
+        return str(h)
+    lineas = [f"**Estado:** {_ESTADO_LEGIBLE.get(h.get('status'), 'Sin datos de observabilidad')}"]
+    modelos = h.get("modelos")
+    if isinstance(modelos, dict) and modelos:
+        lineas.append("**Modelos:** " + ", ".join(
+            f"{n} ({'cargado' if isinstance(m, dict) and m.get('cargado') else 'pendiente'})"
+            for n, m in modelos.items()))
+    gpu = h.get("gpu")
+    if isinstance(gpu, dict):
+        lineas.append(f"**GPU:** {gpu.get('nombre')} · {gpu.get('memoria_gib')} GiB en uso")
+    for clave, etiqueta in [("version", "Versión"), ("cuantizacion", "Cuantización"),
+                            ("consultas_registradas", "Consultas registradas"),
+                            ("uptime_s", "Tiempo encendida (s)"), ("wandb", "W&B"),
+                            ("detalle", "Detalle"), ("nota", "Nota")]:
+        if h.get(clave) is not None:
+            lineas.append(f"**{etiqueta}:** {h[clave]}")
+    return "\n\n".join(lineas)
+
+
+# Marca del producto: una lesión dibujada dentro de un recuadro, en vez de una letra.
+_MARCA_SVG = (
+    '<svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">'
+    '<rect width="36" height="36" rx="8" fill="#1d1f20"/>'
+    '<circle cx="18" cy="18" r="10" fill="none" stroke="#ffffff" stroke-width="2"/>'
+    '<ellipse cx="19.5" cy="16.8" rx="4.2" ry="3.4" fill="#e9a48f"/>'
+    '</svg>'
+)
+
+
+def _html_encabezado(estado=None):
+    status = estado.get("status") if isinstance(estado, dict) else None
+    texto = _ESTADO_LEGIBLE.get(status, "Comprobando estado")
+    clase = {"ok": "estado-ok", "calentando": "estado-cargando", "error": "estado-error"}.get(status, "")
+    return f"""
+<header class="encabezado">
+  <div class="marca">
+    {_MARCA_SVG}
+    <div>
+      <h1>Triage dermatológico</h1>
+      <p>Apoyo a la decisión de referencia · versión {html.escape(_version_tag())}</p>
+    </div>
+  </div>
+  <p class="estado {clase}"><span class="punto" aria-hidden="true"></span>{html.escape(texto)}</p>
+</header>"""
+
+
 def _iniciar_consulta():
     """Primer paso del click (queue=False -- se ve de inmediato): deshabilita el
-    botón y reemplaza la tarjeta de decisión por un aviso, para que nadie haga
-    doble clic pensando que no pasó nada."""
-    return (
-        gr.Button("Analizando...", interactive=False),
-        gr.Markdown("Analizando el caso... puede tardar unos 15 segundos si hay foto.", elem_classes=["mensaje-cargando"]),
-    )
+    botón y pone el esqueleto de carga, para que nadie haga doble clic pensando
+    que no pasó nada."""
+    return gr.Button("Analizando…", interactive=False), _HTML_CARGANDO
 
 
 def _finalizar_consulta():
@@ -249,184 +409,227 @@ def _finalizar_consulta():
 
 
 def _consultar_evento(sintoma, foto):
-    """Wrapper para el botón y los ejemplos de un clic: corre la consulta una
-    sola vez (via _procesar) y pinta las 4 vistas (decisión, foto, evidencia,
-    detalle técnico) con sus clases de tarjeta.
-
-    Los 3 primeros componentes se quedan SIEMPRE visibles (visible=True, nunca
-    se ocultan) -- si no, Gradio no tiene dónde dibujar su indicador de carga
-    nativo mientras corre la consulta. En vez de ocultarlas, antes de la primera
-    consulta (o si no hay síntoma) simplemente no se les pone la clase de
-    tarjeta, así que no se ve ninguna caja vacía."""
+    """Wrapper para el botón y los ejemplos: corre la consulta una sola vez (via
+    _procesar) y devuelve la tarjeta de resultado (HTML) y el detalle técnico.
+    Un error se muestra dentro de la tarjeta: si se propagara, la cadena de
+    .then() se cortaría y el botón quedaría deshabilitado."""
     if not sintoma or not sintoma.strip():
-        vacio = "Escriba el síntoma del paciente antes de consultar."
-        return (
-            gr.Markdown(vacio, elem_classes=[]),
-            gr.Markdown("", elem_classes=[]),
-            gr.Markdown("", elem_classes=[]),
-            "",
-        )
-    resultado, interpretacion, hay_foto, latencia = _procesar(sintoma, foto)
-    texto_decision = _bloque_decision(interpretacion)
-    foto_md = _bloque_foto(resultado, hay_foto)
-    evidencia_md = _bloque_evidencia(resultado, hay_foto)
-    detalle_md = _bloque_detalle_tecnico(resultado, interpretacion, latencia)
-    return (
-        gr.Markdown(texto_decision, elem_classes=["tarjeta-decision", _clase_decision(texto_decision)]),
-        gr.Markdown(foto_md, elem_classes=["tarjeta-secundaria"] if foto_md else []),
-        gr.Markdown(evidencia_md, elem_classes=["tarjeta-secundaria"] if evidencia_md else []),
-        detalle_md,
-    )
+        return _html_vacio("Escriba el síntoma del paciente antes de consultar."), ""
+    try:
+        resultado, interpretacion, hay_foto, latencia = _procesar(sintoma, foto)
+    except Exception:
+        traceback.print_exc()
+        return _HTML_ERROR, ""
+    detalle_md = "\n\n".join([
+        _bloque_detalle_tecnico(resultado, interpretacion, latencia),
+        _bloque_foto(resultado, hay_foto).replace("### Foto\n", "**Lectura técnica de la foto:** ", 1),
+        _bloque_evidencia(resultado, hay_foto).replace("### Evidencia de las guías\n", "**Respuesta completa del RAG:**\n\n", 1),
+    ])
+    return _html_resultado(resultado, interpretacion, hay_foto), detalle_md
 
 
-# Paleta y tipografía: guía de diseño clínico-accesible (skill ui-ux-pro-max --
-# healthcare, Atkinson Hyperlegible por legibilidad, contraste 4.5:1). El veredicto
-# nunca se transmite solo por color: cada tarjeta lleva también la palabra clínica.
-_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+# Diseño: herramienta clínica de trabajo, no página de demo. Superficies planas
+# separadas por un borde de 1px (sin vidrio, sin degradados, sin sombras en
+# reposo); el color solo aparece en la decisión, que es lo único que significa
+# algo. Botón principal casi negro, para que el rojo quede reservado a "urgente".
+# Atkinson Hyperlegible: diseñada para baja visión, legible con prisa.
+_TINTA = "#111418"
+_TINTA_SUAVE = "#4b535c"
+_BORDE = "#e3e6ea"
+_FONDO = "#f4f5f7"
 
-.gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
+_TEMA = gr.themes.Base(
+    primary_hue="neutral",
+    neutral_hue="neutral",
+    font=[gr.themes.GoogleFont("Atkinson Hyperlegible"), "system-ui", "sans-serif"],
+    radius_size="md",
+).set(
+    body_background_fill=_FONDO, body_background_fill_dark=_FONDO,
+    body_text_color=_TINTA, body_text_color_dark=_TINTA,
+    body_text_color_subdued=_TINTA_SUAVE, body_text_color_subdued_dark=_TINTA_SUAVE,
+    body_text_size="17px",
+    block_background_fill="#ffffff", block_background_fill_dark="#ffffff",
+    block_border_color=_BORDE, block_border_color_dark=_BORDE,
+    block_border_width="1px", block_radius="8px", block_shadow="none", block_shadow_dark="none",
+    block_label_background_fill="#ffffff", block_label_background_fill_dark="#ffffff",
+    block_label_text_color=_TINTA, block_label_text_color_dark=_TINTA,
+    block_label_text_size="16px", block_label_text_weight="700", block_label_border_width="0px",
+    block_title_text_color=_TINTA, block_title_text_color_dark=_TINTA,
+    block_title_text_size="16px", block_title_text_weight="700",
+    block_info_text_color=_TINTA_SUAVE, block_info_text_color_dark=_TINTA_SUAVE, block_info_text_size="15px",
+    input_background_fill="#ffffff", input_background_fill_dark="#ffffff",
+    input_border_color="#cfd4da", input_border_color_dark="#cfd4da",
+    input_border_color_focus=_TINTA, input_border_color_focus_dark=_TINTA,
+    input_radius="8px", input_text_size="17px", input_shadow="none", input_shadow_focus="none",
+    button_primary_background_fill="#1d1f20", button_primary_background_fill_dark="#1d1f20",
+    button_primary_background_fill_hover="#33373b", button_primary_background_fill_hover_dark="#33373b",
+    button_primary_text_color="#ffffff", button_primary_text_color_dark="#ffffff",
+    button_primary_border_color="#1d1f20", button_primary_border_color_dark="#1d1f20",
+    button_secondary_background_fill="#ffffff", button_secondary_background_fill_dark="#ffffff",
+    button_secondary_background_fill_hover="#f1f3f5", button_secondary_background_fill_hover_dark="#f1f3f5",
+    button_secondary_border_color="#cfd4da", button_secondary_border_color_dark="#cfd4da",
+    button_secondary_text_color=_TINTA, button_secondary_text_color_dark=_TINTA,
+    button_large_radius="8px", button_large_text_size="17px", button_large_text_weight="700",
+    button_small_radius="8px",
+    border_color_primary=_BORDE, border_color_primary_dark=_BORDE,
+    color_accent_soft="#f1f3f5", color_accent_soft_dark="#f1f3f5",
+    layout_gap="16px",
+)
 
-/* Texto base grande y legible (personal que a veces lee desde el celular, con
-   prisa): Gradio por defecto usa un tamaño menor en el markdown interno. */
-.gradio-container { font-size: 18px; }
-.gradio-container .prose, .gradio-container p, .gradio-container li,
-.gradio-container label span, .gradio-container input, .gradio-container textarea {
-    font-size: 1rem !important;
-    line-height: 1.6;
-}
+# Herramienta de consultorio (luz de día): se fija el modo claro aunque el
+# navegador esté en oscuro, para que contraste y colores de la decisión sean
+# siempre los revisados.
+_JS_MODO_CLARO = "() => { document.body.classList.remove('dark'); document.documentElement.classList.remove('dark'); }"
 
-/* Glow de fondo muy tenue: sin esto el backdrop-filter: blur() de las tarjetas
-   no tiene nada detrás que difuminar (sobre un fondo plano, blur no se nota),
-   y es lo que da el aire de "vidrio" en vez de ser solo transparencia plana. */
-.gradio-container {
-    background-image:
-        radial-gradient(circle at 15% 10%, rgba(220, 38, 38, 0.10), transparent 40%),
-        radial-gradient(circle at 85% 5%, rgba(5, 150, 105, 0.10), transparent 40%),
-        radial-gradient(circle at 50% 90%, rgba(8, 145, 178, 0.08), transparent 45%);
-    background-attachment: fixed;
-}
+_CSS = f"""
+.gradio-container {{ max-width: 1240px !important; margin: 0 auto !important; }}
+.gradio-container ::selection {{ background: #d7dde4; }}
 
-.tarjeta-decision, .tarjeta-secundaria {
-    width: 100%;
-    box-sizing: border-box;
-    border-radius: 14px;
-    padding: 16px 20px;
-    /* sombra de elevación + brillo diagonal (el "sheen" que da el aire 3D de vidrio) */
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 45%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    transition: border-color 200ms ease, background-color 200ms ease;
-}
-.tarjeta-decision { border-left: 6px solid #D97706; }
-/* El fondo es translúcido (vidrio) pero sigue siendo claro de base, en modo
-   claro u oscuro -- por eso el texto se fija en oscuro también siempre: en
-   modo oscuro el tema pone el texto en blanco por defecto, lo que lo deja
-   invisible sobre este fondo claro. La opacidad (0.8) deja ver el glow de
-   atrás sin bajar el contraste del texto. */
-.tarjeta-decision, .tarjeta-decision *, .tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
-.tarjeta-urgente     { border-left-color: #DC2626; background-color: rgba(254, 242, 242, 0.8); }
-.tarjeta-no-urgente  { border-left-color: #059669; background-color: rgba(236, 253, 245, 0.8); }
-.tarjeta-sin-senal   { border-left-color: #D97706; background-color: rgba(255, 251, 235, 0.8); }
+/* Encabezado: marca + nombre a la izquierda, estado a la derecha. */
+.encabezado {{ display: flex; align-items: center; justify-content: space-between; gap: 16px;
+               flex-wrap: wrap; padding: 4px 0 8px; }}
+.encabezado .marca {{ display: flex; align-items: center; gap: 12px; }}
+.encabezado h1 {{ font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; color: {_TINTA}; }}
+.encabezado .marca p {{ margin: 2px 0 0; font-size: 15px; color: {_TINTA_SUAVE}; }}
+.encabezado .estado {{ display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 15px;
+                       color: {_TINTA}; background: #ffffff; border: 1px solid {_BORDE};
+                       border-radius: 999px; padding: 6px 12px; }}
+.encabezado .punto {{ width: 8px; height: 8px; border-radius: 50%; background: #9aa1a9; }}
+.estado-ok .punto {{ background: #1f7a48; }}
+.estado-cargando .punto {{ background: #b45309; }}
+.estado-error .punto {{ background: #c4242a; }}
 
-/* La decisión es el elemento más importante de toda la vista: grande y en
-   negrita, nunca solo color (el texto clínico ya dice "referir"/"puede
-   esperar"/"sin señal", no hace falta un ícono aparte). */
-.tarjeta-decision h2 { font-size: 32px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.25; }
+.nota-espera, .nota-espera p {{ color: {_TINTA_SUAVE} !important; font-size: 15px !important; margin: 0; }}
 
-/* Tarjetas secundarias (foto, evidencia): mismo vidrio que la de decisión pero
-   neutras, para que no compitan de color con el veredicto y se vean como un
-   solo sistema de tarjetas en vez de texto suelto apilado. */
-.tarjeta-secundaria { background-color: rgba(248, 250, 252, 0.8); height: 100%; }
-.tarjeta-secundaria h3 { font-size: 20px; margin-top: 0; }
+/* Tarjeta de resultado: una sola superficie, secciones separadas por una
+   línea; la decisión es el único bloque con color. */
+.resultado {{ background: #ffffff; border: 1px solid {_BORDE}; border-radius: 8px; overflow: hidden;
+             color: {_TINTA}; animation: aparecer 220ms cubic-bezier(0.23, 1, 0.32, 1); }}
+.resultado h2 {{ margin: 0; }}
+.resultado p {{ margin: 0; font-size: 17px; line-height: 1.55; color: {_TINTA}; }}
+.resultado .decision {{ padding: 24px; display: grid; gap: 10px; }}
+.resultado .decision h2 {{ font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; }}
+.resultado .decision .apoyo {{ font-size: 15px; color: {_TINTA_SUAVE}; }}
+.resultado .bloque {{ padding: 20px 24px; border-top: 1px solid {_BORDE}; display: grid; gap: 8px; }}
+.resultado .bloque h3 {{ margin: 0; font-size: 18px; font-weight: 700; color: {_TINTA}; }}
+.resultado .bloque .fuentes, .resultado .bloque .nota {{ font-size: 15px; color: {_TINTA_SUAVE}; }}
+.resultado .bloque .aviso {{ background: #fff4d6; color: #7a3d00; border-radius: 6px; padding: 10px 12px; }}
 
-.mensaje-cargando { font-style: italic; }
+/* Colores de la decisión: fondo pálido y texto oscuro del mismo tono (≥7:1). */
+.tono-urgente {{ background: #fdecea; }}
+.tono-urgente h2 {{ color: #8a1c1c; }}
+.tono-rutina {{ background: #e3f4e9; }}
+.tono-rutina h2 {{ color: #0f4d2c; }}
+.tono-sin-senal {{ background: #fff1cc; }}
+.tono-sin-senal h2 {{ color: #7a3d00; }}
 
-/* Objetivo táctil mínimo (44px) en todos los botones, no solo "Consultar". */
-.gradio-container button { min-height: 44px; font-size: 1rem; }
+.resultado-vacio, .resultado-error {{ padding: 24px; display: grid; gap: 8px; }}
+.resultado-vacio h2, .resultado-error h2 {{ font-size: 20px; font-weight: 700; }}
+.resultado-vacio p {{ color: {_TINTA_SUAVE}; }}
+.resultado-error h2 {{ color: #8a1c1c; }}
 
-/* Responsive: en pantallas angostas (celular) se recorta el padding para no
-   desbordar el ancho; las filas de dos columnas ya las colapsa Gradio solo. */
-@media (max-width: 640px) {
-    .gradio-container { padding-left: 8px !important; padding-right: 8px !important; }
-    .tarjeta-decision, .tarjeta-secundaria { padding: 12px 14px; }
-    .tarjeta-decision h2 { font-size: 28px; }
-}
+.resultado-cargando .cargando-texto {{ font-weight: 700; }}
+.resultado-cargando .barra {{ display: block; height: 14px; width: 100%; border-radius: 4px;
+                              background: #e9ecef; animation: latido 1.2s ease-in-out infinite alternate; }}
+.resultado-cargando .barra-titulo {{ height: 32px; width: 70%; }}
+.resultado-cargando .barra-corta {{ width: 45%; }}
 
-@media (prefers-reduced-motion: reduce) {
-    /* El blur no es movimiento, se queda; solo se quitan las transiciones. */
-    .tarjeta-decision, .tarjeta-secundaria { transition: none; }
-}
+@keyframes aparecer {{ from {{ opacity: 0; transform: translateY(4px); }} }}
+@keyframes latido {{ from {{ opacity: 1; }} to {{ opacity: 0.45; }} }}
 
-.nota-espera { color: #475569; }
+/* Botones: alto táctil de 48px y respuesta al presionar. */
+.gradio-container button {{ min-height: 48px; transition: transform 120ms ease-out, background-color 150ms ease-out; }}
+.gradio-container button:active:not(:disabled) {{ transform: scale(0.98); }}
+.gradio-container button:focus-visible {{ outline: 2px solid {_TINTA}; outline-offset: 2px; }}
+.gradio-container button:disabled {{ opacity: 1; background: #5b6168 !important; color: #ffffff !important; cursor: progress; }}
+
+/* Acordeones (Detalle técnico, Estado): mismo peso que las etiquetas de los campos. */
+.gradio-container .label-wrap span {{ font-size: 16px; font-weight: 700; color: {_TINTA}; }}
+
+/* Es una herramienta clínica, no una demo: sin el pie "Construido con Gradio". */
+footer {{ display: none !important; }}
+
+/* Ejemplos de un clic: botones secundarios discretos. */
+#ejemplos button {{ background: #ffffff; border: 1px solid #cfd4da; border-radius: 8px; color: {_TINTA};
+                    font-size: 15px; min-height: 44px; }}
+#ejemplos button:hover {{ background: #f1f3f5; }}
+
+@media (max-width: 640px) {{
+    .gradio-container {{ padding-left: 16px !important; padding-right: 16px !important; }}
+    .resultado .decision {{ padding: 20px 16px; }}
+    .resultado .decision h2 {{ font-size: 28px; }}
+    .resultado .bloque {{ padding: 16px; }}
+    .encabezado .estado {{ font-size: 14px; }}
+}}
+
+@media (prefers-reduced-motion: reduce) {{
+    .resultado, .resultado-cargando .barra {{ animation: none; }}
+    .gradio-container button {{ transition: none; }}
+    .gradio-container button:active:not(:disabled) {{ transform: none; }}
+}}
 """
-
-_TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
 
 
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico -- M5", theme=_TEMA, css=_CSS) as demo:
-        gr.Markdown(
-            f"# Triage dermatológico\n"
-            f"Versión `{_version_tag()}` · sugerencia de apoyo clínico, no reemplaza el criterio del profesional."
-        )
-        with gr.Row():
-            sintoma = gr.Textbox(
-                label="Síntoma del paciente", lines=3,
-                placeholder="Describa la lesión: tiempo de evolución, cambios de color o tamaño, sangrado, picor.",
-                info="No escriba nombre, documento ni datos que identifiquen al paciente.",
-            )
-            foto = gr.Image(label="Foto de la lesión (opcional)", type="filepath")
-        boton = gr.Button("Consultar", variant="primary")
-        gr.Markdown("Con foto, la consulta puede tardar unos 15 segundos.", elem_classes=["nota-espera"])
+    with gr.Blocks(title="Triage dermatológico", theme=_TEMA, css=_CSS, js=_JS_MODO_CLARO) as demo:
+        encabezado = gr.HTML(_html_encabezado(), padding=False)
 
-        # render=False: se crean aquí (para poder referenciarlos en gr.Examples)
-        # pero se ubican visualmente más abajo con .render(), después de los
-        # ejemplos de un clic.
-        decision_md = gr.Markdown(render=False)
-        foto_md = gr.Markdown(render=False)
-        evidencia_md = gr.Markdown(render=False)
+        # render=False: se crean aquí para poder referenciarlos en gr.Examples
+        # (columna izquierda) y se ubican en la columna derecha con .render().
+        resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
         detalle_md = gr.Markdown(render=False)
 
-        gr.Examples(
-            examples=[
-                [_EJEMPLO_URGENTE_SINTOMA, None],
-                [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
-                [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
-            ],
-            inputs=[sintoma, foto],
-            outputs=[decision_md, foto_md, evidencia_md, detalle_md],
-            fn=_consultar_evento,
-            run_on_click=True,
-            cache_examples=False,
-            label="Ejemplos",
-            example_labels=[
-                "Cambios en un lunar (sin foto)",
-                "Lesión estable (con foto)",
-                "Foto borrosa (no evaluable)",
-            ],
-        )
+        # Dos columnas en escritorio (consulta | resultado); en el celular
+        # Gradio las apila porque no caben dos de 320px de ancho mínimo.
+        with gr.Row(equal_height=False):
+            with gr.Column(scale=5, min_width=320):
+                sintoma = gr.Textbox(
+                    label="Síntoma del paciente", lines=4,
+                    placeholder="Describa la lesión: tiempo de evolución, cambios de color o tamaño, sangrado, picor",
+                    info="No escriba nombre, documento ni datos que identifiquen al paciente.",
+                )
+                foto = gr.Image(label="Foto de la lesión (opcional)", type="filepath", height=240)
+                boton = gr.Button("Consultar", variant="primary", size="lg")
+                gr.Markdown("Con foto, la consulta tarda unos 15 segundos.", elem_classes=["nota-espera"])
+                gr.Examples(
+                    examples=[
+                        [_EJEMPLO_URGENTE_SINTOMA, None],
+                        [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
+                        [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
+                    ],
+                    inputs=[sintoma, foto],
+                    outputs=[resultado_html, detalle_md],
+                    fn=_consultar_evento,
+                    run_on_click=True,
+                    cache_examples=False,
+                    label="Casos de ejemplo",
+                    elem_id="ejemplos",
+                    example_labels=[
+                        "Cambios en un lunar (sin foto)",
+                        "Lesión estable (con foto)",
+                        "Foto borrosa (no evaluable)",
+                    ],
+                )
+            with gr.Column(scale=7, min_width=320):
+                resultado_html.render()
+                with gr.Accordion("Detalle técnico", open=False):
+                    detalle_md.render()
 
-        decision_md.render()
-        with gr.Row(equal_height=True):
-            foto_md.render()
-            evidencia_md.render()
-        with gr.Accordion("Detalle técnico", open=False):
-            detalle_md.render()
-
-        boton.click(_iniciar_consulta, outputs=[boton, decision_md], queue=False).then(
-            _consultar_evento, inputs=[sintoma, foto],
-            outputs=[decision_md, foto_md, evidencia_md, detalle_md],
+        # show_progress="hidden": la tarjeta ya muestra su propio esqueleto de
+        # carga; el velo y el cronómetro de Gradio encima lo taparían.
+        boton.click(_iniciar_consulta, outputs=[boton, resultado_html], queue=False).then(
+            _consultar_evento, inputs=[sintoma, foto], outputs=[resultado_html, detalle_md],
+            show_progress="hidden",
         ).then(
             _finalizar_consulta, outputs=[boton],
         )
 
-        with gr.Accordion("Estado", open=False):
-            estado_json = gr.JSON()
-            gr.Button("Revisar estado").click(lambda: health(), outputs=estado_json)
-            demo.load(lambda: health(), outputs=estado_json)
+        with gr.Accordion("Estado del sistema", open=False):
+            estado_md = gr.Markdown()
+            gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
+
+        demo.load(lambda: (_html_encabezado(health()), _resumen_estado()),
+                  outputs=[encabezado, estado_md], show_progress="hidden")
     return demo
 
 
