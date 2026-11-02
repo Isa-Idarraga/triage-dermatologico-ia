@@ -176,6 +176,7 @@ def tool_ver_imagen(pregunta: str, imagen=None) -> dict:
         "herramienta": "ver_imagen",
         "etiqueta": None if no_evaluable else salida["clase"],
         "score": salida["score"],
+        "calidad": salida.get("calidad"),
         "no_evaluable": no_evaluable,
         "motivo_no_evaluable": salida["motivo"] if no_evaluable else None,
     }
