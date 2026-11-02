@@ -84,9 +84,13 @@ CORRIDAS = {
     "con_foto": ("imagen", True),
     "sin_foto": ("imagen", False),
     "m3_texto": ("m3", False),
-    "caida": ("imagen", False),  # M5: prueba de caída, solo si se pide con --corridas caida
 }
-CORRIDAS_POR_DEFECTO = ["con_foto", "sin_foto", "m3_texto"]
+# M5: corridas que solo se hacen si se piden con --corridas. Van aparte para que
+# quien recorra CORRIDAS (p. ej. m5/eficiencia/medir.py de Camilo) no las corra.
+CORRIDAS_EXTRA = {
+    "caida": ("imagen", False),  # prueba de caída: BETO y RAG apagados
+}
+TODAS_LAS_CORRIDAS = {**CORRIDAS, **CORRIDAS_EXTRA}
 
 # Herramientas que se apagan en la prueba de caída (nombres de agente_tools.HERRAMIENTAS).
 APAGADAS_EN_CAIDA = ("clasificador_beto", "buscar_informacion_dermatologica")
@@ -163,8 +167,16 @@ def calentar():
     from sistema_multimodal import sistema_multimodal
     primera = next(c for c in cargar(CASOS_IMAGEN) if c.get("imagen"))
     t0 = time.perf_counter()
-    sistema_multimodal("Tengo un lunar que cambió de color.",
-                       imagen=os.path.join(CARPETA_IMAGENES, primera["imagen"]))
+    foto = os.path.join(CARPETA_IMAGENES, primera["imagen"])
+    sistema_multimodal("Tengo un lunar que cambió de color.", imagen=foto)
+    # M5: el calentamiento solo carga lo que el cerebro decida usar. Se fuerza la carga
+    # de las tres herramientas (igual que m5/eficiencia/medir.py), para que la latencia
+    # del primer caso medido no incluya cargar un modelo.
+    import agente_tools
+    pregunta = "Tengo un lunar que cambió de color."
+    agente_tools.tool_clasificador_beto(pregunta)
+    agente_tools.tool_buscar_informacion_dermatologica(pregunta)
+    agente_tools.tool_ver_imagen(pregunta, foto)
     print(f"Modelos cargados (calentamiento, no se mide): {time.perf_counter() - t0:.1f} s")
 
 
@@ -234,7 +246,7 @@ def correr(nombre, limite=None):
 
 def _correr(nombre, limite=None):
     from sistema_multimodal import sistema_multimodal
-    origen, con_foto = CORRIDAS[nombre]
+    origen, con_foto = TODAS_LAS_CORRIDAS[nombre]
     casos = cargar(CASOS_IMAGEN if origen == "imagen" else EVAL_SET_M3)
     if limite:
         casos = casos[:limite]
@@ -410,7 +422,7 @@ def _subconjunto(df, criterio, solo_imagen=True):
 
 def armar():
     dfs = {n: pd.read_csv(SALIDA_PARCIAL.format(corrida=n))
-           for n in CORRIDAS if os.path.exists(SALIDA_PARCIAL.format(corrida=n))}
+           for n in TODAS_LAS_CORRIDAS if os.path.exists(SALIDA_PARCIAL.format(corrida=n))}
     if not dfs:
         print("No hay corridas guardadas todavía.")
         return
@@ -475,7 +487,7 @@ def armar():
 
 def main():
     p = argparse.ArgumentParser(description="Harness de M4: impacto del componente visual")
-    p.add_argument("--corridas", default=",".join(CORRIDAS_POR_DEFECTO))
+    p.add_argument("--corridas", default=",".join(CORRIDAS))
     p.add_argument("--limite", type=int, default=None)
     p.add_argument("--solo-resumir", action="store_true")
     p.add_argument("--salida", default="m4", help="carpeta de salida (M5: p. ej. m5/harness)")
@@ -483,9 +495,9 @@ def main():
                    help="permite escribir encima de m4/scorecard_m4.csv (resultado histórico de M4)")
     a = p.parse_args()
     corridas = [c.strip() for c in a.corridas.split(",") if c.strip()]
-    desconocidas = [c for c in corridas if c not in CORRIDAS]
+    desconocidas = [c for c in corridas if c not in TODAS_LAS_CORRIDAS]
     if desconocidas:
-        sys.exit(f"Corridas desconocidas: {desconocidas}. Opciones: {list(CORRIDAS)}")
+        sys.exit(f"Corridas desconocidas: {desconocidas}. Opciones: {list(TODAS_LAS_CORRIDAS)}")
     configurar_salida(a.salida)
     if SALIDA_CSV == "m4/scorecard_m4.csv" and os.path.exists(SALIDA_CSV) and not a.sobrescribir:
         sys.exit("m4/scorecard_m4.csv ya existe y es el resultado histórico de M4. "
