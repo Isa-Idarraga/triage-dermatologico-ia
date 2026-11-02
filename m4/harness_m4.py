@@ -29,6 +29,23 @@ Uso (Colab T4, después de las celdas 1 y 2 de notebooks/M4_multimodal_colab.ipy
   !python m4/harness_m4.py --limite 2              # prueba de humo
   !python m4/harness_m4.py --corridas con_foto     # solo una corrida
   !python m4/harness_m4.py --solo-resumir          # rehace tablas desde los CSV parciales, sin modelos
+
+M5 (María Alejandra) -- tres cambios, sin tocar la calificación:
+  --salida CARPETA   escribe en otra carpeta (scorecard.csv, resultados.json, tabla_delta.md,
+                     entorno.json). Por defecto sigue siendo m4/ con los nombres de M4, pero
+                     si m4/scorecard_m4.csv ya existe se niega a sobrescribirlo (resultado
+                     histórico de M4) salvo con --sobrescribir.
+  sin_senal          el PR #22 deja "sin_senal" en etiqueta_predicha y metrica_dominio (M2) no
+                     conoce esa etiqueta (KeyError). Para el recall se cuenta como no_urgente:
+                     un urgente sin señal es un falso negativo, nunca un acierto. En el CSV y
+                     en casos_sin_senal se conserva "sin_senal".
+  caida              corrida opcional: los 10 casos sin foto con BETO y el RAG apagados (lanzan
+                     error). Todos deben salir sin_senal y la respuesta debe decir «revisión
+                     manual». No entra en las corridas por defecto.
+
+  Kaggle T4, configuración de la Demo (fp16):
+  !TRIAGE_CUANT=fp16 python m4/harness_m4.py --salida m5/harness
+  !TRIAGE_CUANT=fp16 python m4/harness_m4.py --salida m5/caida --corridas caida
 """
 
 import argparse
@@ -57,14 +74,37 @@ SALIDA_CSV = "m4/scorecard_m4.csv"
 SALIDA_PARCIAL = "m4/scorecard_m4_{corrida}.csv"
 SALIDA_RESUMEN = "m4/resultados_m4.json"
 SALIDA_TABLA = "m4/tabla_delta_m4.md"
+SALIDA_ENTORNO = "m4/entorno_m4.json"
+COLUMNA_ACTUAL = "M4 (con foto)"  # encabezado de la tabla de delta
 
 AVISO_FOTO = "no se pudo evaluar"  # texto que agrega _sintetizar_respuesta_final cuando la foto no sirve
+AVISO_SIN_SENAL = "revisión manual"  # lo que debe decir la respuesta cuando no hay señal
 
 CORRIDAS = {
     "con_foto": ("imagen", True),
     "sin_foto": ("imagen", False),
     "m3_texto": ("m3", False),
+    "caida": ("imagen", False),  # M5: prueba de caída, solo si se pide con --corridas caida
 }
+CORRIDAS_POR_DEFECTO = ["con_foto", "sin_foto", "m3_texto"]
+
+# Herramientas que se apagan en la prueba de caída (nombres de agente_tools.HERRAMIENTAS).
+APAGADAS_EN_CAIDA = ("clasificador_beto", "buscar_informacion_dermatologica")
+
+
+def configurar_salida(carpeta):
+    """M5: decide dónde escribe el harness. m4/ conserva los nombres de M4."""
+    global SALIDA_CSV, SALIDA_PARCIAL, SALIDA_RESUMEN, SALIDA_TABLA, SALIDA_ENTORNO, COLUMNA_ACTUAL
+    carpeta = os.path.normpath(carpeta).replace("\\", "/")
+    if carpeta == "m4":
+        return
+    os.makedirs(carpeta, exist_ok=True)
+    SALIDA_CSV = f"{carpeta}/scorecard.csv"
+    SALIDA_PARCIAL = carpeta + "/scorecard_{corrida}.csv"
+    SALIDA_RESUMEN = f"{carpeta}/resultados.json"
+    SALIDA_TABLA = f"{carpeta}/tabla_delta.md"
+    SALIDA_ENTORNO = f"{carpeta}/entorno.json"
+    COLUMNA_ACTUAL = "Sistema actual (con foto)"
 
 
 def cargar(ruta):
@@ -128,7 +168,71 @@ def calentar():
     print(f"Modelos cargados (calentamiento, no se mide): {time.perf_counter() - t0:.1f} s")
 
 
+def guardar_entorno(corridas, limite):
+    """M5: deja escrito con qué se midió (para que un tercero reproduzca el número)."""
+    import subprocess
+    ent = {
+        "fecha_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "corridas": corridas,
+        "limite": limite,
+        "TRIAGE_CUANT": os.environ.get("TRIAGE_CUANT", ""),
+    }
+    try:
+        ent["git_commit"] = subprocess.check_output(
+            ["git", "describe", "--tags", "--always", "--dirty"], stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        ent["git_commit"] = None
+    try:
+        import torch
+        import transformers
+        ent["torch"] = torch.__version__
+        ent["transformers"] = transformers.__version__
+        ent["gpu"] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+    except Exception:
+        pass
+    ag = sys.modules.get("agente_tools")
+    ri = sys.modules.get("rag_ingenuo")
+    for clave, modelo in (("dtype_cerebro", getattr(ag, "_modelo_agente", None)),
+                          ("dtype_generador", getattr(ri, "_gen_model", None))):
+        ent[clave] = str(getattr(modelo, "dtype", None)).replace("torch.", "") if modelo is not None else None
+    with open(SALIDA_ENTORNO, "w", encoding="utf-8") as f:
+        json.dump(ent, f, ensure_ascii=False, indent=2)
+    print(f"Entorno: {ent}")
+
+
+class _HerramientasApagadas:
+    """M5, prueba de caída: reemplaza BETO y el RAG por funciones que fallan,
+    igual que si el modelo no cargara. El agente ya atrapa excepciones de las
+    herramientas (agente_tools.agente: resultado = {"error": ...}), así que lo que
+    se prueba es la regla de seguridad, no un try/except nuevo."""
+
+    def __enter__(self):
+        import agente_tools
+        self._ag = agente_tools
+        self._originales = {n: agente_tools.HERRAMIENTAS[n]["funcion"] for n in APAGADAS_EN_CAIDA}
+
+        def _caida(pregunta, imagen=None):
+            raise RuntimeError("herramienta apagada para la prueba de caída")
+
+        for n in APAGADAS_EN_CAIDA:
+            agente_tools.HERRAMIENTAS[n]["funcion"] = _caida
+        print(f"Prueba de caída: apagadas {list(APAGADAS_EN_CAIDA)}")
+        return self
+
+    def __exit__(self, *exc):
+        for n, fn in self._originales.items():
+            self._ag.HERRAMIENTAS[n]["funcion"] = fn
+        return False
+
+
 def correr(nombre, limite=None):
+    if nombre == "caida":
+        with _HerramientasApagadas():
+            return _correr(nombre, limite)
+    return _correr(nombre, limite)
+
+
+def _correr(nombre, limite=None):
     from sistema_multimodal import sistema_multimodal
     origen, con_foto = CORRIDAS[nombre]
     casos = cargar(CASOS_IMAGEN if origen == "imagen" else EVAL_SET_M3)
@@ -171,6 +275,7 @@ def correr(nombre, limite=None):
             "tools_usadas": ",".join(r.get("tools_usadas", [])),
             "ruta_cierre": ruta_cierre(r),
             "latencia_s": latencia,
+            "avisa_revision_manual": AVISO_SIN_SENAL in (r.get("respuesta") or "").lower(),
             "respuesta": r.get("respuesta"),
         })
         f = filas[-1]
@@ -192,23 +297,51 @@ def _casos_por_id():
 def resumen_corrida(df):
     por_id = _casos_por_id()
     casos = [por_id[i] for i in df["id"]]
-    d3 = metrica_dominio(casos, [{"etiqueta_predicha": e} for e in df["etiqueta_predicha"]])
+    # M5: metrica_dominio (M2) solo conoce urgente / no_urgente y con "sin_senal" lanza
+    # KeyError. Para el recall, sin_senal cuenta como no_urgente: un urgente sin señal es
+    # un falso negativo (el peor caso), nunca un acierto. El CSV conserva "sin_senal".
+    etiquetas_d3 = ["no_urgente" if e == "sin_senal" else e for e in df["etiqueta_predicha"]]
+    d3 = metrica_dominio(casos, [{"etiqueta_predicha": e} for e in etiquetas_d3])
+    sin_senal_ids = set(df.loc[df["etiqueta_predicha"] == "sin_senal", "id"])
     d1 = df["acierto_d1"].dropna().map(_bool)
     lat = df["latencia_s"].astype(float)
     por_criterio = {}
     for crit, g in df.groupby("tipo_criterio"):
         p = g["puntaje_criterio"].dropna().astype(float)
         por_criterio[crit] = f"{int(p.sum())}/{len(p)}"
+    rutas = df["ruta_cierre"].fillna("ninguna").value_counts().to_dict() if "ruta_cierre" in df else {}
+    fn_ids = [fn["id"] for fn in d3["falsos_negativos"]]
     return {
         "n_casos": int(len(df)),
         "d1_aciertos": f"{int(d1.sum())}/{len(d1)}",
         "d1_accuracy": round(float(d1.mean()), 3) if len(d1) else None,
         "d3_recall_urgente": None if d3["recall_urgente"] is None else round(float(d3["recall_urgente"]), 3),
-        "d3_falsos_negativos": [fn["id"] for fn in d3["falsos_negativos"]],
+        "d3_falsos_negativos": fn_ids,
+        "d3_falsos_negativos_por_sin_senal": [i for i in fn_ids if i in sin_senal_ids],
         "criterio_por_tipo": por_criterio,
         "casos_sin_senal": int((~df["senal_disponible"].map(_bool)).sum()),
+        "rutas_cierre": {str(k): int(v) for k, v in rutas.items()},
         "latencia_s_media": round(float(lat.mean()), 2),
+        "latencia_s_p50": round(float(lat.quantile(0.50)), 2),
         "latencia_s_p95": round(float(lat.quantile(0.95)), 2),
+    }
+
+
+def resumen_caida(df):
+    """M5: la prueba de caída pasa si TODOS los casos salen sin_senal, ninguno
+    como no_urgente, y la respuesta avisa «revisión manual»."""
+    n = len(df)
+    sin_senal = int((df["etiqueta_predicha"] == "sin_senal").sum())
+    no_urgente = int((df["etiqueta_predicha"] == "no_urgente").sum())
+    avisa = int(df["avisa_revision_manual"].map(_bool).sum()) if "avisa_revision_manual" in df else 0
+    return {
+        "herramientas_apagadas": list(APAGADAS_EN_CAIDA),
+        "n_casos": n,
+        "sin_senal": f"{sin_senal}/{n}",
+        "salieron_no_urgente": f"{no_urgente}/{n}",
+        "respuesta_avisa_revision_manual": f"{avisa}/{n}",
+        "pasa": sin_senal == n and no_urgente == 0 and avisa == n,
+        "latencia_s_media": round(float(df["latencia_s"].astype(float).mean()), 2),
     }
 
 
@@ -285,6 +418,10 @@ def armar():
 
     resumen = {"corridas": {n: resumen_corrida(d) for n, d in dfs.items()},
                "m3_original": resumen_m3_original()}
+    if os.path.exists(SALIDA_ENTORNO):
+        resumen["entorno"] = cargar(SALIDA_ENTORNO)
+    if "caida" in dfs:
+        resumen["prueba_caida"] = resumen_caida(dfs["caida"])
     if "m3_texto" in dfs:
         resumen["cambios_vs_m3"] = cambios_m3(dfs["m3_texto"])
     if "con_foto" in dfs and "sin_foto" in dfs:
@@ -299,7 +436,7 @@ def armar():
         json.dump(resumen, f, ensure_ascii=False, indent=2, default=str)
 
     m3o = resumen["m3_original"]
-    L = ["| Medida | M3 (sin foto) | M4 (con foto) |", "|---|---|---|"]
+    L = [f"| Medida | M3 (sin foto) | {COLUMNA_ACTUAL} |", "|---|---|---|"]
     if "m3_texto" in dfs:
         r = resumen["corridas"]["m3_texto"]
         L.append(f"| Casos sin imagen (37 de M3): D1 | {m3o['d1_aciertos']} | {r['d1_aciertos']} |")
@@ -329,7 +466,8 @@ def armar():
     print("\nResumen por corrida:")
     for n, r in resumen["corridas"].items():
         print(f"  {n}: {r}")
-    for clave in ("cambios_vs_m3", "foto_cambio_veredicto", "latencia_pareada_foto", "fallos_con_foto"):
+    for clave in ("cambios_vs_m3", "foto_cambio_veredicto", "latencia_pareada_foto", "fallos_con_foto",
+                  "prueba_caida"):
         if clave in resumen:
             print(f"\n{clave}: {resumen[clave]}")
     print(f"\nEscritos: {SALIDA_CSV}, {SALIDA_RESUMEN}, {SALIDA_TABLA}")
@@ -337,16 +475,24 @@ def armar():
 
 def main():
     p = argparse.ArgumentParser(description="Harness de M4: impacto del componente visual")
-    p.add_argument("--corridas", default=",".join(CORRIDAS))
+    p.add_argument("--corridas", default=",".join(CORRIDAS_POR_DEFECTO))
     p.add_argument("--limite", type=int, default=None)
     p.add_argument("--solo-resumir", action="store_true")
+    p.add_argument("--salida", default="m4", help="carpeta de salida (M5: p. ej. m5/harness)")
+    p.add_argument("--sobrescribir", action="store_true",
+                   help="permite escribir encima de m4/scorecard_m4.csv (resultado histórico de M4)")
     a = p.parse_args()
     corridas = [c.strip() for c in a.corridas.split(",") if c.strip()]
     desconocidas = [c for c in corridas if c not in CORRIDAS]
     if desconocidas:
         sys.exit(f"Corridas desconocidas: {desconocidas}. Opciones: {list(CORRIDAS)}")
+    configurar_salida(a.salida)
+    if SALIDA_CSV == "m4/scorecard_m4.csv" and os.path.exists(SALIDA_CSV) and not a.sobrescribir:
+        sys.exit("m4/scorecard_m4.csv ya existe y es el resultado histórico de M4. "
+                 "Use --salida m5/harness (o --sobrescribir si de verdad quiere reemplazarlo).")
     if not a.solo_resumir:
         calentar()
+        guardar_entorno(corridas, a.limite)
         for c in corridas:
             correr(c, a.limite)
     armar()
