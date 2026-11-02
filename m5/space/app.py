@@ -73,35 +73,30 @@ _CSS = """
 
 .gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
 
-.tarjeta-decision {
+.tarjeta-decision, .tarjeta-secundaria {
     border-radius: 14px;
     padding: 16px 20px;
-    border-left: 6px solid #D97706;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     transition: border-color 200ms ease, background-color 200ms ease;
 }
-/* El fondo de la tarjeta es siempre claro, en modo claro u oscuro, para que el
-   color del veredicto se note igual -- por eso el texto se fija en oscuro
-   también siempre: en modo oscuro el tema pone el texto en blanco por defecto,
-   lo que lo deja invisible sobre este fondo claro. */
-.tarjeta-decision, .tarjeta-decision * { color: #0F172A !important; }
-.tarjeta-urgente     { border-left-color: #DC2626; background: #FEF2F2; }
-.tarjeta-no-urgente  { border-left-color: #059669; background: #ECFDF5; }
-.tarjeta-sin-senal   { border-left-color: #D97706; background: #FFFBEB; }
+.tarjeta-decision { border-left: 6px solid #D97706; }
+/* El fondo es translúcido (vidrio) pero sigue siendo claro de base, en modo
+   claro u oscuro -- por eso el texto se fija en oscuro también siempre: en
+   modo oscuro el tema pone el texto en blanco por defecto, lo que lo deja
+   invisible sobre este fondo claro. */
+.tarjeta-decision, .tarjeta-decision *, .tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
+.tarjeta-urgente     { border-left-color: #DC2626; background: rgba(254, 242, 242, 0.85); }
+.tarjeta-no-urgente  { border-left-color: #059669; background: rgba(236, 253, 245, 0.85); }
+.tarjeta-sin-senal   { border-left-color: #D97706; background: rgba(255, 251, 235, 0.85); }
 
-.tarjeta-secundaria {
-    border-radius: 14px;
-    padding: 16px 20px;
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
-    height: 100%;
-}
-.tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
+.tarjeta-secundaria { background: rgba(248, 250, 252, 0.85); height: 100%; }
 .tarjeta-secundaria h3 { margin-top: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-    .tarjeta-decision { transition: none; }
+    .tarjeta-decision, .tarjeta-secundaria { transition: none; }
 }
 """
 

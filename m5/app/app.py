@@ -178,10 +178,20 @@ def consultar(sintoma, foto):
 
 def _consultar_evento(sintoma, foto):
     """Wrapper solo para el botón de Gradio: llama a consultar() (texto plano,
-    sin tocar) y pinta la tarjeta de decisión según su icono."""
+    sin tocar), pinta la tarjeta de decisión según su icono, y revela las tres
+    tarjetas (empiezan ocultas -- ver construir_app -- para no mostrar cuadros
+    vacíos antes de la primera consulta)."""
     texto_decision, foto_md, evidencia_md = consultar(sintoma, foto)
-    tarjeta = gr.Markdown(texto_decision, elem_classes=["tarjeta-decision", _clase_decision(texto_decision)])
-    return tarjeta, foto_md, evidencia_md
+    tarjeta = gr.Markdown(
+        texto_decision, elem_classes=["tarjeta-decision", _clase_decision(texto_decision)], visible=True,
+    )
+    # Si no había síntoma, consultar() devuelve "" en foto/evidencia (ver arriba) --
+    # esas dos tarjetas se quedan ocultas en vez de mostrarse vacías.
+    return (
+        tarjeta,
+        gr.Markdown(foto_md, elem_classes=["tarjeta-secundaria"], visible=bool(foto_md)),
+        gr.Markdown(evidencia_md, elem_classes=["tarjeta-secundaria"], visible=bool(evidencia_md)),
+    )
 
 
 # Paleta y tipografía: guía de diseño clínico-accesible (skill ui-ux-pro-max --
@@ -192,41 +202,38 @@ _CSS = """
 
 .gradio-container, .gradio-container * { font-family: 'Atkinson Hyperlegible', sans-serif; }
 
-.tarjeta-decision {
+.tarjeta-decision, .tarjeta-secundaria {
     border-radius: 14px;
     padding: 16px 20px;
-    border-left: 6px solid #D97706;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     transition: border-color 200ms ease, background-color 200ms ease;
 }
-/* El fondo de la tarjeta es siempre claro, en modo claro u oscuro, para que el
-   color del veredicto se note igual -- por eso el texto se fija en oscuro
-   también siempre: en modo oscuro el tema pone el texto en blanco por defecto,
-   lo que lo deja invisible sobre este fondo claro. */
-.tarjeta-decision, .tarjeta-decision * { color: #0F172A !important; }
-.tarjeta-urgente     { border-left-color: #DC2626; background: #FEF2F2; }
-.tarjeta-no-urgente  { border-left-color: #059669; background: #ECFDF5; }
-.tarjeta-sin-senal   { border-left-color: #D97706; background: #FFFBEB; }
+.tarjeta-decision { border-left: 6px solid #D97706; }
+/* El fondo es translúcido (vidrio) pero sigue siendo claro de base, en modo
+   claro u oscuro -- por eso el texto se fija en oscuro también siempre: en
+   modo oscuro el tema pone el texto en blanco por defecto, lo que lo deja
+   invisible sobre este fondo claro. La opacidad (0.85) deja ver un poco el
+   fondo de atrás sin bajar el contraste del texto. */
+.tarjeta-decision, .tarjeta-decision *, .tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
+.tarjeta-urgente     { border-left-color: #DC2626; background: rgba(254, 242, 242, 0.85); }
+.tarjeta-no-urgente  { border-left-color: #059669; background: rgba(236, 253, 245, 0.85); }
+.tarjeta-sin-senal   { border-left-color: #D97706; background: rgba(255, 251, 235, 0.85); }
 
-/* Tarjetas secundarias (foto, evidencia): mismo look que la de decisión pero
+/* Tarjetas secundarias (foto, evidencia): mismo vidrio que la de decisión pero
    neutras, para que no compitan de color con el veredicto y se vean como un
    solo sistema de tarjetas en vez de texto suelto apilado. */
-.tarjeta-secundaria {
-    border-radius: 14px;
-    padding: 16px 20px;
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
-    height: 100%;
-}
-.tarjeta-secundaria, .tarjeta-secundaria * { color: #0F172A !important; }
+.tarjeta-secundaria { background: rgba(248, 250, 252, 0.85); height: 100%; }
 .tarjeta-secundaria h3 { margin-top: 0; }
 
-.nota-espera { color: #475569; font-size: 0.9em; }
-
 @media (prefers-reduced-motion: reduce) {
-    .tarjeta-decision { transition: none; }
+    /* El blur no es movimiento, se queda; solo se quitan las transiciones. */
+    .tarjeta-decision, .tarjeta-secundaria { transition: none; }
 }
+
+.nota-espera { color: #475569; font-size: 0.9em; }
 """
 
 _TEMA = gr.themes.Soft(primary_hue="red", secondary_hue="slate", neutral_hue="slate")
@@ -244,13 +251,13 @@ def construir_app():
             foto = gr.Image(label="Foto de la lesión (opcional)", type="filepath")
         boton = gr.Button("Consultar", variant="primary")
         gr.Markdown("⏱️ Con foto, la consulta tarda unos 15 s (medido en GPU T4).", elem_classes=["nota-espera"])
-        decision_md = gr.Markdown(elem_classes=["tarjeta-decision"])
+        decision_md = gr.Markdown(elem_classes=["tarjeta-decision"], visible=False)
         with gr.Row():
-            foto_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
-            evidencia_md = gr.Markdown(elem_classes=["tarjeta-secundaria"])
+            foto_md = gr.Markdown(elem_classes=["tarjeta-secundaria"], visible=False)
+            evidencia_md = gr.Markdown(elem_classes=["tarjeta-secundaria"], visible=False)
         boton.click(_consultar_evento, inputs=[sintoma, foto], outputs=[decision_md, foto_md, evidencia_md])
 
-        with gr.Tab("Estado"):
+        with gr.Accordion("Estado", open=False):
             estado_json = gr.JSON()
             gr.Button("Revisar estado").click(lambda: health(), outputs=estado_json)
             demo.load(lambda: health(), outputs=estado_json)
