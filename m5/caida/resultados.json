@@ -1,0 +1,68 @@
+{
+  "corridas": {
+    "caida": {
+      "n_casos": 10,
+      "d1_aciertos": "0/8",
+      "d1_accuracy": 0.0,
+      "d3_recall_urgente": 0.0,
+      "d3_falsos_negativos": [
+        "img_01",
+        "img_04",
+        "img_05",
+        "img_08",
+        "img_10"
+      ],
+      "d3_falsos_negativos_por_sin_senal": [
+        "img_01",
+        "img_04",
+        "img_05",
+        "img_08",
+        "img_10"
+      ],
+      "criterio_por_tipo": {
+        "exacto": "0/7",
+        "llamada_correcta": "1/1",
+        "valvula": "0/2"
+      },
+      "casos_sin_senal": 10,
+      "rutas_cierre": {
+        "sintesis_por_repeticion": 9,
+        "sintesis_pasos_agotados": 1
+      },
+      "latencia_s_media": 6.01,
+      "latencia_s_p50": 5.88,
+      "latencia_s_p95": 7.33
+    }
+  },
+  "m3_original": {
+    "d1_aciertos": "23/32",
+    "d3_recall_urgente": 0.7,
+    "nota": "eval/scorecard_m3.csv no guarda latencia"
+  },
+  "entorno": {
+    "fecha_utc": "2026-11-02T15:39:26Z",
+    "corridas": [
+      "caida"
+    ],
+    "limite": null,
+    "TRIAGE_CUANT": "fp16",
+    "git_commit": "71b64dc",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "dtype_cerebro": "float16",
+    "dtype_generador": "float16"
+  },
+  "prueba_caida": {
+    "herramientas_apagadas": [
+      "clasificador_beto",
+      "buscar_informacion_dermatologica"
+    ],
+    "n_casos": 10,
+    "sin_senal": "10/10",
+    "salieron_no_urgente": "0/10",
+    "respuesta_avisa_revision_manual": "10/10",
+    "pasa": true,
+    "latencia_s_media": 6.01
+  }
+}
