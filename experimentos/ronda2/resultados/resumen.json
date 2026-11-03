@@ -1,0 +1,797 @@
+{
+  "segundos": 1337,
+  "tamanos": {
+    "ent": [
+      12752,
+      5822
+    ],
+    "val": [
+      780,
+      543
+    ],
+    "pru_c": [
+      2148,
+      1546
+    ],
+    "t1": [
+      1055,
+      409
+    ],
+    "hiba_c": [
+      346,
+      235
+    ],
+    "hiba_d": [
+      1270,
+      579
+    ]
+  },
+  "candidatos": {
+    "C0": {
+      "umbral": 0.531008,
+      "val_clinica": {
+        "n": 780,
+        "n_urgentes": 543,
+        "n_no_urgentes": 237,
+        "auc": 0.6833,
+        "recall_urgente": 0.4346,
+        "recall_ic95": [
+          0.3935,
+          0.4766
+        ],
+        "especificidad": 0.7679,
+        "especificidad_ic95": [
+          0.7102,
+          0.8171
+        ],
+        "detectados": "236/543",
+        "falsas_alarmas": "55/237"
+      },
+      "hiba_clinica": {
+        "n": 346,
+        "n_urgentes": 235,
+        "n_no_urgentes": 111,
+        "auc": 0.6583,
+        "recall_urgente": 0.1617,
+        "recall_ic95": [
+          0.1201,
+          0.2142
+        ],
+        "especificidad": 0.964,
+        "especificidad_ic95": [
+          0.911,
+          0.9859
+        ],
+        "detectados": "38/235",
+        "falsas_alarmas": "4/111"
+      },
+      "hiba_dermatoscopia": {
+        "n": 1270,
+        "n_urgentes": 579,
+        "n_no_urgentes": 691,
+        "auc": 0.8424,
+        "recall_urgente": 0.5682,
+        "recall_ic95": [
+          0.5276,
+          0.608
+        ],
+        "especificidad": 0.9161,
+        "especificidad_ic95": [
+          0.893,
+          0.9345
+        ],
+        "detectados": "329/579",
+        "falsas_alarmas": "58/691"
+      },
+      "milk_clinica": {
+        "n": 2148,
+        "n_urgentes": 1546,
+        "n_no_urgentes": 602,
+        "auc": 0.6615,
+        "recall_urgente": 0.4062,
+        "recall_ic95": [
+          0.382,
+          0.4309
+        ],
+        "especificidad": 0.7957,
+        "especificidad_ic95": [
+          0.7616,
+          0.826
+        ],
+        "detectados": "628/1546",
+        "falsas_alarmas": "123/602"
+      },
+      "milk_oscura": {
+        "n": 111,
+        "n_urgentes": 57,
+        "n_no_urgentes": 54,
+        "auc": 0.6738,
+        "recall_urgente": 0.1754,
+        "recall_ic95": [
+          0.0982,
+          0.2937
+        ],
+        "especificidad": 0.9074,
+        "especificidad_ic95": [
+          0.8009,
+          0.9598
+        ],
+        "detectados": "10/57",
+        "falsas_alarmas": "5/54"
+      },
+      "milk_clara": {
+        "n": 563,
+        "n_urgentes": 413,
+        "n_no_urgentes": 150,
+        "auc": 0.6808,
+        "recall_urgente": 0.4794,
+        "recall_ic95": [
+          0.4316,
+          0.5276
+        ],
+        "especificidad": 0.7933,
+        "especificidad_ic95": [
+          0.7216,
+          0.8504
+        ],
+        "detectados": "198/413",
+        "falsas_alarmas": "31/150"
+      },
+      "T1_ham_biopsia": {
+        "n": 1055,
+        "n_urgentes": 409,
+        "n_no_urgentes": 646,
+        "auc": 0.7948,
+        "recall_urgente": 0.7286,
+        "recall_ic95": [
+          0.6835,
+          0.7694
+        ],
+        "especificidad": 0.6796,
+        "especificidad_ic95": [
+          0.6426,
+          0.7144
+        ],
+        "detectados": "298/409",
+        "falsas_alarmas": "207/646"
+      },
+      "hiba_melanoma": {
+        "n": 59,
+        "n_urgentes": 59,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.1356,
+        "recall_ic95": [
+          0.0703,
+          0.2454
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "8/59",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_basocelular": {
+        "n": 112,
+        "n_urgentes": 112,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.1696,
+        "recall_ic95": [
+          0.1114,
+          0.2498
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "19/112",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_escamocelular_y_queratosis_actinica": {
+        "n": 64,
+        "n_urgentes": 64,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.1719,
+        "recall_ic95": [
+          0.0988,
+          0.2821
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "11/64",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_nevus": {
+        "n": 53,
+        "n_urgentes": 0,
+        "n_no_urgentes": 53,
+        "auc": null,
+        "recall_urgente": null,
+        "recall_ic95": null,
+        "especificidad": 0.9811,
+        "especificidad_ic95": [
+          0.9006,
+          0.9967
+        ],
+        "detectados": "0/0",
+        "falsas_alarmas": "1/53"
+      }
+    },
+    "E3": {
+      "umbral": 0.753559,
+      "val_clinica": {
+        "n": 780,
+        "n_urgentes": 543,
+        "n_no_urgentes": 237,
+        "auc": 0.8682,
+        "recall_urgente": 0.8508,
+        "recall_ic95": [
+          0.8184,
+          0.8783
+        ],
+        "especificidad": 0.7131,
+        "especificidad_ic95": [
+          0.6525,
+          0.7669
+        ],
+        "detectados": "462/543",
+        "falsas_alarmas": "68/237"
+      },
+      "hiba_clinica": {
+        "n": 346,
+        "n_urgentes": 235,
+        "n_no_urgentes": 111,
+        "auc": 0.8311,
+        "recall_urgente": 0.634,
+        "recall_ic95": [
+          0.5708,
+          0.693
+        ],
+        "especificidad": 0.8378,
+        "especificidad_ic95": [
+          0.7582,
+          0.8949
+        ],
+        "detectados": "149/235",
+        "falsas_alarmas": "18/111"
+      },
+      "hiba_dermatoscopia": {
+        "n": 1270,
+        "n_urgentes": 579,
+        "n_no_urgentes": 691,
+        "auc": 0.9311,
+        "recall_urgente": 0.6459,
+        "recall_ic95": [
+          0.6061,
+          0.6838
+        ],
+        "especificidad": 0.9465,
+        "especificidad_ic95": [
+          0.9271,
+          0.9609
+        ],
+        "detectados": "374/579",
+        "falsas_alarmas": "37/691"
+      },
+      "milk_clinica": {
+        "n": 2148,
+        "n_urgentes": 1546,
+        "n_no_urgentes": 602,
+        "auc": 0.8349,
+        "recall_urgente": 0.8428,
+        "recall_ic95": [
+          0.8238,
+          0.8601
+        ],
+        "especificidad": 0.6827,
+        "especificidad_ic95": [
+          0.6445,
+          0.7186
+        ],
+        "detectados": "1303/1546",
+        "falsas_alarmas": "191/602"
+      },
+      "milk_oscura": {
+        "n": 111,
+        "n_urgentes": 57,
+        "n_no_urgentes": 54,
+        "auc": 0.7862,
+        "recall_urgente": 0.6316,
+        "recall_ic95": [
+          0.5018,
+          0.7448
+        ],
+        "especificidad": 0.7593,
+        "especificidad_ic95": [
+          0.6305,
+          0.8536
+        ],
+        "detectados": "36/57",
+        "falsas_alarmas": "13/54"
+      },
+      "milk_clara": {
+        "n": 563,
+        "n_urgentes": 413,
+        "n_no_urgentes": 150,
+        "auc": 0.8551,
+        "recall_urgente": 0.8257,
+        "recall_ic95": [
+          0.7861,
+          0.8592
+        ],
+        "especificidad": 0.7533,
+        "especificidad_ic95": [
+          0.6786,
+          0.8154
+        ],
+        "detectados": "341/413",
+        "falsas_alarmas": "37/150"
+      },
+      "T1_ham_biopsia": {
+        "n": 1055,
+        "n_urgentes": 409,
+        "n_no_urgentes": 646,
+        "auc": 0.8219,
+        "recall_urgente": 0.4768,
+        "recall_ic95": [
+          0.4288,
+          0.5252
+        ],
+        "especificidad": 0.9396,
+        "especificidad_ic95": [
+          0.9185,
+          0.9555
+        ],
+        "detectados": "195/409",
+        "falsas_alarmas": "39/646"
+      },
+      "hiba_melanoma": {
+        "n": 59,
+        "n_urgentes": 59,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.2712,
+        "recall_ic95": [
+          0.1744,
+          0.396
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "16/59",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_basocelular": {
+        "n": 112,
+        "n_urgentes": 112,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.7946,
+        "recall_ic95": [
+          0.7107,
+          0.8591
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "89/112",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_escamocelular_y_queratosis_actinica": {
+        "n": 64,
+        "n_urgentes": 64,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.6875,
+        "recall_ic95": [
+          0.5661,
+          0.7877
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "44/64",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_nevus": {
+        "n": 53,
+        "n_urgentes": 0,
+        "n_no_urgentes": 53,
+        "auc": null,
+        "recall_urgente": null,
+        "recall_ic95": null,
+        "especificidad": 0.9057,
+        "especificidad_ic95": [
+          0.7975,
+          0.959
+        ],
+        "detectados": "0/0",
+        "falsas_alarmas": "5/53"
+      }
+    },
+    "F2": {
+      "umbral": 0.733071,
+      "val_clinica": {
+        "n": 780,
+        "n_urgentes": 543,
+        "n_no_urgentes": 237,
+        "auc": 0.877,
+        "recall_urgente": 0.8508,
+        "recall_ic95": [
+          0.8184,
+          0.8783
+        ],
+        "especificidad": 0.7932,
+        "especificidad_ic95": [
+          0.7372,
+          0.8399
+        ],
+        "detectados": "462/543",
+        "falsas_alarmas": "49/237"
+      },
+      "hiba_clinica": {
+        "n": 346,
+        "n_urgentes": 235,
+        "n_no_urgentes": 111,
+        "auc": 0.8635,
+        "recall_urgente": 0.7064,
+        "recall_ic95": [
+          0.6452,
+          0.7609
+        ],
+        "especificidad": 0.8739,
+        "especificidad_ic95": [
+          0.7994,
+          0.9234
+        ],
+        "detectados": "166/235",
+        "falsas_alarmas": "14/111"
+      },
+      "hiba_dermatoscopia": {
+        "n": 1270,
+        "n_urgentes": 579,
+        "n_no_urgentes": 691,
+        "auc": 0.9366,
+        "recall_urgente": 0.7029,
+        "recall_ic95": [
+          0.6645,
+          0.7387
+        ],
+        "especificidad": 0.9421,
+        "especificidad_ic95": [
+          0.9221,
+          0.9572
+        ],
+        "detectados": "407/579",
+        "falsas_alarmas": "40/691"
+      },
+      "milk_clinica": {
+        "n": 2148,
+        "n_urgentes": 1546,
+        "n_no_urgentes": 602,
+        "auc": 0.8253,
+        "recall_urgente": 0.8131,
+        "recall_ic95": [
+          0.7929,
+          0.8317
+        ],
+        "especificidad": 0.6711,
+        "especificidad_ic95": [
+          0.6326,
+          0.7074
+        ],
+        "detectados": "1257/1546",
+        "falsas_alarmas": "198/602"
+      },
+      "milk_oscura": {
+        "n": 111,
+        "n_urgentes": 57,
+        "n_no_urgentes": 54,
+        "auc": 0.6862,
+        "recall_urgente": 0.6667,
+        "recall_ic95": [
+          0.5372,
+          0.7751
+        ],
+        "especificidad": 0.5926,
+        "especificidad_ic95": [
+          0.4597,
+          0.7132
+        ],
+        "detectados": "38/57",
+        "falsas_alarmas": "22/54"
+      },
+      "milk_clara": {
+        "n": 563,
+        "n_urgentes": 413,
+        "n_no_urgentes": 150,
+        "auc": 0.8598,
+        "recall_urgente": 0.8087,
+        "recall_ic95": [
+          0.768,
+          0.8437
+        ],
+        "especificidad": 0.7467,
+        "especificidad_ic95": [
+          0.6715,
+          0.8095
+        ],
+        "detectados": "334/413",
+        "falsas_alarmas": "38/150"
+      },
+      "T1_ham_biopsia": {
+        "n": 1055,
+        "n_urgentes": 409,
+        "n_no_urgentes": 646,
+        "auc": 0.8358,
+        "recall_urgente": 0.5526,
+        "recall_ic95": [
+          0.5041,
+          0.6
+        ],
+        "especificidad": 0.887,
+        "especificidad_ic95": [
+          0.8603,
+          0.9092
+        ],
+        "detectados": "226/409",
+        "falsas_alarmas": "73/646"
+      },
+      "hiba_melanoma": {
+        "n": 59,
+        "n_urgentes": 59,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.4237,
+        "recall_ic95": [
+          0.3061,
+          0.5507
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "25/59",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_basocelular": {
+        "n": 112,
+        "n_urgentes": 112,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.8393,
+        "recall_ic95": [
+          0.7602,
+          0.8959
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "94/112",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_escamocelular_y_queratosis_actinica": {
+        "n": 64,
+        "n_urgentes": 64,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.7344,
+        "recall_ic95": [
+          0.6152,
+          0.827
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "47/64",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_nevus": {
+        "n": 53,
+        "n_urgentes": 0,
+        "n_no_urgentes": 53,
+        "auc": null,
+        "recall_urgente": null,
+        "recall_ic95": null,
+        "especificidad": 0.8679,
+        "especificidad_ic95": [
+          0.7516,
+          0.9345
+        ],
+        "detectados": "0/0",
+        "falsas_alarmas": "7/53"
+      }
+    },
+    "F3": {
+      "umbral": 0.771333,
+      "val_clinica": {
+        "n": 780,
+        "n_urgentes": 543,
+        "n_no_urgentes": 237,
+        "auc": 0.8741,
+        "recall_urgente": 0.8508,
+        "recall_ic95": [
+          0.8184,
+          0.8783
+        ],
+        "especificidad": 0.7511,
+        "especificidad_ic95": [
+          0.6923,
+          0.8018
+        ],
+        "detectados": "462/543",
+        "falsas_alarmas": "59/237"
+      },
+      "hiba_clinica": {
+        "n": 346,
+        "n_urgentes": 235,
+        "n_no_urgentes": 111,
+        "auc": 0.8411,
+        "recall_urgente": 0.5915,
+        "recall_ic95": [
+          0.5277,
+          0.6524
+        ],
+        "especificidad": 0.8829,
+        "especificidad_ic95": [
+          0.8099,
+          0.9303
+        ],
+        "detectados": "139/235",
+        "falsas_alarmas": "13/111"
+      },
+      "hiba_dermatoscopia": {
+        "n": 1270,
+        "n_urgentes": 579,
+        "n_no_urgentes": 691,
+        "auc": 0.941,
+        "recall_urgente": 0.5803,
+        "recall_ic95": [
+          0.5397,
+          0.6199
+        ],
+        "especificidad": 0.9797,
+        "especificidad_ic95": [
+          0.9663,
+          0.9879
+        ],
+        "detectados": "336/579",
+        "falsas_alarmas": "14/691"
+      },
+      "milk_clinica": {
+        "n": 2148,
+        "n_urgentes": 1546,
+        "n_no_urgentes": 602,
+        "auc": 0.8419,
+        "recall_urgente": 0.815,
+        "recall_ic95": [
+          0.7949,
+          0.8336
+        ],
+        "especificidad": 0.7226,
+        "especificidad_ic95": [
+          0.6855,
+          0.7569
+        ],
+        "detectados": "1260/1546",
+        "falsas_alarmas": "167/602"
+      },
+      "milk_oscura": {
+        "n": 111,
+        "n_urgentes": 57,
+        "n_no_urgentes": 54,
+        "auc": 0.7859,
+        "recall_urgente": 0.5789,
+        "recall_ic95": [
+          0.4498,
+          0.6981
+        ],
+        "especificidad": 0.7778,
+        "especificidad_ic95": [
+          0.6506,
+          0.868
+        ],
+        "detectados": "33/57",
+        "falsas_alarmas": "12/54"
+      },
+      "milk_clara": {
+        "n": 563,
+        "n_urgentes": 413,
+        "n_no_urgentes": 150,
+        "auc": 0.8589,
+        "recall_urgente": 0.7893,
+        "recall_ic95": [
+          0.7474,
+          0.8259
+        ],
+        "especificidad": 0.7867,
+        "especificidad_ic95": [
+          0.7144,
+          0.8446
+        ],
+        "detectados": "326/413",
+        "falsas_alarmas": "32/150"
+      },
+      "T1_ham_biopsia": {
+        "n": 1055,
+        "n_urgentes": 409,
+        "n_no_urgentes": 646,
+        "auc": 0.8352,
+        "recall_urgente": 0.3985,
+        "recall_ic95": [
+          0.3522,
+          0.4467
+        ],
+        "especificidad": 0.9567,
+        "especificidad_ic95": [
+          0.9381,
+          0.9698
+        ],
+        "detectados": "163/409",
+        "falsas_alarmas": "28/646"
+      },
+      "hiba_melanoma": {
+        "n": 59,
+        "n_urgentes": 59,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.3051,
+        "recall_ic95": [
+          0.2025,
+          0.4315
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "18/59",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_basocelular": {
+        "n": 112,
+        "n_urgentes": 112,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.7143,
+        "recall_ic95": [
+          0.6246,
+          0.7898
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "80/112",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_escamocelular_y_queratosis_actinica": {
+        "n": 64,
+        "n_urgentes": 64,
+        "n_no_urgentes": 0,
+        "auc": null,
+        "recall_urgente": 0.6406,
+        "recall_ic95": [
+          0.5182,
+          0.7471
+        ],
+        "especificidad": null,
+        "especificidad_ic95": null,
+        "detectados": "41/64",
+        "falsas_alarmas": "0/0"
+      },
+      "hiba_nevus": {
+        "n": 53,
+        "n_urgentes": 0,
+        "n_no_urgentes": 53,
+        "auc": null,
+        "recall_urgente": null,
+        "recall_ic95": null,
+        "especificidad": 0.9245,
+        "especificidad_ic95": [
+          0.8214,
+          0.9703
+        ],
+        "detectados": "0/0",
+        "falsas_alarmas": "4/53"
+      }
+    }
+  },
+  "elegido": "F2",
+  "reglas": {
+    "1_recall_0_80_y_esp_0_60": false,
+    "2_melanoma_0_60": false,
+    "3_basocelular_y_escamo_0_70": true,
+    "4_esp_nevus_0_50": true,
+    "5_brecha_oscura_0_15": true,
+    "6_dermatoscopia": true
+  },
+  "veredicto": "no se adopta"
+}
