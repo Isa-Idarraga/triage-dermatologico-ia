@@ -17,5 +17,10 @@
     "semilla": 42,
     "hardware": "Tesla T4",
     "entrenamiento": "HAM10000 + PAD-UFES-20 + MILK10k entrenamiento; melanoma x3; variación de brillo y color; LoRA r 8, alpha 16, 4 épocas"
+  },
+  "valvula_piel": {
+    "pesos": "valvula_v4.npz",
+    "modo": "aviso",
+    "nota": "V4 (experimentos/valvula_piel). Solo avisa: no cambia la clase ni el score. No pasó la regla para bloquear (dermatoscopias de piel oscura 53/60)."
   }
 }

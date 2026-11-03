@@ -179,6 +179,9 @@ def tool_ver_imagen(pregunta: str, imagen=None) -> dict:
         "calidad": salida.get("calidad"),
         "no_evaluable": no_evaluable,
         "motivo_no_evaluable": salida["motivo"] if no_evaluable else None,
+        # Válvula de piel en modo aviso (M5): no cambia la etiqueta; la app lo muestra.
+        "parece_piel": salida.get("parece_piel"),
+        "score_piel": salida.get("score_piel"),
     }
 
 

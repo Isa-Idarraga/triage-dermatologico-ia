@@ -342,13 +342,27 @@ class DINOv2LoRA:
         return x.transpose(2, 0, 1)
 
     def puntuar(self, imagenes, tam_lote=32):
-        torch, salida = self._torch, []
-        for i in range(0, len(imagenes), tam_lote):
-            lote = np.stack([self._preprocesar(im) for im in imagenes[i:i + tam_lote]])
-            with torch.no_grad():
-                logits = self.modelo(pixel_values=torch.from_numpy(lote).to(self.dispositivo)).logits
-                salida.append(torch.softmax(logits.float(), dim=-1)[:, 1].cpu().numpy())
-        return np.concatenate(salida) if salida else np.zeros(0)
+        return self.puntuar_y_caracteristicas(imagenes, tam_lote)[0]
+
+    def puntuar_y_caracteristicas(self, imagenes, tam_lote=32):
+        """(scores, características). Las características son la entrada de la capa final de F2
+        (token CLS + promedio de los parches, 1 536 valores); las usa la válvula de piel sin otra
+        pasada por la red."""
+        torch, scores, feats, captura = self._torch, [], [], {}
+        capa = self.modelo.base_model.model.classifier
+        gancho = capa.register_forward_hook(lambda m, entrada, salida: captura.__setitem__("x", entrada[0]))
+        try:
+            for i in range(0, len(imagenes), tam_lote):
+                lote = np.stack([self._preprocesar(im) for im in imagenes[i:i + tam_lote]])
+                with torch.no_grad():
+                    logits = self.modelo(pixel_values=torch.from_numpy(lote).to(self.dispositivo)).logits
+                    scores.append(torch.softmax(logits.float(), dim=-1)[:, 1].cpu().numpy())
+                    feats.append(captura["x"].float().cpu().numpy())
+        finally:
+            gancho.remove()
+        if not scores:
+            return np.zeros(0), np.zeros((0, 1536), dtype=np.float32)
+        return np.concatenate(scores), np.concatenate(feats)
 
 
 def construir_clasificador(cfg, dispositivo=None):
@@ -384,8 +398,8 @@ def precargar(config=None):
 
 
 # ---------------------------------------------------------------- API pública
-def _resultado(clase, score, motivo, cfg, t0, calidad=None):
-    return {
+def _resultado(clase, score, motivo, cfg, t0, calidad=None, piel=None):
+    r = {
         "clase": clase,
         "score": None if score is None else round(float(score), 4),
         "motivo": motivo,
@@ -394,6 +408,34 @@ def _resultado(clase, score, motivo, cfg, t0, calidad=None):
         "calidad": calidad or None,
         "latencia_s": round(time.perf_counter() - t0, 4),
     }
+    if piel is not None:
+        r["parece_piel"], r["score_piel"] = piel
+    return r
+
+
+class ValvulaPiel:
+    """Válvula V4 (experimentos/valvula_piel): regresión logística sobre las características de
+    F2. Solo AVISA: no cambia la clase ni el score de la foto. No pasó la regla para bloquear
+    (rechazaba más dermatoscopias de piel oscura que de clara), así que se usa como aviso."""
+
+    def __init__(self, ruta_npz):
+        z = np.load(ruta_npz)
+        self.media, self.escala, self.coef = z["media"], z["escala"], z["coef"]
+        self.sesgo, self.umbral = float(z["sesgo"]), float(z["umbral"])
+
+    def puntuar(self, caracteristicas):
+        x = (np.asarray(caracteristicas, dtype=np.float64) - self.media) / self.escala
+        return 1.0 / (1.0 + np.exp(-(x @ self.coef + self.sesgo)))
+
+
+def obtener_valvula(cfg):
+    """ValvulaPiel si la configuración trae "valvula_piel" y el archivo existe; si no, None."""
+    nombre = (cfg.get("valvula_piel") or {}).get("pesos")
+    if not nombre or not (AQUI / nombre).exists():
+        return None
+    if _CACHE.get("valvula_clave") != nombre:
+        _CACHE["valvula"], _CACHE["valvula_clave"] = ValvulaPiel(AQUI / nombre), nombre
+    return _CACHE["valvula"]
 
 
 def ver(imagen, config=None, clasificador=None):
@@ -407,9 +449,17 @@ def ver(imagen, config=None, clasificador=None):
     if not ok:
         return _resultado("no_evaluable", None, motivo, cfg, t0, calidad)
     clf = clasificador or obtener_clasificador(cfg)
-    score = float(clf.puntuar([img])[0])
+    valvula = obtener_valvula(cfg) if hasattr(clf, "puntuar_y_caracteristicas") else None
+    piel = None
+    if valvula is not None:
+        scores, feats = clf.puntuar_y_caracteristicas([img])
+        score = float(scores[0])
+        sp = float(valvula.puntuar(feats)[0])
+        piel = (bool(sp >= valvula.umbral), round(sp, 4))
+    else:
+        score = float(clf.puntuar([img])[0])
     clase, motivo = decidir(score, cfg["umbral"], cfg["banda_incertidumbre"])
-    return _resultado(clase, score, motivo, cfg, t0, calidad)
+    return _resultado(clase, score, motivo, cfg, t0, calidad, piel)
 
 
 if __name__ == "__main__":
