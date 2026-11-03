@@ -943,6 +943,9 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
                  padding: 11px 12px; border-radius: 10px; cursor: pointer; min-height: 44px;
                  transition: background-color 150ms ease-out; }
 .lateral .item:hover { background: rgba(255,255,255,.1); }
+/* Gradio pinta los SVG con su propio color: aquí cada ícono toma el color del texto de su botón. */
+.lateral .item svg { flex: none; color: inherit !important; }
+.lateral .item svg, .lateral .item svg * { color: inherit !important; stroke: currentColor !important; fill: none !important; }
 .lateral .item-principal { background: #ffffff; color: #0f355e; font-weight: 700; margin-bottom: 8px; }
 .lateral .item-principal:hover { background: #e3effa; }
 .dark .lateral .item-principal { color: #0a2440; }
