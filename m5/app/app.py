@@ -12,6 +12,12 @@ iniciar (_calentar), no en cada consulta -- piden esto explícitamente en el
 reparto de M5 porque el costo de carga en frío (~160 s) no lo debe pagar el
 usuario en la demo.
 
+La interfaz tiene una página de inicio con los avisos de uso (hay que aceptarlos
+una vez; el navegador recuerda la versión aceptada), pestañas de «Cómo
+funciona», «Términos de uso» y «Privacidad y datos», y una tarjeta de resultado
+que explica qué dijo cada señal y con qué criterio. consultar() y sus textos no
+cambian: los asserts del notebook siguen valiendo.
+
 Correr local o en Kaggle (T4, con link público):
     python m5/app/app.py
 """
@@ -229,41 +235,69 @@ def consultar(sintoma, foto):
 
 
 # --- Vista principal (lo que ve el profesional) ------------------------------
-# Lenguaje clínico, sin nombres de herramientas ni scores. Todo sale del mismo
-# resultado de sistema_multimodal(); aquí solo se traduce y se maqueta. Los
-# títulos se redactan como sugerencia ("Se sugiere..."): la herramienta apoya
-# al profesional, no le da una orden.
+# Lenguaje clínico. Todo sale del mismo resultado de sistema_multimodal(): aquí
+# solo se traduce y se maqueta. Lo único que calcula la vista es la lista de
+# signos de alarma mencionados en el texto (_signos_en_texto), que se muestra
+# rotulada como lectura de la app y no cambia la sugerencia.
 
 _APOYO_HTML = "Apoyo a la decisión: la valoración y la decisión final son del profesional."
 
-
-def _decision_clinica(interpretacion):
-    """(tono, título, por qué). El tono es el del veredicto FINAL del sistema
-    (misma regla que etiqueta_final() en m4/harness_m4.py); lo que dijo cada
-    señal por separado se ve en _html_senales(). El título siempre dice la
-    sugerencia con palabras, así nunca depende solo del color."""
-    señales = interpretacion["señales"]
-    veredicto = interpretacion["veredicto"]
-    if veredicto is None:
-        return ("sin-senal", "Sin señal suficiente: se sugiere revisión manual",
-                "Ninguna fuente (texto, foto o guías) dio una señal clara. "
-                "Esto no significa que el caso pueda esperar.")
-    if veredicto == "urgente":
-        if all(v == "urgente" for v in señales.values()):
-            por_que = "Todas las señales disponibles indican urgencia."
-        else:
-            por_que = ("Las señales no coinciden. Cuando al menos una indica urgencia, el sistema "
-                       "se inclina por referir para no dejar pasar un caso grave.")
-        return "urgente", "Se sugiere referir con prioridad a dermatología", por_que
-    return "rutina", "Se sugiere cita de rutina", "Ninguna de las señales disponibles indicó urgencia."
-
-
-# Nombre corto de cada señal para su marca en la tarjeta.
+# Nombre de cada señal tal como lo ve la enfermera.
 _ETIQUETA_SEÑAL = {
     "clasificador_beto": "Texto del síntoma",
     "ver_imagen": "Foto",
     "buscar_informacion_dermatologica": "Guías clínicas",
 }
+_ORDEN_SEÑALES = ["clasificador_beto", "ver_imagen", "buscar_informacion_dermatologica"]
+_CON_ARTICULO = {
+    "clasificador_beto": "el texto del síntoma",
+    "ver_imagen": "la foto",
+    "buscar_informacion_dermatologica": "las guías clínicas",
+}
+
+
+def _mayuscula(t):
+    return t[:1].upper() + t[1:]
+
+
+def _palabra(v):
+    return "urgente" if v == "urgente" else "no urgente"
+
+
+def _num(x, decimales=2):
+    return f"{x:.{decimales}f}".replace(".", ",")
+
+
+def _lista_humana(nombres):
+    nombres = list(nombres)
+    if len(nombres) <= 1:
+        return "".join(nombres)
+    return ", ".join(nombres[:-1]) + " y " + nombres[-1]
+
+
+def _decision_clinica(interpretacion):
+    """(tono, título, por qué). El tono es el del veredicto FINAL del sistema
+    (misma regla que etiqueta_final() en m4/harness_m4.py). El por qué nombra qué
+    señal marcó urgente y cuál no, en vez de solo decir que no coinciden."""
+    señales = interpretacion["señales"]
+    veredicto = interpretacion["veredicto"]
+    if veredicto is None:
+        return ("sin-senal", "Sin señal suficiente: se sugiere revisión manual",
+                "Ni el texto, ni la foto, ni las guías dieron una señal clara. "
+                "Esto no significa que el caso pueda esperar.")
+    urg = [_CON_ARTICULO[n] for n in _ORDEN_SEÑALES if señales.get(n) == "urgente"]
+    no_urg = [_CON_ARTICULO[n] for n in _ORDEN_SEÑALES if señales.get(n) == "no_urgente"]
+    if veredicto == "urgente":
+        verbo = "indicó" if len(urg) == 1 else "indicaron"
+        por_que = f"{_mayuscula(_lista_humana(urg))} {verbo} urgencia"
+        if not no_urg:
+            por_que += "."
+        else:
+            por_que += (f"; {_lista_humana(no_urg)}, no. Basta una señal de urgencia para sugerir "
+                        "referir: el sistema prefiere una consulta de más a dejar pasar un cáncer de piel.")
+        return "urgente", "Se sugiere referir con prioridad a dermatología", por_que
+    return ("rutina", "Se sugiere cita de rutina",
+            f"Ninguna señal indicó urgencia: {_lista_humana(no_urg)} dijeron no urgente.")
 
 
 def _html_senales(señales):
@@ -272,30 +306,93 @@ def _html_senales(señales):
     if not señales:
         return ""
     marcas = "".join(
-        f'<li class="senal senal-{"urgente" if v == "urgente" else "rutina"}">'
+        f'<li class="senal senal-{"urgente" if señales[n] == "urgente" else "rutina"}">'
         f'<span class="senal-punto" aria-hidden="true"></span>'
-        f'{html.escape(_ETIQUETA_SEÑAL.get(n, n))}: <strong>{html.escape(v.replace("_", " "))}</strong></li>'
-        for n, v in señales.items()
+        f'{html.escape(_ETIQUETA_SEÑAL.get(n, n))}: <strong>{_palabra(señales[n])}</strong></li>'
+        for n in _ORDEN_SEÑALES if n in señales
     )
     return f'<ul class="senales" aria-label="Qué indicó cada señal">{marcas}</ul>'
 
 
-def _foto_clinica(resultado, hay_foto):
-    """(texto, es_aviso). es_aviso marca la foto no evaluable, que se resalta
-    porque no puede leerse como un caso tranquilo."""
-    v = resultado.get("detalle_tools", {}).get("ver_imagen")
-    if not hay_foto:
-        return "No se adjuntó foto. La sugerencia se basa en el texto y las guías.", False
-    if v is None:
-        return "La foto no se analizó en esta consulta.", False
-    if v.get("no_evaluable"):
-        motivo = v.get("motivo_no_evaluable")
-        motivo_txt = f" ({motivo})" if motivo else ""
-        return (f"No se pudo evaluar la foto{motivo_txt}. Esto no equivale a \"puede esperar\": "
-                "la sugerencia se basa solo en el texto y las guías."), True
-    if v.get("etiqueta") == "urgente":
-        return "El análisis de la foto encontró rasgos que sugieren revisar con prioridad.", False
-    return "El análisis de la foto no encontró rasgos de alarma.", False
+# --- Datos de apoyo para explicar cada señal ---------------------------------
+
+_CACHE = {}
+
+
+def _config_foto():
+    """Umbral y tipo de modelo de ver() activos (ver_config.json o TRIAGE_VER).
+    Se leen del mismo archivo que usa ver(), no se escriben aquí."""
+    if "foto" not in _CACHE:
+        try:
+            from ver import cargar_config
+            cfg = cargar_config()
+            _CACHE["foto"] = {"umbral": float(cfg["umbral"]), "backend": cfg.get("backend", "")}
+        except Exception as e:
+            print(f"No se pudo leer la configuración de ver(): {e!r}")
+            _CACHE["foto"] = {"umbral": None, "backend": ""}
+    return _CACHE["foto"]
+
+
+def _nombres_fuentes():
+    """id del documento -> 'Institución: título (fecha)', leído de la tabla de
+    data/corpus_m3/fuentes.md. Si no se puede leer, se muestra el id."""
+    if "fuentes" not in _CACHE:
+        nombres = {}
+        try:
+            with open(os.path.join(_RAIZ, "data", "corpus_m3", "fuentes.md"), encoding="utf-8") as f:
+                for linea in f:
+                    m = re.match(r"\|\s*`([a-z0-9_]+)`\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|", linea)
+                    if m:
+                        institucion = m.group(3).split(";")[0].strip()
+                        fecha = m.group(4).split(" (")[0].strip()
+                        nombres[m.group(1)] = f"{institucion}: {m.group(2).strip()} ({fecha})"
+        except OSError:
+            pass
+        _CACHE["fuentes"] = nombres
+    return _CACHE["fuentes"]
+
+
+def _fuente_legible(fid):
+    return _nombres_fuentes().get(fid.strip("[] "), fid)
+
+
+# Signos de alarma que la enfermera suele preguntar (cambios ABCDE y otros que
+# nombran las guías del corpus, p. ej. CDC: lesión que sangra o no sana). Es una
+# lectura del texto con expresiones regulares, no lo que usó el modelo.
+_SIGNOS = [
+    ("Creció o cambió de tamaño", r"\bcreci|\bcrece|agrand|aument\w*(\s+\w+){0,2}\s+tamano|cambi\w*(\s+\w+){0,3}\s+tamano|mas\s+grande", True),
+    ("Cambió de color o tiene varios colores", r"cambi\w*(\s+\w+){0,3}\s+color|varios\s+(colores|tonos)|\bnegr|oscurec", True),
+    ("Cambió de forma o tiene bordes irregulares", r"cambi\w*(\s+\w+){0,4}\s+forma|borde\w*\s+irregular|asimetric|forma\s+irregular", True),
+    ("Sangra o supura", r"sangr|supur", True),
+    ("Herida o costra que no sana", r"no\s+(sana|cicatriza|se\s+cura|cura)|ulcer|costra", False),
+    ("Pica o duele", r"\bpica|picazon|prurit|\bduele|dolor", True),
+    ("Apareció hace poco", r"aparec|\bnuev[oa]s?\b|reciente", True),
+]
+
+
+def _normalizar(texto):
+    import unicodedata
+    t = unicodedata.normalize("NFD", (texto or "").lower())
+    return "".join(c for c in t if unicodedata.category(c) != "Mn")
+
+
+def _signos_en_texto(texto):
+    """(mencionados, negados). Un signo cuenta como negado si en las tres palabras
+    anteriores, sin pasar por un «y», «pero» o «que», aparece 'no', 'ni', 'sin' o
+    'nunca' («no pica ni sangra»)."""
+    t = _normalizar(texto)
+    mencionados, negados = [], []
+    for nombre, patron, revisar_negacion in _SIGNOS:
+        m = re.search(patron, t)
+        if not m:
+            continue
+        antes = re.split(r"[.,;:!?]|\by\b|\bpero\b|\bque\b", t[max(0, m.start() - 30):m.start()])[-1]
+        antes = " ".join(antes.split()[-3:])
+        if revisar_negacion and re.search(r"\b(no|ni|sin|nunca)\b", antes):
+            negados.append(nombre)
+        else:
+            mencionados.append(nombre)
+    return mencionados, negados
 
 
 def _justificacion(respuesta):
@@ -310,32 +407,129 @@ def _parrafos(texto):
     return "".join(f"<p>{html.escape(p.strip())}</p>" for p in texto.split("\n") if p.strip())
 
 
-def _html_resultado(resultado, interpretacion, hay_foto):
-    tono, titulo, por_que = _decision_clinica(interpretacion)
-    foto_txt, foto_aviso = _foto_clinica(resultado, hay_foto)
-    det = resultado.get("detalle_tools", {}).get("buscar_informacion_dermatologica")
-    if det:
-        fuentes = ", ".join(det.get("fuentes", [])) or "ninguna"
-        evidencia = (_parrafos(_justificacion(det.get("respuesta", "")))
-                     + f'<p class="fuentes">Fuentes: {html.escape(fuentes)}</p>'
-                     + '<p class="nota">Esta evidencia viene de guías clínicas; no describe la foto del paciente.</p>')
+def _item_criterio(nombre, etiqueta, cuerpo_html, aviso=False):
+    clase = {"urgente": "crit-urgente", "no_urgente": "crit-rutina"}.get(etiqueta, "crit-neutro")
+    estado = (_palabra(etiqueta) if etiqueta in ("urgente", "no_urgente")
+              else ("no evaluable" if aviso else ""))
+    estado_html = f' · <strong>{estado}</strong>' if estado else ""
+    return (f'<li class="criterio {clase}{" crit-aviso" if aviso else ""}">'
+            f'<p class="crit-titulo"><span class="senal-punto" aria-hidden="true"></span>'
+            f'{html.escape(nombre)}{estado_html}</p>{cuerpo_html}</li>')
+
+
+def _criterio_texto(d):
+    if not d:
+        return _item_criterio("Texto del síntoma", None,
+                              "<p>El clasificador de texto no se usó en esta consulta.</p>")
+    etq, conf = d.get("etiqueta"), d.get("confianza")
+    seguridad = (f" con una seguridad de {round(float(conf) * 100)} %"
+                 if isinstance(conf, (int, float)) else "")
+    cuerpo = (f"<p>Un modelo de lenguaje (BETO) entrenado con descripciones de lesiones etiquetadas "
+              f"lo clasificó como <strong>{_palabra(etq)}</strong>{seguridad}. Este modelo no indica qué "
+              "palabras pesaron; los signos de alarma que aparecen en el texto están más abajo.</p>")
+    return _item_criterio("Texto del síntoma", etq, cuerpo)
+
+
+def _criterio_foto(d, hay_foto):
+    if not hay_foto:
+        return _item_criterio("Foto", None, "<p>No se adjuntó foto.</p>")
+    if not d:
+        return _item_criterio("Foto", None, "<p>La foto no se analizó en esta consulta.</p>")
+    if d.get("no_evaluable"):
+        motivo = d.get("motivo_no_evaluable")
+        motivo_txt = f" ({html.escape(motivo)})" if motivo else ""
+        return _item_criterio(
+            "Foto", None,
+            f"<p>No se pudo evaluar{motivo_txt}. Esto no equivale a «puede esperar»: la sugerencia "
+            "se basa solo en el texto y las guías. Si puede, tome otra foto enfocada, con buena luz "
+            "y la lesión centrada.</p>", aviso=True)
+    cfg = _config_foto()
+    modelo = ("un modelo de imagen (DINOv2) entrenado con fotos clínicas y dermatoscopias"
+              if cfg["backend"] == "dinov2_lora" else "un modelo de imagen entrenado con dermatoscopias")
+    score, umbral, etq = d.get("score"), cfg["umbral"], d.get("etiqueta")
+    if isinstance(score, (int, float)) and umbral is not None:
+        lado = "por encima" if score >= umbral else "por debajo"
+        detalle = (f"Le dio <strong>{_num(score)}</strong> en una escala de 0 a 1. Marca urgente "
+                   f"desde {_num(umbral)}, y este caso queda {lado}.")
     else:
-        evidencia = "<p>No se consultaron las guías en este caso.</p>"
+        detalle = f"La clasificó como {_palabra(etq)}."
+    alcance = ("Detecta cerca del 71 % de los casos urgentes en fotos clínicas, así que una"
+               if cfg["backend"] == "dinov2_lora" else "Una")
+    cuerpo = (f"<p>La analizó {modelo}. {detalle}</p>"
+              f"<p class=\"nota\">El modelo no describe la lesión: da un valor de 0 a 1. {alcance}"
+              " foto «no urgente» no descarta nada.</p>")
+    return _item_criterio("Foto", etq, cuerpo)
+
+
+def _criterio_guias(d, hay_foto):
+    if not d:
+        return _item_criterio("Guías clínicas", None, "<p>No se consultaron las guías en este caso.</p>")
+    etq = d.get("etiqueta")
+    fuentes = [f for f in (d.get("fuentes") or []) if f]
+    fuentes_html = ("<ul class=\"fuentes-lista\">" + "".join(
+        f"<li>{html.escape(_fuente_legible(f))}</li>" for f in fuentes) + "</ul>") if fuentes else ""
+    cuerpo = (_parrafos(_justificacion(d.get("respuesta", "")))
+              + (f'<p class="fuentes">Documentos consultados:</p>{fuentes_html}' if fuentes_html else "")
+              + ('<p class="nota">Es texto de las guías: no describe la foto del paciente.</p>' if hay_foto else ""))
+    return _item_criterio("Guías clínicas", etq, cuerpo)
+
+
+def _html_signos(sintoma):
+    mencionados, negados = _signos_en_texto(sintoma)
+    if mencionados:
+        lista = "".join(f"<li>{html.escape(s)}</li>" for s in mencionados)
+        cuerpo = f'<ul class="signos">{lista}</ul>'
+    else:
+        cuerpo = "<p>El texto no menciona ninguno de los signos de alarma de la lista.</p>"
+    if negados:
+        cuerpo += f'<p class="nota">El texto dice que no hay: {html.escape(_lista_humana([n.lower() for n in negados]))}.</p>'
+    return (cuerpo + '<p class="nota">Lectura automática del texto con una lista de signos (cambios '
+            'de tamaño, color o forma; sangrado; herida que no sana; picor o dolor; aparición reciente). '
+            'No es lo que usó el modelo y no cambia la sugerencia.</p>')
+
+
+_SIGUIENTE_PASO = {
+    "urgente": "Referir con prioridad a dermatología, según el protocolo de su institución.",
+    "rutina": ("Programar cita de rutina. Reconsultar antes si la lesión crece, cambia de color o forma, "
+               "sangra o no sana."),
+    "sin-senal": "Valoración por el profesional: la herramienta no tuvo con qué sugerir una prioridad.",
+}
+
+
+def _html_resultado(resultado, interpretacion, hay_foto, sintoma=""):
+    tono, titulo, por_que = _decision_clinica(interpretacion)
+    det = resultado.get("detalle_tools", {})
+    criterios = [
+        (n, f) for n, f in [
+            ("clasificador_beto", lambda: _criterio_texto(det.get("clasificador_beto"))),
+            ("ver_imagen", lambda: _criterio_foto(det.get("ver_imagen"), hay_foto)),
+            ("buscar_informacion_dermatologica",
+             lambda: _criterio_guias(det.get("buscar_informacion_dermatologica"), hay_foto)),
+        ]
+    ]
+    # Primero las señales que marcaron urgente: son las que explican la sugerencia.
+    señales = interpretacion["señales"]
+    criterios.sort(key=lambda nf: 0 if señales.get(nf[0]) == "urgente" else 1)
+    items = "".join(f() for _, f in criterios)
     return f"""
 <section class="resultado" aria-live="polite">
   <div class="decision tono-{tono}">
     <h2>{html.escape(titulo)}</h2>
-    {_html_senales(interpretacion["señales"])}
+    {_html_senales(señales)}
     <p class="por-que">{html.escape(por_que)}</p>
+  </div>
+  <div class="bloque">
+    <h3>Por qué: qué dijo cada señal y con qué criterio</h3>
+    <ul class="criterios">{items}</ul>
+  </div>
+  <div class="bloque">
+    <h3>Signos de alarma que aparecen en el texto</h3>
+    {_html_signos(sintoma)}
+  </div>
+  <div class="bloque bloque-paso">
+    <h3>Siguiente paso sugerido</h3>
+    <p>{html.escape(_SIGUIENTE_PASO[tono])}</p>
     <p class="apoyo">{_APOYO_HTML}</p>
-  </div>
-  <div class="bloque">
-    <h3>Foto</h3>
-    <p class="{'aviso' if foto_aviso else ''}">{html.escape(foto_txt)}</p>
-  </div>
-  <div class="bloque">
-    <h3>Evidencia de las guías</h3>
-    {evidencia}
   </div>
 </section>"""
 
@@ -359,8 +553,8 @@ _HTML_CARGANDO = """
     <span class="barra"></span>
     <span class="barra barra-corta"></span>
   </div>
-  <div class="bloque"><h3>Foto</h3><span class="barra"></span></div>
-  <div class="bloque"><h3>Evidencia de las guías</h3><span class="barra"></span><span class="barra barra-corta"></span></div>
+  <div class="bloque"><h3>Por qué: qué dijo cada señal y con qué criterio</h3><span class="barra"></span><span class="barra"></span><span class="barra barra-corta"></span></div>
+  <div class="bloque"><h3>Signos de alarma que aparecen en el texto</h3><span class="barra barra-corta"></span></div>
 </section>"""
 
 _HTML_ERROR = """
@@ -485,7 +679,7 @@ def _iniciar_consulta():
 
 
 def _finalizar_consulta():
-    return gr.Button("Consultar", interactive=True)
+    return gr.Button("3. Consultar", interactive=True)
 
 
 def _consultar_evento(sintoma, foto):
@@ -505,7 +699,7 @@ def _consultar_evento(sintoma, foto):
         _bloque_foto(resultado, hay_foto).replace("### Foto\n", "**Lectura técnica de la foto:** ", 1),
         _bloque_evidencia(resultado, hay_foto).replace("### Evidencia de las guías\n", "**Respuesta completa del RAG:**\n\n", 1),
     ])
-    return _html_resultado(resultado, interpretacion, hay_foto), detalle_md
+    return _html_resultado(resultado, interpretacion, hay_foto, sintoma), detalle_md
 
 
 # Diseño: herramienta clínica de trabajo, no página de demo. Superficies planas
@@ -694,6 +888,61 @@ footer { display: none !important; }
 """
 
 _CSS_APP = """
+/* Páginas de texto (inicio, cómo funciona, términos, privacidad): columna de
+   lectura de ~70 caracteres, jerarquía clara y nada de adornos. */
+.pagina { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 28px;
+          color: var(--tinta); display: grid; gap: 12px; }
+.pagina > * { max-width: 72ch; }
+.pagina h2 { margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2; color: var(--tinta); }
+.pagina h3 { margin: 10px 0 0; font-size: 18px; font-weight: 700; color: var(--tinta); }
+.pagina p, .pagina li { margin: 0; font-size: 17px; line-height: 1.6; color: var(--tinta); }
+.pagina ul, .pagina ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.pagina a { color: var(--tinta); text-decoration: underline; text-underline-offset: 3px; }
+.pagina .nota { font-size: 15px; color: var(--tinta-suave); }
+.inicio .sobretitulo { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+                       color: var(--tinta-suave); }
+.inicio h2 { font-size: 30px; }
+.inicio .entrada-texto { font-size: 18px; }
+.inicio .pasos { counter-reset: paso; list-style: none; padding: 0; gap: 12px; }
+.inicio .pasos li { counter-increment: paso; position: relative; padding-left: 44px; }
+.inicio .pasos li::before { content: counter(paso); position: absolute; left: 0; top: 0; width: 30px; height: 30px;
+    border-radius: 50%; background: var(--primario); color: var(--primario-texto); font-weight: 700;
+    display: grid; place-items: center; font-size: 15px; }
+.aviso-legal { background: var(--sin-fondo); border-radius: 8px; padding: 18px 20px; display: grid; gap: 10px;
+               max-width: none !important; }
+.aviso-legal h3, .aviso-legal li, .aviso-legal strong { color: var(--sin-tinta); margin: 0; }
+#acepto { border: 1px solid var(--control); }
+#acepto label span { font-size: 16px; line-height: 1.5; }
+
+/* Criterio por señal dentro del resultado: punto con el color de lo que dijo
+   esa señal y la palabra escrita. */
+.criterios { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.criterio { display: grid; gap: 6px; padding-left: 14px; border-left: 3px solid var(--borde); }
+.criterio.crit-urgente { border-left-color: var(--punto-urg); }
+.criterio.crit-rutina { border-left-color: var(--punto-rut); }
+.criterio.crit-aviso { border-left-color: var(--cargando); }
+.criterio .crit-titulo { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.crit-urgente .senal-punto { background: var(--punto-urg); }
+.crit-rutina .senal-punto { background: var(--punto-rut); }
+.crit-neutro .senal-punto, .crit-aviso .senal-punto { background: var(--tinta-suave); }
+.resultado .fuentes-lista, .resultado .signos { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.resultado .fuentes-lista li { font-size: 15px; color: var(--tinta-suave); }
+.resultado .signos li { font-size: 17px; color: var(--tinta); }
+.resultado .bloque-paso { background: var(--superficie-2); }
+.resultado .por-que { font-weight: 700; }
+
+/* Pestañas: la activa se distingue por texto oscuro y una línea debajo. */
+.gradio-container button[role="tab"] { font-size: 16px; color: var(--tinta-suave); min-height: 44px; }
+.gradio-container button[role="tab"][aria-selected="true"] { color: var(--tinta); font-weight: 700;
+    box-shadow: inset 0 -3px 0 var(--tinta); }
+
+@media (max-width: 640px) {
+    .pagina { padding: 20px 16px; }
+    .aviso-legal { padding: 16px 14px; }
+    .pagina ul, .pagina ol { padding-left: 18px; }
+    .inicio h2 { font-size: 25px; }
+}
+
 .encabezado .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 15px;
                       color: var(--tinta); background: var(--superficie); border: 1px solid var(--borde);
                       border-radius: 999px; padding: 6px 12px; }
@@ -740,52 +989,247 @@ _CSS_APP = """
 _CSS = _CSS_COLORES + _CSS_COMPARTIDO + _CSS_APP
 
 
+# --- Páginas de inicio, uso y avisos -----------------------------------------
+# Textos fijos. Cada cifra sale del README del repo (scorecard, ronda 2 e
+# integración de F2); si cambian los números, se cambian aquí.
+
+# Si cambian los términos, se sube esta versión y todos vuelven a aceptarlos.
+_VERSION_TERMINOS = "2026-11-03"
+
+_EQUIPO = "Camilo Salazar, Juan Esteban Alzate, Isabella Idárraga y María Alejandra Ocampo"
+_REPO = "https://github.com/Isa-Idarraga/triage-dermatologico-ia"
+
+_HTML_INICIO = f"""
+<section class="pagina inicio">
+  <p class="sobretitulo">Prototipo académico · Universidad EAFIT · curso SI4006</p>
+  <h2>Apoyo para priorizar lesiones de piel en el triage</h2>
+  <p class="entrada-texto">Usted describe la lesión y, si puede, adjunta una foto. La herramienta sugiere si el caso
+  conviene <strong>referirlo con prioridad a dermatología</strong> o puede ir a <strong>cita de rutina</strong>,
+  y muestra qué dijo cada señal y por qué. No diagnostica: la decisión es del profesional.</p>
+
+  <ol class="pasos">
+    <li><strong>Describa la lesión</strong> como se la cuenta el paciente: cuánto tiempo lleva, si cambió de tamaño,
+    color o forma, si sangra, pica o no sana.</li>
+    <li><strong>Adjunte una foto</strong> si la tiene (opcional): enfocada, con buena luz y la lesión centrada.</li>
+    <li><strong>Lea la sugerencia y el porqué.</strong> Si cualquier señal indica urgencia, la herramienta sugiere
+    referir. Si ninguna señal responde, pide revisión manual, nunca «puede esperar».</li>
+  </ol>
+
+  <div class="aviso-legal" role="note">
+    <h3>Antes de usarla</h3>
+    <ul>
+      <li><strong>No es un dispositivo médico.</strong> No tiene registro sanitario del INVIMA ni validación
+      clínica. Es un trabajo de estudiantes para un curso.</li>
+      <li><strong>Se equivoca.</strong> En 37 casos de prueba detectó 14 de 20 urgentes (70 %). En fotos clínicas
+      de un hospital que no vio al entrenar detectó el 71 % de los casos urgentes y 25 de 59 melanomas.</li>
+      <li><strong>No la use para decidir la atención de un paciente real.</strong> Úsela con casos de ejemplo o
+      descripciones inventadas.</li>
+      <li><strong>No escriba datos que identifiquen al paciente</strong> (nombre, documento, historia clínica,
+      teléfono, dirección) ni suba fotos con la cara, tatuajes u otros rasgos que lo identifiquen.</li>
+    </ul>
+  </div>
+</section>"""
+
+_HTML_COMO_FUNCIONA = """
+<section class="pagina">
+  <h2>Cómo funciona</h2>
+  <p>Un agente (un modelo de lenguaje, Qwen2.5-3B) decide qué herramientas consultar. Hay tres, y cada una da su
+  propia señal, <em>urgente</em> o <em>no urgente</em>:</p>
+  <ul>
+    <li><strong>Texto del síntoma:</strong> un clasificador (BETO) entrenado con descripciones de lesiones etiquetadas
+    por el equipo (136 en total entre entrenamiento y prueba; 10 son casos reales y el resto las escribió el equipo). Da la etiqueta y qué tan seguro está, pero no
+    explica qué palabras pesaron.</li>
+    <li><strong>Foto:</strong> un modelo de imagen (DINOv2 con ajuste LoRA) entrenado con dermatoscopias y fotos
+    clínicas. Da un valor de 0 a 1; desde 0,73 la marca urgente. Antes revisa si la foto se puede leer
+    (tamaño y nitidez). Si no, la foto no vota.</li>
+    <li><strong>Guías clínicas:</strong> busca en 13 documentos con fuente (del Instituto Nacional del Cáncer
+    de EE. UU., los CDC y una revista colombiana de dermatología, entre otros) y redacta una justificación citando los documentos que usó. Esa evidencia es
+    texto de las guías, no una descripción de la foto.</li>
+  </ul>
+  <h3>Cómo se decide</h3>
+  <p>Si cualquier señal dice urgente, la sugerencia es referir con prioridad. Un melanoma enviado a cita de rutina
+  es el error más caro; el costo es que a veces se refieren lesiones benignas. Si ninguna herramienta responde,
+  la sugerencia es revisión manual, nunca «puede esperar».</p>
+  <h3>Qué tan bien funciona</h3>
+  <ul>
+    <li>37 casos escritos como habla un paciente: detecta 14 de 20 urgentes (70 %). La meta del equipo era 85 % y
+    no se alcanzó.</li>
+    <li>346 fotos clínicas de un hospital que el modelo no vio (Hospital Italiano de Buenos Aires): detecta el 71 %
+    de los urgentes, 25 de 59 melanomas, y acierta en el 87 % de los no urgentes.</li>
+    <li>Piel oscura: en una prueba con 57 urgentes detectó 38 (67 %), frente al 81 % en piel clara. Son pocos casos
+    para afirmar que no hay sesgo.</li>
+    <li>Un melanoma descrito por el paciente como «un lunar de siempre, no pica ni sangra» no lo detecta ninguna
+    de las tres señales.</li>
+  </ul>
+</section>"""
+
+_HTML_TERMINOS = f"""
+<section class="pagina">
+  <h2>Términos de uso</h2>
+  <p class="nota">Versión del {_VERSION_TERMINOS}. Al entrar a la herramienta usted acepta estos términos.</p>
+  <h3>1. Qué es</h3>
+  <p>Un prototipo académico hecho por estudiantes de Ingeniería de Sistemas de la Universidad EAFIT ({_EQUIPO})
+  para el curso SI4006. No es un producto, no es un dispositivo médico y no tiene registro sanitario del INVIMA
+  ni validación clínica.</p>
+  <h3>2. Para qué se puede usar</h3>
+  <p>Para demostración, enseñanza y evaluación académica, con casos de ejemplo o descripciones inventadas. No se
+  debe usar para decidir la atención de pacientes reales.</p>
+  <h3>3. Qué hace y qué no</h3>
+  <p>Sugiere una prioridad (referir con prioridad, cita de rutina o revisión manual) y muestra en qué se basa. No
+  diagnostica, no reemplaza la valoración de un profesional de la salud y no emite órdenes médicas.</p>
+  <h3>4. Limitaciones conocidas</h3>
+  <p>Se equivoca en los dos sentidos: deja pasar casos urgentes (detecta cerca del 70 % en nuestras pruebas) y
+  refiere lesiones benignas. Fue evaluada con pocos casos de piel oscura. La foto no detecta si la imagen no es
+  de piel. Las cifras están en «Cómo funciona» y en el repositorio.</p>
+  <h3>5. Responsabilidad</h3>
+  <p>La herramienta se ofrece tal como está, sin garantías. Cualquier decisión clínica es de quien la toma. Si
+  usted es profesional de la salud, siga los protocolos de su institución.</p>
+  <h3>6. Licencias de datos y modelos</h3>
+  <p>Usa datos y modelos con licencias que en varios casos solo permiten uso no comercial: HAM10000 (CC BY-NC 4.0),
+  imágenes del ISIC Archive (licencia de cada colección), BETO (CC BY 4.0), DINOv2 (Apache 2.0), Qwen2.5-3B
+  (licencia de investigación de Qwen) y Qwen2.5-1.5B (Apache 2.0). Los modelos entrenados por el equipo son solo
+  para uso académico.</p>
+  <h3>7. Cambios</h3>
+  <p>Si estos términos cambian, la herramienta le pedirá aceptarlos de nuevo. El código y el historial de cambios
+  están en <a href="{_REPO}" target="_blank" rel="noopener">el repositorio del proyecto</a>.</p>
+</section>"""
+
+_HTML_PRIVACIDAD = f"""
+<section class="pagina">
+  <h2>Privacidad y datos</h2>
+  <h3>Lo que le pedimos</h3>
+  <p>No escriba datos que identifiquen al paciente: nombre, documento, número de historia clínica, fecha de
+  nacimiento, teléfono o dirección. No suba fotos donde se vea la cara, tatuajes u otros rasgos que lo
+  identifiquen. En Colombia los datos de salud son datos sensibles (Ley 1581 de 2012), y esta herramienta no
+  está hecha para tratarlos.</p>
+  <h3>Lo que se guarda</h3>
+  <p>Por cada consulta se guarda una línea con: fecha y hora, versión de la herramienta, si hubo foto, qué
+  herramientas se usaron, la sugerencia, la seguridad del clasificador de texto y el tiempo de respuesta.
+  <strong>No se guardan el texto que usted escribe ni la foto.</strong> Esa misma línea se envía a Weights &amp;
+  Biases, un servicio externo de registro de experimentos, cuando el equipo lo tiene activado.</p>
+  <h3>Dónde se procesa</h3>
+  <p>Los modelos corren en la máquina donde está encendida la herramienta (en la demo, un servidor de Kaggle con
+  GPU). El texto y la foto no se envían a servicios de inteligencia artificial de terceros. El enlace público de
+  la demo pasa por el servicio de túneles de Gradio. La foto queda en una carpeta temporal de esa máquina
+  mientras la sesión está encendida y se borra al apagarla.</p>
+  <h3>Preguntas</h3>
+  <p>Escríbale al equipo a través del <a href="{_REPO}" target="_blank" rel="noopener">repositorio del proyecto</a>.</p>
+</section>"""
+
+_TEXTO_ACEPTO = ("Entiendo que es un prototipo académico que no diagnostica, que no debo usarlo para decidir la "
+                 "atención de pacientes reales ni escribir datos que los identifiquen, y acepto los términos de uso.")
+
+
+def _entrar(acepto):
+    """Al aceptar: guarda la versión aceptada en el navegador y muestra la herramienta."""
+    if not acepto:
+        return gr.update(), gr.update(), gr.update()
+    return _VERSION_TERMINOS, gr.update(visible=False), gr.update(visible=True)
+
+
+def _vista_inicial(aceptado):
+    """Quien ya aceptó esta versión de los términos entra directo a la consulta."""
+    ya = aceptado == _VERSION_TERMINOS
+    return gr.update(visible=not ya), gr.update(visible=ya)
+
+
+def _volver_al_inicio():
+    return gr.update(visible=True), gr.update(visible=False)
+
+
+def _limpiar():
+    return "", None, _html_vacio(), ""
+
+
 def construir_app():
     with gr.Blocks(title="Triage dermatológico", theme=_TEMA, css=_CSS, js=_JS_TEMA) as demo:
         # La clase de entrada va en el bloque (que persiste), no en el <header>:
         # demo.load lo vuelve a pintar y la animación arrancaría dos veces.
         encabezado = gr.HTML(_html_encabezado(), padding=False, elem_classes=["entrada"])
 
-        # render=False: se crean aquí para poder referenciarlos en gr.Examples
-        # (columna izquierda) y se ubican en la columna derecha con .render().
-        resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
-        detalle_md = gr.Markdown(render=False)
+        # Qué versión de los términos aceptó este navegador (localStorage, vía
+        # Gradio). Solo guarda la fecha de la versión, nada del paciente.
+        aceptado = gr.BrowserState(None, storage_key="triage_terminos")
 
-        # Dos columnas en escritorio (consulta | resultado); en el celular
-        # Gradio las apila porque no caben dos de 320px de ancho mínimo.
-        with gr.Row(equal_height=False):
-            with gr.Column(scale=5, min_width=320, elem_classes=["entrada", "entrada-2"]):
-                sintoma = gr.Textbox(
-                    label="Síntoma del paciente", lines=4,
-                    placeholder="Describa la lesión: tiempo de evolución, cambios de color o tamaño, sangrado, picor",
-                    info="No escriba nombre, documento ni datos que identifiquen al paciente.",
-                )
-                foto = gr.Image(label="Foto de la lesión (opcional)", type="filepath", height=240)
-                boton = gr.Button("Consultar", variant="primary", size="lg")
-                gr.Markdown("Con foto, la consulta tarda unos 15 segundos.", elem_classes=["nota-espera"])
-                gr.Examples(
-                    examples=[
-                        [_EJEMPLO_URGENTE_SINTOMA, None],
-                        [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
-                        [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
-                    ],
-                    inputs=[sintoma, foto],
-                    outputs=[resultado_html, detalle_md],
-                    fn=_consultar_evento,
-                    run_on_click=True,
-                    cache_examples=False,
-                    label="Casos de ejemplo",
-                    elem_id="ejemplos",
-                    example_labels=[
-                        "Cambios en un lunar (sin foto)",
-                        "Lesión estable (con foto)",
-                        "Foto borrosa (no evaluable)",
-                    ],
-                )
-            with gr.Column(scale=7, min_width=320, elem_classes=["entrada", "entrada-3"]):
-                resultado_html.render()
-                with gr.Accordion("Detalle técnico", open=False):
-                    detalle_md.render()
+        # --- Inicio: qué es, cómo se usa, avisos y aceptación -----------------
+        with gr.Column(visible=True, elem_classes=["entrada", "entrada-2"]) as inicio:
+            gr.HTML(_HTML_INICIO, padding=False)
+            with gr.Accordion("Leer los términos de uso completos", open=False):
+                gr.HTML(_HTML_TERMINOS, padding=False)
+            with gr.Accordion("Privacidad y datos", open=False):
+                gr.HTML(_HTML_PRIVACIDAD, padding=False)
+            acepto = gr.Checkbox(label=_TEXTO_ACEPTO, value=False, elem_id="acepto")
+            entrar = gr.Button("Entrar a la herramienta", variant="primary", size="lg", interactive=False)
+
+        # --- Herramienta ------------------------------------------------------
+        with gr.Column(visible=False, elem_classes=["entrada", "entrada-2"]) as herramienta:
+            with gr.Tabs():
+                with gr.Tab("Consulta"):
+                    # render=False: se crean aquí para poder referenciarlos en
+                    # gr.Examples (columna izquierda) y se ubican en la derecha.
+                    resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
+                    detalle_md = gr.Markdown(render=False)
+
+                    # Dos columnas en escritorio (consulta | resultado); en el
+                    # celular Gradio las apila.
+                    with gr.Row(equal_height=False):
+                        with gr.Column(scale=5, min_width=320):
+                            sintoma = gr.Textbox(
+                                label="1. ¿Qué le pasa a la lesión?", lines=5,
+                                placeholder=("Ej.: lunar en la espalda que en los últimos tres meses creció, "
+                                             "tiene bordes irregulares y varios tonos de café y negro."),
+                                info=("Incluya cuánto tiempo lleva y si cambió de tamaño, color o forma, sangra, "
+                                      "pica o no sana. Sin nombre, documento ni datos que identifiquen al paciente."),
+                            )
+                            foto = gr.Image(label="2. Foto de la lesión (opcional)", type="filepath", height=240)
+                            gr.Markdown("Enfocada, con buena luz, la lesión centrada y sin la cara del paciente.",
+                                        elem_classes=["nota-espera"])
+                            with gr.Row():
+                                boton = gr.Button("3. Consultar", variant="primary", size="lg", scale=3)
+                                limpiar = gr.Button("Nueva consulta", variant="secondary", size="lg", scale=2)
+                            gr.Markdown("Con foto, la consulta tarda unos 15 segundos.", elem_classes=["nota-espera"])
+                            gr.Examples(
+                                examples=[
+                                    [_EJEMPLO_URGENTE_SINTOMA, None],
+                                    [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
+                                    [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
+                                ],
+                                inputs=[sintoma, foto],
+                                outputs=[resultado_html, detalle_md],
+                                fn=_consultar_evento,
+                                run_on_click=True,
+                                cache_examples=False,
+                                label="Casos de ejemplo",
+                                elem_id="ejemplos",
+                                example_labels=[
+                                    "Cambios en un lunar (sin foto)",
+                                    "Lesión estable (con foto)",
+                                    "Foto borrosa (no evaluable)",
+                                ],
+                            )
+                        with gr.Column(scale=7, min_width=320):
+                            resultado_html.render()
+                            with gr.Accordion("Detalle técnico (para auditar)", open=False):
+                                detalle_md.render()
+                with gr.Tab("Cómo funciona"):
+                    gr.HTML(_HTML_COMO_FUNCIONA, padding=False)
+                with gr.Tab("Términos de uso"):
+                    gr.HTML(_HTML_TERMINOS, padding=False)
+                with gr.Tab("Privacidad y datos"):
+                    gr.HTML(_HTML_PRIVACIDAD, padding=False)
+
+            with gr.Row():
+                with gr.Column(scale=4):
+                    with gr.Accordion("Estado del sistema", open=False):
+                        estado_md = gr.Markdown()
+                        gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
+                with gr.Column(scale=1, min_width=200):
+                    volver = gr.Button("Ver la página de inicio", variant="secondary")
+
+        # --- Eventos ----------------------------------------------------------
+        acepto.change(lambda v: gr.update(interactive=bool(v)), inputs=acepto, outputs=entrar, queue=False)
+        entrar.click(_entrar, inputs=acepto, outputs=[aceptado, inicio, herramienta], queue=False)
+        volver.click(_volver_al_inicio, outputs=[inicio, herramienta], queue=False)
 
         # show_progress="hidden": la tarjeta ya muestra su propio esqueleto de
         # carga; el velo y el cronómetro de Gradio encima lo taparían.
@@ -795,11 +1239,9 @@ def construir_app():
         ).then(
             _finalizar_consulta, outputs=[boton],
         )
+        limpiar.click(_limpiar, outputs=[sintoma, foto, resultado_html, detalle_md], queue=False)
 
-        with gr.Accordion("Estado del sistema", open=False, elem_classes=["entrada", "entrada-4"]):
-            estado_md = gr.Markdown()
-            gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
-
+        demo.load(_vista_inicial, inputs=aceptado, outputs=[inicio, herramienta], queue=False)
         demo.load(lambda: (_html_encabezado(health()), _resumen_estado()),
                   outputs=[encabezado, estado_md], show_progress="hidden")
     return demo
