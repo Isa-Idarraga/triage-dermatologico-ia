@@ -296,6 +296,9 @@ def main():
             f"mel {r['T1_melanoma_recall']} | T2 rec {r['T2_pad']['recall_urgente']} esp {r['T2_pad']['especificidad']} "
             f"| oscura benig esp {r['T3_benigno_oscura']['especificidad']} urg {r['T3_urgente_oscura']['detectados']}")
     log("elegido:", elegido, "| reglas:", reglas, "|", resumen["veredicto"])
+    # Para reutilizar los modelos entrenados en otros experimentos (foto_clinica/milk10k.py)
+    return {"ext": ext, "c0": c0, "c1": c1, "c2": c2, "cfg": cfg, "pad": pad, "ham": ham_filas, "ent": ent,
+            "E": E, "leer": leer, "res": res}
 
 
 if __name__ == "__main__":
