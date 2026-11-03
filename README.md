@@ -36,7 +36,7 @@ flowchart LR
     AG --> B["clasificador_beto (M1)<br/>BETO + LoRA"]
     AG --> R["buscar_informacion_dermatologica (M3)<br/>RAG híbrido BM25 + denso<br/>13 documentos · Qwen2.5-1.5B"]
     AG -. "solo si hay foto" .-> Q["evaluar calidad<br/>tamaño · nitidez"]
-    Q -- "evaluable" --> V["ver_imagen (M4)<br/>ViT-base + regresión logística<br/>umbral 0,531"]
+    Q -- "evaluable" --> V["ver_imagen (F2)<br/>DINOv2 + LoRA<br/>umbral 0,733"]
     Q -- "no evaluable: no vota" --> S
     B -- voto --> S["Síntesis con regla de seguridad<br/>cualquier urgente → urgente<br/>ninguna señal → sin señal: revisión manual"]
     R -- voto + evidencia --> S
@@ -63,6 +63,7 @@ El mismo diagrama en imagen, para las diapositivas: [m5/diagrama_sistema.png](m5
 | M2 | Harness de 3 dimensiones: exact-match (D1), juez LLM Qwen2.5-3B (D2) y recall de urgentes por categoría (D3) | Promediar el juez con el orden invertido para mitigar el sesgo de posición, y no confiar solo en él (puntuó ≤ 2,5 a 19 de 26 casos correctos) | [M2_README.md](docs/M2_README.md) |
 | M3 | RAG sobre 13 documentos con fuente, licencia y autoridad declaradas, y un agente con tool use | Retrieval híbrido (BM25 + denso con RRF), elegido con una regla fijada antes de correr: subió hit@3 de 0,53 a 0,79 | [M3_README.md](docs/M3_README.md) |
 | M4 | `ver()`: clasificador de la foto enchufado al agente como *tool* | Patrón *tool* y no *input*: describir la foto con un modelo de visión es más lento y puede inventar rasgos de la lesión. Modelo elegido entre 5 candidatos con regla previa | [m4/README.md](m4/README.md) |
+| Después de M5 | Nuevo modelo de la foto (F2: DINOv2 + LoRA, entrenado también con fotos clínicas) | El modelo de M4 detectaba el 16 % de los urgentes en fotos clínicas de un hospital nuevo; F2, el 71 %. Se cambió tras pasar una regla de no regresión del sistema completo (ver abajo) | [experimentos/](experimentos/README.md) |
 | M5 | App en Gradio, despliegue, técnica de eficiencia y observabilidad | Cerebro y generador en fp16. Se midieron bf16, fp16 y 4 bits sobre los mismos 57 casos (ver abajo) | [eficiencia.md](m5/eficiencia.md), [harness/README.md](m5/harness/README.md) |
 
 **Regla de seguridad (desde M1):** si cualquier señal dice urgente, el veredicto es urgente.
@@ -83,6 +84,7 @@ Mismo eval set de 37 casos nuevos escritos en lenguaje de paciente (`eval/eval_s
 | RAG híbrido (M3) | 23/32 | 0,55 (11/20) | 9 |
 | Agente BETO + RAG híbrido (M3) | 23/32 | 0,70 (14/20) | 6 |
 | Sistema completo con foto, fp16 (M5, `m5/harness/`) | 23/32 | 0,70 (14/20) | 6, los mismos |
+| Sistema completo con F2, fp16 (`experimentos/integracion_f2/harness/`) | 23/32 | 0,70 (14/20) | 6, los mismos |
 | Meta del equipo desde M1 | — | ≥ 0,85 | — |
 
 **La meta de 0,85 no se alcanza.** Quedan 6 urgentes sin detectar, tres de ellos melanoma.
@@ -90,7 +92,34 @@ En el test de M1 (26 casos parecidos al entrenamiento) BETO llega a 26/26, pero 
 casos nuevos en lenguaje de paciente baja a 0,50. Por eso evaluamos con estos.
 
 **Casos con foto (10, `m4/eval_set/`):** 3 de 7 exactos, la válvula se negó en 1 de 2
-adversariales y, sin foto, `ver_imagen` no se llama (1/1).
+adversariales y, sin foto, `ver_imagen` no se llama (1/1). Con F2 da lo mismo (ver abajo).
+
+## El modelo de la foto: de C0 (M4) a F2
+
+El producto lee la foto que toma una enfermera, casi siempre con celular. El modelo de M4 (C0:
+ViT-base + regresión logística) se entrenó con dermatoscopias y en fotos clínicas fallaba. Lo
+medimos y entrenamos otro en una rama aparte; todo está en [experimentos/](experimentos/README.md).
+
+Prueba principal: 346 fotos clínicas del Hospital Italiano de Buenos Aires (HIBA, ISIC), que
+ningún modelo vio.
+
+| | C0 (M4) | **F2 (en uso)** |
+|---|---|---|
+| Modelo | ViT-base + regresión logística | DINOv2-base + LoRA |
+| Recall de urgentes en HIBA (n=235) | 0,16 | 0,71 |
+| Especificidad en HIBA (n=111) | 0,96 | 0,87 |
+| Melanoma en HIBA (n=59) | 8 | 25 |
+| Carcinoma basocelular en HIBA (n=112) | 19 | 94 |
+| Piel oscura, MILK10k: urgentes detectados (n=57) | 10 | 38 (piel clara: 0,81) |
+| Dermatoscopias de HIBA: AUC | 0,842 | 0,937 |
+
+**F2 no cumple las metas clínicas** que fijamos antes de correr (recall ≥ 0,80 y melanoma ≥
+0,60 en HIBA), y por esa regla no se adoptaba. **Lo adoptamos por una decisión tomada después de
+ver los resultados, y así lo declaramos:** C0 es peor en todo lo que el producto promete. Antes
+de cambiarlo escribimos una regla de no regresión del sistema completo y F2 la pasó 5 de 5: mismo
+D1 y recall en los 37 casos, mismos exactos con foto, misma válvula, y latencia p50 con foto de
+14,72 s frente a 14,46 s ([resultados](experimentos/integracion_f2/RESULTADOS.md)).
+`TRIAGE_VER=c0` vuelve al modelo de M4.
 
 ## Ablation: qué aporta cada pieza
 
@@ -151,11 +180,14 @@ Son consultas de prueba del 2 de noviembre; se regeneran con `python m5/observab
   minimiza («un lunar de siempre en el hombro, no pica ni sangra»). `ver()` le dio 0,26 y BETO y
   el RAG también dijeron no urgente. Ninguna señal dice urgente y la regla no tiene nada que
   escalar. Lo dejamos en el eval set a propósito, esperando que fallara.
-- **`ver()` queda cerca del azar fuera de validación:** en 40 fotos reservadas con biopsia
-  acierta el 50 % y detecta 3 de 8 melanomas.
-- **Falsos positivos por la regla OR:** img_02, img_03 e img_09 son benignas; `ver()` acertó,
+- **Melanoma en foto clínica sigue siendo lo más difícil:** F2 detecta 25 de 59 en HIBA
+  (C0: 8). Con el umbral elegido en otra fuente, en un hospital nuevo sobra especificidad y
+  falta recall.
+- **Falsos positivos por la regla OR:** img_02, img_03 e img_09 son benignas; `ver()` acertó
+  (con C0 y con F2),
   pero BETO dijo urgente y la regla escaló.
-- **La válvula no detecta «esto no es piel»:** una hoja de papel (img_07) pasó como lesión y el
+- **La válvula no detecta «esto no es piel»:** una hoja de papel (img_07) pasó como lesión (con
+  F2, `ver()` incluso la marca urgente) y el
   RAG describió una «lesión rosada con grietas». Por eso la tarjeta rotula la evidencia como
   texto de guías que no describe la foto.
 - **Bugs que encontró la medición y se corrigieron:** la capa `pooler` de BETO no se guardaba
@@ -165,22 +197,22 @@ Son consultas de prueba del 2 de noviembre; se regeneran con `python m5/observab
 ## Límites y ética
 
 - **Sugiere, no diagnostica.** No reemplaza la valoración clínica y no está validado para uso real.
-- **Piel oscura:** HAM10000 casi no la tiene. Con el ISIC Archive medimos menos falsas alarmas
-  en benignas (0/58 contra 8/58 en piel clara), pero scores mucho más bajos (0,05 contra 0,22).
-  Solo había 7 cánceres en piel oscura, así que el sesgo no está descartado
-  ([m4/eval_set/piel_oscura/](m4/eval_set/piel_oscura/README.md)).
-- **Foto de celular ≠ dermatoscopia:** `ver()` se entrenó con dermatoscopias. Con fotos de
-  celular (PAD-UFES-20) detectó 24 de 60 lesiones malignas o premalignas (40 %).
+- **Piel oscura:** con F2, en fotos clínicas de MILK10k, detecta 38 de 57 urgentes en piel
+  oscura (0,67) frente a 0,81 en piel clara. La brecha (0,14) cumple el límite de 0,15, pero con
+  57 casos es un resultado frágil. C0 detectaba 10 de 57
+  ([m4/eval_set/piel_oscura/](m4/eval_set/piel_oscura/README.md) tiene la medición de M4).
+- **Foto clínica:** F2 se entrenó con dermatoscopias (HAM10000) y fotos clínicas (PAD-UFES-20 y
+  MILK10k). No hay fototipos V–VI en HIBA, así que esa prueba no mide piel oscura.
 - **Datos casi todos sintéticos:** 126 de los 136 textos de entrenamiento y los 37 casos de
   evaluación están escritos por el equipo en lenguaje de paciente.
-- **Datos y licencias:** HAM10000 (CC BY-NC 4.0), ISIC Archive (CC BY), SPACCC y CodiEsp (CC BY
+- **Datos y licencias:** HAM10000 (CC BY-NC 4.0), ISIC Archive (CC BY; HIBA, MILK10k y PAD-UFES-20 se bajaron de ahí, con la licencia de cada colección), DINOv2 (Apache 2.0), SPACCC y CodiEsp (CC BY
   4.0), y el corpus del RAG con licencia por documento (`data/corpus_m3/fuentes.md`). Las
   imágenes tienen sha256 y atribución en [ATRIBUCION.md](m4/pipeline/eval_tool/ATRIBUCION.md);
   no tienen EXIF ni rostros. img_07 está marcada como generada por el equipo. Los logs no
   guardan texto del paciente.
-- **Con más tiempo:** ViT + LoRA, que rindió mejor en las 40 fotos reservadas; una banda
-  «revisar pronto» para scores de foto entre 0,2 y 0,53; más casos reales y más casos malignos
-  en piel oscura.
+- **Con más tiempo:** más melanomas en foto clínica para entrenar; probar en un conjunto nuevo
+  (DDI, de Stanford) un umbral más bajo; un detector de «esto no es piel» que no rechace más piel
+  oscura que clara; más casos reales y más casos malignos en piel oscura.
 
 ## Estructura del repo
 

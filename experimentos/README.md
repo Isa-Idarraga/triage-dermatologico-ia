@@ -1,8 +1,11 @@
 # Experimentos (rama `experimentos`)
 
-Cambios que todavía no son parte del sistema. `main` y el tag `demo-v1` no se tocan.
-Si un experimento mejora el producto, entra a `main` con un PR. Si no, su resultado
-queda escrito aquí igual.
+Pruebas para mejorar el modelo de la foto, hechas en ramas aparte. Si un experimento mejora el
+producto, entra a `main`. Si no, su resultado queda escrito aquí igual.
+
+**Resultado:** F2 (ronda 2) reemplazó al modelo de M4 en `ver()` después de pasar una regla de
+no regresión del sistema completo ([integracion_f2/](integracion_f2/RESULTADOS.md)). Los pesos
+de los modelos entrenados están en [pesos/](pesos/README.md), solo para uso académico.
 
 | Carpeta | Pregunta | Estado |
 |---|---|---|
@@ -11,3 +14,4 @@ queda escrito aquí igual.
 | [foto_clinica/](foto_clinica/README.md) | A: ¿la válvula distingue piel de otros objetos? B: ¿los candidatos sirven en fotos clínicas de otra fuente (DDI)? | A corrida: **no se adopta**, rechaza la piel oscura ([resultados](foto_clinica/resultados_valvula/RESULTADOS.md)). B (MILK10k en vez de DDI): **no se adopta**, mejora en foto clínica pero no en melanoma ni en piel oscura ([resultados](foto_clinica/resultados_milk10k/RESULTADOS.md)) |
 | [mejorar_ver/](mejorar_ver/README.md) | ¿Entrenar con MILK10k, melanoma ×3, variación de color y DINOv2 arregla melanoma y piel oscura en foto clínica? | corrido: **no se adopta** (melanoma 0,43 y brecha de piel oscura 0,19), pero es el mejor resultado ([resultados](mejorar_ver/resultados/RESULTADOS.md)) |
 | [ronda2/](ronda2/README.md) | ¿LoRA sobre DINOv2, o combinar E3 con DINOv2, pasa en un hospital nuevo (HIBA) sin sacrificar los demás urgentes? | corrido: **no se adopta**, F2 cumple 4 de 6 (falla recall 0,71 y melanoma 0,42); es el mejor modelo ([resultados](ronda2/resultados/RESULTADOS.md)) |
+| [integracion_f2/](integracion_f2/README.md) | ¿Cambiar C0 por F2 en `ver()` empeora algo del sistema completo (texto, casos con foto, válvula, latencia)? | corrido: **pasa 5 de 5, F2 en uso** ([resultados](integracion_f2/RESULTADOS.md)) |

@@ -1,6 +1,11 @@
 # M4 · Componente visual del triage dermatológico
 SI4006 · Universidad EAFIT · Equipo: Camilo Salazar, Juan Esteban Alzate, Isabella Idárraga, María Alejandra Ocampo
 
+> **Nota (3 nov 2026):** este documento describe el modelo de M4 (C0: ViT-base + regresión
+> logística). Después de M5, `ver()` usa F2 (DINOv2 + LoRA), que pasó una regla de no regresión
+> del sistema completo. Detalle en [experimentos/integracion_f2/](../experimentos/integracion_f2/RESULTADOS.md).
+> `TRIAGE_VER=c0` vuelve a C0 (`pipeline/ver_config_c0.json`).
+
 Sobre el sistema de M3 (agente con BETO + RAG) enchufamos un clasificador de imágenes como **tool**: cuando el enfermero adjunta la foto de la lesión, el agente puede mirarla. El sistema sugiere; la decisión es del personal de salud.
 
 ## 1 · La pregunta del usuario
