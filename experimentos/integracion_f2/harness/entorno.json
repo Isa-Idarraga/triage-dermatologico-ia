@@ -1,0 +1,16 @@
+{
+  "fecha_utc": "2026-11-03T05:13:11Z",
+  "corridas": [
+    "con_foto",
+    "sin_foto",
+    "m3_texto"
+  ],
+  "limite": null,
+  "TRIAGE_CUANT": "fp16",
+  "git_commit": "410196e",
+  "torch": "2.11.0+cu130",
+  "transformers": "5.20.2",
+  "gpu": "Tesla T4",
+  "dtype_cerebro": "float16",
+  "dtype_generador": "float16"
+}

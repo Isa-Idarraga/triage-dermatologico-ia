@@ -1,0 +1,166 @@
+{
+  "corridas": {
+    "con_foto": {
+      "n_casos": 10,
+      "d1_aciertos": "4/8",
+      "d1_accuracy": 0.5,
+      "d3_recall_urgente": 0.8,
+      "d3_falsos_negativos": [
+        "img_05"
+      ],
+      "d3_falsos_negativos_por_sin_senal": [],
+      "criterio_por_tipo": {
+        "exacto": "3/7",
+        "llamada_correcta": "1/1",
+        "valvula": "1/2"
+      },
+      "casos_sin_senal": 0,
+      "rutas_cierre": {
+        "sintesis_por_repeticion": 9,
+        "sintesis_pasos_agotados": 1
+      },
+      "latencia_s_media": 14.35,
+      "latencia_s_p50": 14.72,
+      "latencia_s_p95": 16.5
+    },
+    "sin_foto": {
+      "n_casos": 10,
+      "d1_aciertos": "4/8",
+      "d1_accuracy": 0.5,
+      "d3_recall_urgente": 0.8,
+      "d3_falsos_negativos": [
+        "img_05"
+      ],
+      "d3_falsos_negativos_por_sin_senal": [],
+      "criterio_por_tipo": {
+        "exacto": "3/7",
+        "llamada_correcta": "1/1",
+        "valvula": "0/2"
+      },
+      "casos_sin_senal": 0,
+      "rutas_cierre": {
+        "sintesis_por_repeticion": 10
+      },
+      "latencia_s_media": 12.03,
+      "latencia_s_p50": 12.09,
+      "latencia_s_p95": 13.74
+    },
+    "m3_texto": {
+      "n_casos": 37,
+      "d1_aciertos": "23/32",
+      "d1_accuracy": 0.719,
+      "d3_recall_urgente": 0.7,
+      "d3_falsos_negativos": [
+        "m3_g04",
+        "m3_g05",
+        "m3_g08",
+        "m3_g13",
+        "m3_g14",
+        "m3_a03"
+      ],
+      "d3_falsos_negativos_por_sin_senal": [],
+      "criterio_por_tipo": {
+        "exacto": "23/32"
+      },
+      "casos_sin_senal": 1,
+      "rutas_cierre": {
+        "sintesis_por_repeticion": 28,
+        "responder_final": 9
+      },
+      "latencia_s_media": 12.46,
+      "latencia_s_p50": 12.19,
+      "latencia_s_p95": 17.31
+    }
+  },
+  "m3_original": {
+    "d1_aciertos": "23/32",
+    "d3_recall_urgente": 0.7,
+    "nota": "eval/scorecard_m3.csv no guarda latencia"
+  },
+  "entorno": {
+    "fecha_utc": "2026-11-03T05:13:11Z",
+    "corridas": [
+      "con_foto",
+      "sin_foto",
+      "m3_texto"
+    ],
+    "limite": null,
+    "TRIAGE_CUANT": "fp16",
+    "git_commit": "410196e",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "gpu": "Tesla T4",
+    "dtype_cerebro": "float16",
+    "dtype_generador": "float16"
+  },
+  "cambios_vs_m3": [
+    {
+      "id": "m3_i01",
+      "esperado": "no_aplica",
+      "m3": "urgente",
+      "m4_sin_foto": "sin_senal"
+    },
+    {
+      "id": "m3_a07",
+      "esperado": "no_aplica",
+      "m3": "urgente",
+      "m4_sin_foto": "no_urgente"
+    }
+  ],
+  "foto_cambio_veredicto": [],
+  "latencia_pareada_foto": {
+    "n": 9,
+    "con_foto_media": 14.79,
+    "sin_foto_media": 12.22,
+    "delta_media_s": 2.57,
+    "delta_mediana_s": 2.62,
+    "delta_pct": 21.0
+  },
+  "fallos_con_foto": [
+    {
+      "id": "img_02",
+      "esperado": "no_urgente",
+      "etiqueta_predicha": "urgente",
+      "etiqueta_ver": "no_urgente",
+      "score_ver": 0.2795,
+      "etiqueta_beto": "urgente",
+      "etiqueta_rag": "no_urgente"
+    },
+    {
+      "id": "img_03",
+      "esperado": "no_urgente",
+      "etiqueta_predicha": "urgente",
+      "etiqueta_ver": "no_urgente",
+      "score_ver": 0.1735,
+      "etiqueta_beto": "urgente",
+      "etiqueta_rag": "no_urgente"
+    },
+    {
+      "id": "img_05",
+      "esperado": "urgente",
+      "etiqueta_predicha": "no_urgente",
+      "etiqueta_ver": "no_urgente",
+      "score_ver": 0.257,
+      "etiqueta_beto": "no_urgente",
+      "etiqueta_rag": "no_urgente"
+    },
+    {
+      "id": "img_07",
+      "esperado": "no_evaluable",
+      "etiqueta_predicha": "urgente",
+      "etiqueta_ver": "urgente",
+      "score_ver": 0.8357,
+      "etiqueta_beto": "urgente",
+      "etiqueta_rag": "no_urgente"
+    },
+    {
+      "id": "img_09",
+      "esperado": "no_urgente",
+      "etiqueta_predicha": "urgente",
+      "etiqueta_ver": "no_urgente",
+      "score_ver": 0.1304,
+      "etiqueta_beto": "urgente",
+      "etiqueta_rag": "no_urgente"
+    }
+  ]
+}

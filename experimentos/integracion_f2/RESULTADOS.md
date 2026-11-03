@@ -4,13 +4,17 @@ Corrida en Kaggle, Tesla T4, rama `ver-f2` (commit 410196e), con
 `TRIAGE_CUANT=fp16 TRIAGE_VER=f2`. Salidas completas en [harness/](harness/).
 Se compara con `m5/harness/`: la misma corrida con C0.
 
+Ojo con el entorno: Kaggle actualizó librerías entre las dos corridas. C0 se midió con torch
+2.11.0+cu128 y transformers 5.16.1; F2, con torch 2.11.0+cu130 y transformers 5.20.2
+(`harness/entorno.json`). Ninguno de los 37 casos de texto cambió de veredicto, así que el cambio de librerías no movió al cerebro ni a BETO en estos casos.
+
 ## Veredicto: **pasa (5 de 5).** F2 queda como `ver_config.json`
 
 | Regla (escrita antes de correr) | C0 | F2 | ¿Se cumple? |
 |---|---|---|---|
 | 1. Texto, 37 casos de M3: D1 ≥ 23/32 y recall ≥ 0,70 | 23/32 y 0,70 | 23/32 y 0,70 | Sí |
 | 2. Casos con foto, exactos ≥ 3/7 | 3/7 | 3/7 | Sí |
-| 3. Válvula ≥ 1/2, e img_06 sigue saliendo no evaluable | 1/2 | 1/2, img_06 no evaluable | Sí |
+| 3. Válvula ≥ 1/2, e img_06 sigue saliendo no evaluable | 1/2 | 1/2, img_06 no evaluable (`ver_no_evaluable` = True) | Sí |
 | 4. Control sin foto: `ver_imagen` no se llama | 1/1 | 1/1 | Sí |
 | 5. Latencia p50 con foto ≤ 17,46 s | 14,46 s | 14,72 s | Sí |
 
@@ -36,6 +40,12 @@ Los veredictos finales no cambiaron. Cambiaron los scores de `ver()`:
   Que una foto que no es piel salga urgente es más seguro que lo contrario, pero confirma que la
   válvula no detecta «esto no es piel». El intento de arreglarlo (experimentos/foto_clinica,
   válvula V2) no se adoptó porque rechazaba más piel oscura que clara.
+
+## Notebook de la app
+
+Los `assert` de `notebooks/M5_app_kaggle.ipynb` (celdas 8, 9 y 11) se corrieron con F2 en la
+misma sesión y pasan. El de la celda 9 se cambió: antes exigía el score exacto de C0 (0,157) y
+ahora compara con el del modelo activo (F2: 0,1735; C0: 0,1565).
 
 ## Lo que este harness no mide
 
