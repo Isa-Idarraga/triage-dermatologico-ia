@@ -44,8 +44,8 @@ personas y el gris liso.
 - La causa que vimos en V2 era correcta: con piel oscura en el entrenamiento, la válvula pasa de
   rechazar 3 de cada 10 fotos de piel oscura a rechazar 1 de cada 10.
 - No alcanza la regla. Bajar el umbral para que pasen esas 7 dermatoscopias sería elegirlo
-  mirando la prueba, así que no se hace. `ver()` sigue sin válvula de contenido y los términos de
-  uso siguen diciéndolo.
+  mirando la prueba, así que no se hace. La válvula no bloquea fotos; se usa solo como aviso
+  (ver la decisión abajo).
 
 ## Qué haría falta
 
