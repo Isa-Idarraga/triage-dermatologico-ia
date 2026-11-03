@@ -342,13 +342,27 @@ class DINOv2LoRA:
         return x.transpose(2, 0, 1)
 
     def puntuar(self, imagenes, tam_lote=32):
-        torch, salida = self._torch, []
-        for i in range(0, len(imagenes), tam_lote):
-            lote = np.stack([self._preprocesar(im) for im in imagenes[i:i + tam_lote]])
-            with torch.no_grad():
-                logits = self.modelo(pixel_values=torch.from_numpy(lote).to(self.dispositivo)).logits
-                salida.append(torch.softmax(logits.float(), dim=-1)[:, 1].cpu().numpy())
-        return np.concatenate(salida) if salida else np.zeros(0)
+        return self.puntuar_y_caracteristicas(imagenes, tam_lote)[0]
+
+    def puntuar_y_caracteristicas(self, imagenes, tam_lote=32):
+        """(scores, características). Las características son la entrada de la capa final de F2
+        (token CLS + promedio de los parches, 1 536 valores); las usa la válvula de piel sin otra
+        pasada por la red."""
+        torch, scores, feats, captura = self._torch, [], [], {}
+        capa = self.modelo.base_model.model.classifier
+        gancho = capa.register_forward_hook(lambda m, entrada, salida: captura.__setitem__("x", entrada[0]))
+        try:
+            for i in range(0, len(imagenes), tam_lote):
+                lote = np.stack([self._preprocesar(im) for im in imagenes[i:i + tam_lote]])
+                with torch.no_grad():
+                    logits = self.modelo(pixel_values=torch.from_numpy(lote).to(self.dispositivo)).logits
+                    scores.append(torch.softmax(logits.float(), dim=-1)[:, 1].cpu().numpy())
+                    feats.append(captura["x"].float().cpu().numpy())
+        finally:
+            gancho.remove()
+        if not scores:
+            return np.zeros(0), np.zeros((0, 1536), dtype=np.float32)
+        return np.concatenate(scores), np.concatenate(feats)
 
 
 def construir_clasificador(cfg, dispositivo=None):
