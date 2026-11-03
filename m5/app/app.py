@@ -68,6 +68,12 @@ _EJEMPLO_ESTABLE_SINTOMA = (
 _EJEMPLO_BORROSA_SINTOMA = "Tengo una mancha rara en la espalda, no se si es grave."
 _IMAGEN_EJEMPLO_ESTABLE = os.path.join(_RAIZ, "m4", "eval_set", "imagenes", "img_02.jpg")
 _IMAGEN_EJEMPLO_BORROSA = os.path.join(_RAIZ, "m4", "eval_set", "imagenes", "img_06.jpg")
+# (síntoma, foto, rótulo del botón). La vitrina del Space la reemplaza por sus casos guardados.
+_EJEMPLOS = [
+    (_EJEMPLO_URGENTE_SINTOMA, None, "Cambios en un lunar (sin foto)"),
+    (_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE, "Lesión estable (con foto)"),
+    (_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA, "Foto borrosa (no evaluable)"),
+]
 
 
 def _version_tag():
@@ -1277,11 +1283,7 @@ def construir_app():
                         gr.Markdown("Con foto tarda unos 15 segundos. La foto: enfocada, con buena luz y sin la "
                                     "cara del paciente.", elem_classes=["nota-espera"])
                 gr.Examples(
-                    examples=[
-                        [_EJEMPLO_URGENTE_SINTOMA, None],
-                        [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
-                        [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
-                    ],
+                    examples=[[texto, ruta] for texto, ruta, _ in _EJEMPLOS],
                     inputs=[sintoma, foto],
                     outputs=[resultado_html, detalle_md],
                     fn=_consultar_evento,
@@ -1289,11 +1291,7 @@ def construir_app():
                     cache_examples=False,
                     label="O pruebe con un caso de ejemplo",
                     elem_id="ejemplos",
-                    example_labels=[
-                        "Cambios en un lunar (sin foto)",
-                        "Lesión estable (con foto)",
-                        "Foto borrosa (no evaluable)",
-                    ],
+                    example_labels=[rotulo for _, _, rotulo in _EJEMPLOS],
                 )
                 resultado_html.render()
                 with gr.Accordion("Detalle técnico (para auditar)", open=False):
