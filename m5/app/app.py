@@ -700,7 +700,7 @@ def _html_lateral(estado=None):
     clase = {"ok": "estado-ok", "calentando": "estado-cargando", "error": "estado-error"}.get(status, "")
     icono = f'<img class="icono" src="{_ICONO}" alt="" width="72" height="72">' if _ICONO else ""
     return f"""
-<aside class="lateral">
+<aside class="lateral"><div class="lateral-fijo">
   <button type="button" class="marca" data-accion="inicio" title="Volver a la página de inicio">
     {icono}<span class="nombre">Triaje dermatológico</span><span class="lema">Prototipo académico. No diagnostica.</span>
   </button>
@@ -714,7 +714,7 @@ def _html_lateral(estado=None):
     <p class="estado {clase}"><span class="punto" aria-hidden="true"></span>{html.escape(texto)}</p>
     {_INTERRUPTOR_TEMA}
   </div>
-</aside>"""
+</div></aside>"""
 
 
 def _iniciar_consulta():
@@ -922,9 +922,16 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
 @keyframes aparecer { from { opacity: 0; transform: translateY(12px) scale(.98); } }
 
 /* --- Menú lateral ---------------------------------------------------------------------------- */
-.columna-lateral { position: sticky; top: 16px; align-self: flex-start; }
+/* La barra marino llega hasta abajo; su contenido se queda fijo arriba al bajar por la ficha. */
+.columna-lateral { align-self: stretch !important; }
+.columna-lateral .block, .columna-lateral .html-container { height: 100%; overflow: visible !important; }
+/* Gradio corta el desborde del contenedor y eso anula position: sticky. «clip» recorta igual sin
+   crear un contenedor de desplazamiento, así que el menú sí puede quedarse fijo. */
+.gradio-container { overflow: clip !important; }
+.columna-lateral .prose { height: 100%; display: flex; flex-direction: column; }
 .lateral { background: var(--cabecera); color: var(--cabecera-tinta); border-radius: 20px; padding: 22px 16px;
-           display: grid; gap: 22px; min-height: calc(100vh - 48px); grid-template-rows: auto 1fr auto; }
+           flex: 1 1 auto; min-height: calc(100vh - 48px); box-sizing: border-box; }
+.lateral-fijo { position: sticky; top: 22px; display: grid; gap: 22px; }
 .lateral .marca { display: grid; justify-items: center; gap: 6px; background: none; border: 0; padding: 0;
                   cursor: pointer; text-align: center; color: inherit; min-height: 0; }
 .lateral .icono { width: 72px; height: 72px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.2); }
@@ -939,7 +946,8 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
 .lateral .item-principal { background: #ffffff; color: #0f355e; font-weight: 700; margin-bottom: 8px; }
 .lateral .item-principal:hover { background: #e3effa; }
 .dark .lateral .item-principal { color: #0a2440; }
-.lateral .pie { display: grid; gap: 12px; justify-items: start; }
+.lateral .pie { display: grid; gap: 12px; justify-items: start; padding-top: 18px;
+                border-top: 1px solid rgba(255,255,255,.18); }
 .lateral .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px;
                    color: var(--cabecera-tinta); }
 .lateral .punto { width: 9px; height: 9px; border-radius: 50%; background: var(--cabecera-suave); }
@@ -981,14 +989,15 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
 .tono-rutina { background: var(--rut-fondo); border-left: 10px solid var(--rut); } .tono-rutina h2 { color: var(--rut-tinta); }
 .tono-sin-senal { background: var(--sin-fondo); border-left: 10px solid var(--sin); } .tono-sin-senal h2 { color: var(--sin-tinta); }
 
-.columnas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+.columnas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto 1fr; }
 .columnas > li { margin: 0 !important; }
-.columna { display: grid; grid-template-rows: auto 1fr; border-right: 1px solid var(--borde); min-height: 120px; }
+.columna { display: grid; grid-row: span 2; grid-template-rows: subgrid; border-right: 1px solid var(--borde); }
 .columna:last-child { border-right: 0; }
-.col-cabeza { display: flex !important; align-items: baseline; justify-content: space-between; gap: 8px;
-              padding: 12px 18px !important; margin: 0 !important; }
+.col-cabeza { display: grid !important; gap: 2px; align-content: center; padding: 14px 18px !important;
+              margin: 0 !important; min-height: 76px; box-sizing: border-box; }
 .col-nombre { font-size: 15px; font-weight: 700; }
-.col-valor { font-size: 19px; font-weight: 700; }
+.col-valor { font-size: 21px; font-weight: 700; line-height: 1.2; }
 .col-urgente .col-cabeza { background: var(--urg); } .col-urgente .col-cabeza * { color: #fff; }
 .col-rutina .col-cabeza { background: var(--rut); } .col-rutina .col-cabeza * { color: #fff; }
 .dark .col-urgente .col-cabeza *, .dark .col-rutina .col-cabeza * { color: #0b1624; }
@@ -1012,7 +1021,8 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
 .ficha-error { padding: 26px; display: grid; gap: 10px; }
 .ficha-error h2 { margin: 0; font-size: 24px; color: var(--urg-tinta); }
 .ficha-cargando .cargando-texto { font-weight: 700; }
-.ficha-cargando .columna { padding: 18px; gap: 10px; align-content: start; grid-template-rows: none; }
+.ficha-cargando .columnas { grid-template-rows: none; }
+.ficha-cargando .columna { grid-row: auto; padding: 18px; gap: 10px; align-content: start; grid-template-rows: none; }
 .hueso { display: block; height: 14px; width: 100%; border-radius: 6px; background: var(--hueso);
          animation: latido 1.2s ease-in-out infinite alternate; }
 .hueso-titulo { height: 36px; width: 60%; } .hueso-corto { width: 45%; }
@@ -1020,8 +1030,8 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
 
 /* --- Pantallas medianas y celular ---------------------------------------------------------- */
 @media (max-width: 1100px) {
-  .columnas { grid-template-columns: 1fr; }
-  .columna { border-right: 0; border-bottom: 1px solid var(--borde); min-height: 0; }
+  .columnas { grid-template-columns: 1fr; grid-template-rows: none; }
+  .columna { grid-row: auto; grid-template-rows: auto 1fr; border-right: 0; border-bottom: 1px solid var(--borde); }
   .avisos { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 900px) {
@@ -1030,7 +1040,8 @@ dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
   .portada .pasos { grid-template-columns: 1fr; }
   .portada-logo { transform: none; }
   .columna-lateral { position: static; }
-  .lateral { min-height: 0; grid-template-rows: auto; }
+  .lateral { min-height: 0; height: auto; }
+  .lateral-fijo { position: static; }
   .lateral .menu { grid-template-columns: 1fr 1fr; }
   .lateral .item-principal { grid-column: 1 / -1; margin-bottom: 0; }
   .lateral .pie { grid-auto-flow: column; justify-content: space-between; align-items: center; }
