@@ -420,14 +420,19 @@ def _parrafos(texto):
     return "".join(f"<p>{html.escape(p.strip())}</p>" for p in texto.split("\n") if p.strip())
 
 
-def _item_criterio(nombre, etiqueta, cuerpo_html, aviso=False):
-    clase = {"urgente": "crit-urgente", "no_urgente": "crit-rutina"}.get(etiqueta, "crit-neutro")
-    estado = (_palabra(etiqueta) if etiqueta in ("urgente", "no_urgente")
-              else ("no evaluable" if aviso else ""))
-    estado_html = f' · <strong>{estado}</strong>' if estado else ""
-    return (f'<li class="criterio {clase}{" crit-aviso" if aviso else ""}">'
-            f'<p class="crit-titulo"><span class="senal-punto" aria-hidden="true"></span>'
-            f'{html.escape(nombre)}{estado_html}</p>{cuerpo_html}</li>')
+def _item_criterio(nombre, etiqueta, cuerpo_html, aviso=False, vacio="Sin respuesta"):
+    """Una columna de la ficha: encabezado pintado con lo que dijo la señal, y su criterio."""
+    if etiqueta in ("urgente", "no_urgente"):
+        clase, estado = ("urgente" if etiqueta == "urgente" else "rutina"), _mayuscula(_palabra(etiqueta))
+    elif aviso:
+        clase, estado = "aviso", "No evaluable"
+    else:
+        clase, estado = "vacio", vacio
+    marca_aviso = " col-con-aviso" if aviso and etiqueta in ("urgente", "no_urgente") else ""
+    return (f'<li class="columna col-{clase}{marca_aviso}">'
+            f'<p class="col-cabeza"><span class="col-nombre">{html.escape(nombre)}</span>'
+            f'<span class="col-valor">{estado}</span></p>'
+            f'<div class="col-cuerpo">{cuerpo_html}</div></li>')
 
 
 def _criterio_texto(d):
@@ -445,7 +450,7 @@ def _criterio_texto(d):
 
 def _criterio_foto(d, hay_foto):
     if not hay_foto:
-        return _item_criterio("Foto", None, "<p>No se adjuntó foto.</p>")
+        return _item_criterio("Foto", None, "<p>No se adjuntó foto. La sugerencia se basa en el texto y las guías.</p>", vacio="Sin foto")
     if not d:
         return _item_criterio("Foto", None, "<p>La foto no se analizó en esta consulta.</p>")
     if d.get("no_evaluable"):
@@ -516,73 +521,59 @@ _SIGUIENTE_PASO = {
 def _html_resultado(resultado, interpretacion, hay_foto, sintoma=""):
     tono, titulo, por_que = _decision_clinica(interpretacion)
     det = resultado.get("detalle_tools", {})
-    criterios = [
-        (n, f) for n, f in [
-            ("clasificador_beto", lambda: _criterio_texto(det.get("clasificador_beto"))),
-            ("ver_imagen", lambda: _criterio_foto(det.get("ver_imagen"), hay_foto)),
-            ("buscar_informacion_dermatologica",
-             lambda: _criterio_guias(det.get("buscar_informacion_dermatologica"), hay_foto)),
-        ]
-    ]
-    # Primero las señales que marcaron urgente: son las que explican la sugerencia.
-    señales = interpretacion["señales"]
-    criterios.sort(key=lambda nf: 0 if señales.get(nf[0]) == "urgente" else 1)
-    items = "".join(f() for _, f in criterios)
+    columnas = (_criterio_texto(det.get("clasificador_beto"))
+                + _criterio_foto(det.get("ver_imagen"), hay_foto)
+                + _criterio_guias(det.get("buscar_informacion_dermatologica"), hay_foto))
     return f"""
-<section class="resultado" aria-live="polite">
+<section class="ficha" aria-live="polite">
   <div class="veredicto tono-{tono}">
     <h2>{html.escape(titulo)}</h2>
-    {_html_senales(señales, det, hay_foto)}
     <p class="por-que">{html.escape(por_que)}</p>
   </div>
-  <div class="bloque">
-    <h3>Por qué: qué dijo cada señal y con qué criterio</h3>
-    <ul class="criterios">{items}</ul>
-  </div>
-  <div class="bloque">
-    <h3>Signos de alarma que aparecen en el texto</h3>
-    {_html_signos(sintoma)}
-  </div>
-  <div class="bloque bloque-paso">
-    <h3>Siguiente paso sugerido</h3>
-    <p>{html.escape(_SIGUIENTE_PASO[tono])}</p>
-    <p class="apoyo">{_APOYO_HTML}</p>
+  <ul class="columnas" aria-label="Qué dijo cada señal y con qué criterio">{columnas}</ul>
+  <div class="ficha-pie">
+    <div class="bloque">
+      <h3>Signos de alarma en el texto</h3>
+      {_html_signos(sintoma)}
+    </div>
+    <div class="bloque bloque-paso">
+      <h3>Siguiente paso sugerido</h3>
+      <p>{html.escape(_SIGUIENTE_PASO[tono])}</p>
+      <p class="apoyo">{_APOYO_HTML}</p>
+    </div>
   </div>
 </section>"""
 
 
 def _html_vacio(mensaje="Describa la lesión, adjunte la foto si la tiene y pulse «Consultar». "
-                        "Aquí verá la prioridad sugerida y qué dijo cada señal."):
+                        "Aquí aparecerá la ficha con la prioridad sugerida y qué dijo cada señal."):
+    vacias = "".join(f'<li class="columna col-vacio"><p class="col-cabeza"><span class="col-nombre">{n}</span>'
+                     f'<span class="col-valor">—</span></p></li>' for n in ("Texto del síntoma", "Foto", "Guías clínicas"))
     return f"""
-<section class="resultado resultado-vacio">
-  <h2>Aún no hay un caso</h2>
-  <p>{html.escape(mensaje)}</p>
-  <ul class="franja franja-muestra" aria-hidden="true">
-    <li class="tramo tramo-vacio"><span class="tramo-nombre">Texto del síntoma</span><span class="tramo-valor">—</span></li>
-    <li class="tramo tramo-vacio"><span class="tramo-nombre">Foto</span><span class="tramo-valor">—</span></li>
-    <li class="tramo tramo-vacio"><span class="tramo-nombre">Guías clínicas</span><span class="tramo-valor">—</span></li>
+<section class="ficha ficha-vacia">
+  <div class="veredicto"><h2>Aún no hay un caso</h2><p>{html.escape(mensaje)}</p></div>
+  <ul class="columnas" aria-hidden="true">{vacias}</ul>
+</section>"""
+
+
+# Mismo esqueleto que la ficha real: el layout no salta cuando llega la respuesta.
+_HTML_CARGANDO = """
+<section class="ficha ficha-cargando" aria-busy="true">
+  <div class="veredicto">
+    <p class="cargando-texto">Analizando el caso: texto, foto y guías clínicas…</p>
+    <span class="hueso hueso-titulo"></span><span class="hueso hueso-corto"></span>
+  </div>
+  <ul class="columnas">
+    <li class="columna col-vacio"><span class="hueso"></span><span class="hueso"></span><span class="hueso hueso-corto"></span></li>
+    <li class="columna col-vacio"><span class="hueso"></span><span class="hueso"></span><span class="hueso hueso-corto"></span></li>
+    <li class="columna col-vacio"><span class="hueso"></span><span class="hueso"></span><span class="hueso hueso-corto"></span></li>
   </ul>
 </section>"""
 
-
-# Mismo esqueleto que el resultado real, con barras grises en lugar del texto:
-# el layout no salta cuando llega la respuesta.
-_HTML_CARGANDO = """
-<section class="resultado resultado-cargando" aria-busy="true">
-  <div class="veredicto">
-    <p class="cargando-texto">Analizando el caso: texto, foto y guías clínicas…</p>
-    <span class="hueso hueso-titulo"></span>
-    <span class="hueso hueso-franja"></span>
-    <span class="hueso hueso-corto"></span>
-  </div>
-  <div class="bloque"><h3>Por qué: qué dijo cada señal y con qué criterio</h3><span class="hueso"></span><span class="hueso"></span><span class="hueso hueso-corto"></span></div>
-  <div class="bloque"><h3>Signos de alarma que aparecen en el texto</h3><span class="hueso hueso-corto"></span></div>
-</section>"""
-
 _HTML_ERROR = """
-<section class="resultado resultado-error" role="alert">
+<section class="ficha ficha-error" role="alert">
   <h2>No se pudo completar la consulta</h2>
-  <p>Hubo un error al analizar el caso. Intente de nuevo; si se repite, abra «Estado del sistema» al final de la página.</p>
+  <p>Hubo un error al analizar el caso. Intente de nuevo; si se repite, revise el estado en el menú de la izquierda.</p>
 </section>"""
 
 
@@ -673,6 +664,11 @@ _JS_TEMA = """
     if (cerrar) { cerrar.closest('dialog')?.close(); return; }
     if (e.target.tagName === 'DIALOG') { e.target.close(); return; }  // clic fuera del contenido
     if (e.target.closest('[data-accion="inicio"]')) { document.querySelector('#btn-inicio')?.click(); return; }
+    if (e.target.closest('[data-accion="nueva"]')) {
+      document.querySelector('#btn-limpiar')?.click();
+      document.querySelector('#sintoma textarea')?.focus();
+      return;
+    }
     if (!e.target.closest('.interruptor-tema')) return;
     const oscuro = !document.body.classList.contains('dark');
     document.body.classList.toggle('dark', oscuro);
@@ -684,31 +680,41 @@ _JS_TEMA = """
 }
 """
 
-_ENLACES_AYUDA = (
-    '<button type="button" class="enlace" data-abrir="como">Cómo funciona</button>'
-    '<button type="button" class="enlace" data-abrir="terminos">Términos de uso</button>'
-    '<button type="button" class="enlace" data-abrir="privacidad">Privacidad y datos</button>'
-)
+_ICONOS = {
+    "nueva": '<path d="M12 5v14M5 12h14"/>',
+    "como": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+    "terminos": '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',
+    "privacidad": '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9.5 12l2 2 3.5-4"/>',
+}
 
 
-def _html_encabezado(estado=None):
+def _icono(clave):
+    return ('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{_ICONOS[clave]}</svg>')
+
+
+def _html_lateral(estado=None):
+    """Menú lateral de la herramienta: marca, acciones, ayuda, estado y modo de color."""
     status = estado.get("status") if isinstance(estado, dict) else None
     texto = _ESTADO_LEGIBLE.get(status, "Comprobando estado")
     clase = {"ok": "estado-ok", "calentando": "estado-cargando", "error": "estado-error"}.get(status, "")
-    icono = f'<img class="icono" src="{_ICONO}" alt="" width="44" height="44">' if _ICONO else ""
+    icono = f'<img class="icono" src="{_ICONO}" alt="" width="72" height="72">' if _ICONO else ""
     return f"""
-<header class="cabecera">
+<aside class="lateral">
   <button type="button" class="marca" data-accion="inicio" title="Volver a la página de inicio">
-    {icono}
-    <span class="marca-texto"><span class="nombre">Triaje dermatológico</span>
-    <span class="lema">Prototipo académico. No diagnostica.</span></span>
+    {icono}<span class="nombre">Triaje dermatológico</span><span class="lema">Prototipo académico. No diagnostica.</span>
   </button>
-  <nav class="enlaces" aria-label="Información de la herramienta">{_ENLACES_AYUDA}</nav>
-  <div class="acciones">
+  <nav class="menu" aria-label="Menú">
+    <button type="button" class="item item-principal" data-accion="nueva">{_icono("nueva")}Nueva consulta</button>
+    <button type="button" class="item" data-abrir="como">{_icono("como")}Cómo funciona</button>
+    <button type="button" class="item" data-abrir="terminos">{_icono("terminos")}Términos de uso</button>
+    <button type="button" class="item" data-abrir="privacidad">{_icono("privacidad")}Privacidad y datos</button>
+  </nav>
+  <div class="pie">
     <p class="estado {clase}"><span class="punto" aria-hidden="true"></span>{html.escape(texto)}</p>
     {_INTERRUPTOR_TEMA}
   </div>
-</header>"""
+</aside>"""
 
 
 def _iniciar_consulta():
@@ -780,6 +786,8 @@ def _tema():
         input_border_color=c["control"], input_border_color_dark=o["control"],
         input_border_color_focus="#1c6e8c", input_border_color_focus_dark="#7cc3dd",
         input_radius="10px", input_text_size="17px", input_shadow="none", input_shadow_focus="none",
+        checkbox_label_background_fill=c["superficie"], checkbox_label_background_fill_dark=o["superficie"],
+        checkbox_label_background_fill_hover=c["hover"], checkbox_label_background_fill_hover_dark=o["hover"],
         checkbox_background_color_selected="#1c6e8c", checkbox_background_color_selected_dark="#7cc3dd",
         checkbox_border_color_selected="#1c6e8c", checkbox_border_color_selected_dark="#7cc3dd",
         button_primary_background_fill=c["primario"], button_primary_background_fill_dark=o["primario"],
@@ -828,43 +836,17 @@ _CSS_COLORES = """
 """
 
 _CSS_BASE = """
-.gradio-container { max-width: 1240px !important; margin: 0 auto !important; }
-.gradio-container h1, .gradio-container h2, .gradio-container h3, .cabecera .nombre {
+.gradio-container { max-width: 1320px !important; margin: 0 auto !important; }
+.gradio-container h1, .gradio-container h2, .gradio-container h3, .lateral .nombre, .col-valor {
   font-family: 'Lexend', 'Atkinson Hyperlegible', system-ui, sans-serif; letter-spacing: -0.01em; }
 footer { display: none !important; }
 .oculto { display: none !important; }
 .gradio-container :focus-visible { outline: 3px solid var(--petroleo); outline-offset: 2px; }
 
-/* --- Cabecera: barra marino con el ícono del logo ------------------------------------- */
-.cabecera { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; padding: 12px 18px;
-            background: var(--cabecera); color: var(--cabecera-tinta); border-radius: 14px; }
-.cabecera .marca { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0;
-                   cursor: pointer; text-align: left; color: inherit; min-height: 0; }
-.cabecera .icono { width: 44px; height: 44px; border-radius: 50%; background: #fff; flex: none;
-                   box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
-.cabecera .marca-texto { display: grid; gap: 1px; }
-.cabecera .nombre { font-size: 20px; font-weight: 700; line-height: 1.2; color: var(--cabecera-tinta); }
-.cabecera .lema { font-size: 14px; color: var(--cabecera-suave); }
-.cabecera .enlaces { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
-.cabecera .enlace { background: none; border: 0; color: var(--cabecera-tinta); font: inherit; font-size: 15px;
-                    padding: 8px 10px; white-space: nowrap; border-radius: 8px; cursor: pointer; min-height: 40px;
-                    text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px;
-                    transition: text-decoration-color 150ms ease-out, background-color 150ms ease-out; }
-.cabecera .enlace:hover { text-decoration-color: currentColor; background: rgba(255,255,255,.08); }
-.cabecera :focus-visible { outline-color: #9fd3e6; }
-.cabecera .acciones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.cabecera .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px;
-                    color: var(--cabecera-tinta); border: 1px solid rgba(255,255,255,.28); border-radius: 999px;
-                    padding: 6px 12px; }
-.cabecera .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--cabecera-suave); }
-.estado-ok .punto { background: #5fd39b; }
-.estado-cargando .punto { background: #f6b45e; animation: latido 0.9s ease-in-out infinite alternate; }
-.estado-error .punto { background: #ff8a80; }
-
-/* Interruptor claro/oscuro sobre la barra marino */
+/* --- Interruptor claro/oscuro (sobre fondo marino) -------------------------------------- */
 .gradio-container .interruptor-tema { position: relative; flex: none; display: inline-grid;
     grid-template-columns: 1fr 1fr; align-items: center; height: 38px; min-height: 0; padding: 3px;
-    border-radius: 999px; border: 1px solid rgba(255,255,255,.28); background: transparent; cursor: pointer; }
+    border-radius: 999px; border: 1px solid rgba(255,255,255,.3); background: transparent; cursor: pointer; }
 .interruptor-tema .indicador { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
     border-radius: 999px; background: #ffffff; transition: transform 280ms cubic-bezier(0.23, 1, 0.32, 1); }
 .dark .interruptor-tema .indicador { transform: translateX(100%); }
@@ -876,51 +858,62 @@ footer { display: none !important; }
 .dark .interruptor-tema .opcion-claro { color: var(--cabecera-suave); }
 .dark .interruptor-tema .opcion-oscuro { color: #0a2440; }
 
-/* --- Inicio --------------------------------------------------------------------------- */
-.inicio { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 32px; align-items: center;
-          background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 32px; }
-.inicio .logo-marco { background: #ffffff; border-radius: 14px; padding: 12px; display: grid; place-items: center; }
-.inicio .logo-marco img { width: 100%; height: auto; max-width: 460px; }
-.inicio .texto { display: grid; gap: 16px; max-width: 60ch; }
-.inicio h1 { margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--marino); }
-.inicio p { margin: 0; font-size: 18px; line-height: 1.6; color: var(--tinta); }
-.pasos { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 12px; counter-reset: paso; }
-.pasos li { counter-increment: paso; position: relative; padding-left: 46px; font-size: 17px; line-height: 1.5;
-            color: var(--tinta); min-height: 32px; }
-.pasos li::before { content: counter(paso); position: absolute; left: 0; top: -2px; width: 32px; height: 32px;
-    border-radius: 50%; background: var(--petroleo); color: #fff; font-weight: 700; display: grid; place-items: center;
-    font-family: 'Lexend', sans-serif; font-size: 15px; }
-.dark .pasos li::before { color: #0b1624; }
+/* --- Portada (inicio) ---------------------------------------------------------------------- */
+.portada { position: relative; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px;
+           align-items: center; background: var(--cabecera); color: var(--cabecera-tinta);
+           border-radius: 24px; padding: 56px 48px 48px; overflow: hidden; }
+.portada::after { content: ""; position: absolute; right: -120px; bottom: -160px; width: 420px; height: 420px;
+                  border-radius: 50%; border: 56px solid rgba(78, 159, 104, .18); pointer-events: none; }
+.portada-texto { display: grid; gap: 18px; position: relative; z-index: 1; }
+.portada .origen { margin: 0; font-size: 16px; color: var(--cabecera-suave); }
+.portada h1 { margin: 0; font-size: 52px; line-height: 1.04; font-weight: 700; color: #ffffff; max-width: 15ch; }
+.portada .bajada { margin: 0; font-size: 19px; line-height: 1.55; color: #e3edf7; max-width: 52ch; }
+.portada .pasos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr);
+                  gap: 14px; counter-reset: paso; }
+.portada .pasos li { counter-increment: paso; display: grid; gap: 6px; align-content: start;
+                     border-top: 2px solid rgba(255,255,255,.28); padding-top: 12px; }
+.portada .pasos li::before { content: counter(paso); font-family: 'Lexend', sans-serif; font-weight: 700;
+                             font-size: 26px; color: #9fd8b0; line-height: 1; }
+.portada .pasos strong { font-size: 17px; color: #ffffff; }
+.portada .pasos span { font-size: 15px; line-height: 1.45; color: var(--cabecera-suave); }
+.portada-logo { position: relative; z-index: 1; background: #ffffff; border-radius: 20px; padding: 20px;
+                display: grid; place-items: center; transform: rotate(-1.5deg);
+                box-shadow: 0 18px 40px rgba(3, 14, 28, .35); }
+.portada-logo img { width: 100%; height: auto; max-width: 440px; }
+.portada-tema { position: absolute; top: 18px; right: 20px; z-index: 2; }
 
-.antes { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 14px; padding: 20px 24px;
-         display: grid; gap: 10px; }
-.antes h2 { margin: 0; font-size: 20px; color: var(--sin-tinta); }
-.antes ul { margin: 0; padding-left: 20px; display: grid; gap: 8px 32px; grid-template-columns: 1fr 1fr; }
-.antes li { font-size: 16px; line-height: 1.5; color: var(--sin-tinta); }
-.antes strong { color: var(--sin-tinta); }
+.antes { display: grid; gap: 16px; padding: 8px 4px 0; }
+.antes h2 { margin: 0; font-size: 24px; color: var(--marino); }
+.avisos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.avisos li { display: grid; gap: 6px; align-content: start; background: var(--sin-fondo); color: var(--sin-tinta);
+             border-radius: 14px; padding: 16px 18px; border-top: 4px solid var(--sin); }
+.avisos strong { font-family: 'Lexend', sans-serif; font-size: 17px; color: var(--sin-tinta); }
+.avisos span { font-size: 15px; line-height: 1.5; color: var(--sin-tinta); }
 .leer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.leer p { margin: 0; font-size: 16px; color: var(--tinta-suave); }
+.leer > span { font-size: 16px; color: var(--tinta-suave); margin-right: 4px; }
 .boton-ventana { font: inherit; font-size: 16px; font-weight: 700; color: var(--marino); background: var(--superficie);
-                 border: 1px solid var(--control); border-radius: 999px; padding: 9px 16px; min-height: 44px; cursor: pointer;
+                 border: 1px solid var(--control); border-radius: 999px; padding: 9px 18px; min-height: 44px; cursor: pointer;
                  transition: background-color 150ms ease-out; }
 .boton-ventana:hover { background: var(--hover); }
-#acepto { border: 1px solid var(--control); border-radius: 12px; }
+.aceptar { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 10px; }
+#acepto, #acepto label { border: 0 !important; background: transparent !important; }
 #acepto label span { font-size: 16px; line-height: 1.5; }
 
-/* --- Ventanas superpuestas (<dialog>) ------------------------------------------------- */
-.ventana { border: 0; padding: 0; border-radius: 16px; width: min(760px, calc(100vw - 32px));
-           max-height: min(86vh, 900px); background: var(--superficie); color: var(--tinta);
-           box-shadow: 0 24px 64px rgba(6, 20, 38, .35); }
-.ventana[open] { display: flex; flex-direction: column; animation: aparecer 220ms cubic-bezier(0.23, 1, 0.32, 1); }
-.ventana::backdrop { background: rgba(8, 22, 40, .55); }
+/* --- Ventanas superpuestas (<dialog>): siempre centradas ---------------------------------- */
+dialog.ventana { position: fixed !important; inset: 0 !important; margin: auto !important;
+           border: 0; padding: 0; border-radius: 18px; width: min(760px, calc(100vw - 32px));
+           height: fit-content; max-height: min(86vh, 900px); background: var(--superficie); color: var(--tinta);
+           box-shadow: 0 24px 64px rgba(6, 20, 38, .4); }
+dialog.ventana[open] { display: flex; flex-direction: column; animation: aparecer 220ms cubic-bezier(0.23, 1, 0.32, 1); }
+dialog.ventana::backdrop { background: rgba(8, 22, 40, .6); }
 .ventana-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px;
                  padding: 16px 20px 14px 28px; border-bottom: 1px solid var(--borde); }
-.ventana-barra h2 { margin: 0; font-size: 22px; color: var(--marino); }
+.ventana-barra h2 { margin: 0 !important; font-size: 22px; color: var(--marino); }
 .ventana-cerrar { font: inherit; font-size: 15px; font-weight: 700; color: var(--tinta); background: var(--superficie-2);
                   border: 1px solid var(--control); border-radius: 999px; padding: 8px 16px; min-height: 40px; cursor: pointer; }
 .ventana-cerrar:hover { background: var(--hover); }
 .ventana-cuerpo { overflow-y: auto; padding: 20px 28px 28px; display: grid; gap: 10px; }
-.ventana-cuerpo > * { max-width: 68ch; }
+.ventana-cuerpo > * { max-width: 68ch; margin: 0; }
 .ventana-cuerpo h3 { margin: 12px 0 0; font-size: 18px; color: var(--marino); }
 .ventana-cuerpo p, .ventana-cuerpo li { margin: 0; font-size: 17px; line-height: 1.6; color: var(--tinta); }
 .ventana-cuerpo ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
@@ -928,99 +921,132 @@ footer { display: none !important; }
 .ventana-cuerpo .nota { font-size: 15px; color: var(--tinta-suave); }
 @keyframes aparecer { from { opacity: 0; transform: translateY(12px) scale(.98); } }
 
-/* --- Resultado -------------------------------------------------------------------------- */
-.resultado { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; overflow: hidden;
-             color: var(--tinta); }
-.resultado > * { animation: entrar 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-.resultado > *:nth-child(2) { animation-delay: 60ms; }
-.resultado > *:nth-child(3) { animation-delay: 120ms; }
-.resultado > *:nth-child(4) { animation-delay: 180ms; }
-@keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
-.resultado h2 { margin: 0; }
-.resultado p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--tinta); }
-.veredicto { padding: 26px 26px 22px; display: grid; gap: 14px; }
-.veredicto h2 { font-size: 30px; font-weight: 700; line-height: 1.15; }
-.veredicto .por-que { font-size: 17px; }
-.tono-urgente { background: var(--urg-fondo); } .tono-urgente h2 { color: var(--urg-tinta); }
-.tono-rutina { background: var(--rut-fondo); } .tono-rutina h2 { color: var(--rut-tinta); }
-.tono-sin-senal { background: var(--sin-fondo); } .tono-sin-senal h2 { color: var(--sin-tinta); }
+/* --- Menú lateral ---------------------------------------------------------------------------- */
+.columna-lateral { position: sticky; top: 16px; align-self: flex-start; }
+.lateral { background: var(--cabecera); color: var(--cabecera-tinta); border-radius: 20px; padding: 22px 16px;
+           display: grid; gap: 22px; min-height: calc(100vh - 48px); grid-template-rows: auto 1fr auto; }
+.lateral .marca { display: grid; justify-items: center; gap: 6px; background: none; border: 0; padding: 0;
+                  cursor: pointer; text-align: center; color: inherit; min-height: 0; }
+.lateral .icono { width: 72px; height: 72px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.2); }
+.lateral .nombre { font-size: 19px; font-weight: 700; color: #fff; line-height: 1.2; }
+.lateral .lema { font-size: 14px; color: var(--cabecera-suave); }
+.lateral .menu { display: grid; gap: 4px; align-content: start; }
+.lateral .item { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0;
+                 color: var(--cabecera-tinta); font: inherit; font-size: 16px; text-align: left;
+                 padding: 11px 12px; border-radius: 10px; cursor: pointer; min-height: 44px;
+                 transition: background-color 150ms ease-out; }
+.lateral .item:hover { background: rgba(255,255,255,.1); }
+.lateral .item-principal { background: #ffffff; color: #0f355e; font-weight: 700; margin-bottom: 8px; }
+.lateral .item-principal:hover { background: #e3effa; }
+.dark .lateral .item-principal { color: #0a2440; }
+.lateral .pie { display: grid; gap: 12px; justify-items: start; }
+.lateral .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px;
+                   color: var(--cabecera-tinta); }
+.lateral .punto { width: 9px; height: 9px; border-radius: 50%; background: var(--cabecera-suave); }
+.estado-ok .punto { background: #5fd39b; }
+.estado-cargando .punto { background: #f6b45e; animation: latido 0.9s ease-in-out infinite alternate; }
+.estado-error .punto { background: #ff8a80; }
+.dark .lateral, .dark .portada { border: 1px solid var(--borde); }
 
-/* La franja: tres tramos, uno por señal, pintados con lo que dijo cada una. */
-.franja { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.franja > li { margin: 0 !important; }
-.tramo { display: grid; gap: 2px; padding: 10px 14px; border-radius: 10px; min-height: 64px; align-content: center; }
-.tramo-nombre { font-size: 14px; }
-.tramo-valor { font-family: 'Lexend', sans-serif; font-size: 18px; font-weight: 700; }
-.tramo-urgente { background: var(--urg); color: #fff; }
-.tramo-rutina { background: var(--rut); color: #fff; }
-.dark .tramo-urgente, .dark .tramo-rutina { color: #0b1624; }
-.tramo-vacio { background: transparent; border: 2px dashed var(--control); color: var(--tinta-suave); }
-.resultado .bloque { padding: 20px 26px; border-top: 1px solid var(--borde); display: grid; gap: 10px; }
-.resultado .bloque h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--marino); }
-.resultado .nota, .resultado .fuentes { font-size: 15px; color: var(--tinta-suave); }
-.resultado .aviso { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 8px; padding: 10px 12px; }
-.resultado .apoyo { font-size: 15px; color: var(--tinta-suave); }
-.resultado .bloque-paso { background: var(--superficie-2); }
-.criterios { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
-.criterio { display: grid; gap: 6px; padding-left: 14px; border-left: 4px solid var(--borde); }
-.criterio.crit-urgente { border-left-color: var(--urg); }
-.criterio.crit-rutina { border-left-color: var(--rut); }
-.criterio.crit-aviso { border-left-color: var(--cargando); }
-.criterio .crit-titulo { display: flex; align-items: center; gap: 8px; font-weight: 700; }
-.senal-punto { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--tinta-suave); }
-.crit-urgente .senal-punto { background: var(--urg); }
-.crit-rutina .senal-punto { background: var(--rut); }
-.resultado .fuentes-lista, .resultado .signos { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
-.resultado .fuentes-lista li { font-size: 15px; color: var(--tinta-suave); }
-.resultado .signos li { font-size: 17px; color: var(--tinta); }
-.resultado-vacio, .resultado-error { padding: 26px; display: grid; gap: 12px; }
-.resultado-vacio h2, .resultado-error h2 { font-size: 22px; font-weight: 700; color: var(--marino); }
-.resultado-vacio p { color: var(--tinta-suave); }
-.resultado-error h2 { color: var(--urg-tinta); }
-.resultado-cargando .cargando-texto { font-weight: 700; }
-.hueso { display: block; height: 14px; width: 100%; border-radius: 6px; background: var(--hueso);
-         animation: latido 1.2s ease-in-out infinite alternate; }
-.hueso-titulo { height: 32px; width: 70%; } .hueso-franja { height: 64px; } .hueso-corto { width: 45%; }
-@keyframes latido { from { opacity: 1; } to { opacity: 0.45; } }
-
-/* --- Formulario ------------------------------------------------------------------------- */
-.panel-caso { background: var(--superficie); border: 1px solid var(--borde) !important; border-radius: 16px; padding: 8px; }
-.titulo-panel h2 { margin: 6px 8px 0; font-size: 22px; color: var(--marino); }
-.nota-espera, .nota-espera p { color: var(--tinta-suave) !important; font-size: 15px !important; margin: 0 8px; }
-.gradio-container button:not(.label-wrap):not(.interruptor-tema):not(.enlace):not(.marca) { min-height: 48px;
+/* --- Caso (entrada) ---------------------------------------------------------------------------- */
+.caso { background: var(--superficie) !important; border: 1px solid var(--borde) !important; border-radius: 18px !important;
+        padding: 10px 12px 12px !important; gap: 12px !important; }
+.caso-titulo h2 { margin: 4px 4px 0; font-size: 24px; color: var(--marino); }
+.caso-acciones { align-items: center !important; padding: 4px 6px 8px; }
+.nota-espera, .nota-espera p { color: var(--tinta-suave) !important; font-size: 15px !important; margin: 0; }
+.gradio-container button:not(.label-wrap):not(.interruptor-tema):not(.item):not(.marca) { min-height: 48px;
     transition: transform 120ms ease-out, background-color 150ms ease-out; }
-.gradio-container button:not(.label-wrap):not(.interruptor-tema):not(.enlace):not(.marca):active:not(:disabled) { transform: scale(0.98); }
+.gradio-container button:not(.label-wrap):not(.interruptor-tema):not(.item):not(.marca):active:not(:disabled) { transform: scale(0.98); }
 .gradio-container button.primary:disabled { opacity: 1; background: var(--tinta-suave) !important;
     color: var(--superficie) !important; cursor: progress; }
 .gradio-container button.secondary { border: 1px solid var(--control) !important; }
-.dark .cabecera { border: 1px solid var(--borde); }
+#ejemplos { background: transparent !important; border: 0 !important; }
 #ejemplos button { background: var(--superficie); border: 1px solid var(--control); border-radius: 999px;
                    color: var(--tinta); font-size: 15px; min-height: 44px; }
 #ejemplos button:hover { background: var(--hover); }
 .gradio-container .label-wrap span { font-size: 16px; font-weight: 700; color: var(--tinta); }
 
-@media (max-width: 1180px) {
-  .cabecera .enlaces { margin-left: 0; order: 3; width: 100%; }
-  .cabecera .acciones { margin-left: auto; }
+/* --- Ficha (resultado) --------------------------------------------------------------------------- */
+.ficha { background: var(--superficie); border: 1px solid var(--borde); border-radius: 18px; overflow: hidden;
+         color: var(--tinta); }
+.ficha > * { animation: entrar 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.ficha > *:nth-child(2) { animation-delay: 70ms; }
+.ficha > *:nth-child(3) { animation-delay: 140ms; }
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
+.ficha p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--tinta); }
+.veredicto { padding: 28px 30px; display: grid; gap: 10px; border-bottom: 1px solid var(--borde); }
+.veredicto h2 { margin: 0; font-size: 36px; font-weight: 700; line-height: 1.1; color: var(--marino); }
+.veredicto .por-que { font-size: 18px; max-width: 75ch; }
+.tono-urgente { background: var(--urg-fondo); border-left: 10px solid var(--urg); } .tono-urgente h2 { color: var(--urg-tinta); }
+.tono-rutina { background: var(--rut-fondo); border-left: 10px solid var(--rut); } .tono-rutina h2 { color: var(--rut-tinta); }
+.tono-sin-senal { background: var(--sin-fondo); border-left: 10px solid var(--sin); } .tono-sin-senal h2 { color: var(--sin-tinta); }
+
+.columnas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+.columnas > li { margin: 0 !important; }
+.columna { display: grid; grid-template-rows: auto 1fr; border-right: 1px solid var(--borde); min-height: 120px; }
+.columna:last-child { border-right: 0; }
+.col-cabeza { display: flex !important; align-items: baseline; justify-content: space-between; gap: 8px;
+              padding: 12px 18px !important; margin: 0 !important; }
+.col-nombre { font-size: 15px; font-weight: 700; }
+.col-valor { font-size: 19px; font-weight: 700; }
+.col-urgente .col-cabeza { background: var(--urg); } .col-urgente .col-cabeza * { color: #fff; }
+.col-rutina .col-cabeza { background: var(--rut); } .col-rutina .col-cabeza * { color: #fff; }
+.dark .col-urgente .col-cabeza *, .dark .col-rutina .col-cabeza * { color: #0b1624; }
+.col-aviso .col-cabeza, .col-vacio .col-cabeza { background: var(--superficie-2); border-bottom: 2px dashed var(--control); }
+.col-aviso .col-cabeza *, .col-vacio .col-cabeza * { color: var(--tinta-suave); }
+.col-cuerpo { padding: 16px 18px 20px; display: grid; gap: 10px; align-content: start; }
+.col-cuerpo p { font-size: 16px !important; }
+.ficha .nota, .ficha .fuentes { font-size: 14px !important; color: var(--tinta-suave); }
+.ficha .aviso { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 8px; padding: 10px 12px; }
+.ficha .apoyo { font-size: 15px !important; color: var(--tinta-suave); }
+.ficha .fuentes-lista, .ficha .signos { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.ficha .fuentes-lista li { font-size: 14px; color: var(--tinta-suave); }
+.ficha .signos li { font-size: 17px; color: var(--tinta); }
+.ficha-pie { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--borde); }
+.ficha .bloque { padding: 20px 24px; display: grid; gap: 10px; align-content: start; }
+.ficha .bloque h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--marino); }
+.ficha .bloque-paso { background: var(--superficie-2); border-left: 1px solid var(--borde); }
+.ficha-vacia .veredicto h2 { font-size: 26px; }
+.ficha-vacia .veredicto p { color: var(--tinta-suave); }
+.ficha-vacia .columna { min-height: 64px; }
+.ficha-error { padding: 26px; display: grid; gap: 10px; }
+.ficha-error h2 { margin: 0; font-size: 24px; color: var(--urg-tinta); }
+.ficha-cargando .cargando-texto { font-weight: 700; }
+.ficha-cargando .columna { padding: 18px; gap: 10px; align-content: start; grid-template-rows: none; }
+.hueso { display: block; height: 14px; width: 100%; border-radius: 6px; background: var(--hueso);
+         animation: latido 1.2s ease-in-out infinite alternate; }
+.hueso-titulo { height: 36px; width: 60%; } .hueso-corto { width: 45%; }
+@keyframes latido { from { opacity: 1; } to { opacity: 0.45; } }
+
+/* --- Pantallas medianas y celular ---------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .columnas { grid-template-columns: 1fr; }
+  .columna { border-right: 0; border-bottom: 1px solid var(--borde); min-height: 0; }
+  .avisos { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 860px) {
-  .inicio { grid-template-columns: 1fr; padding: 22px; gap: 20px; }
-  .inicio .logo-marco img { max-width: 340px; }
-  .antes ul { grid-template-columns: 1fr; }
-  .cabecera .enlaces { margin-left: 0; order: 3; width: 100%; }
+@media (max-width: 900px) {
+  .portada { grid-template-columns: 1fr; padding: 64px 24px 28px; gap: 24px; }
+  .portada h1 { font-size: 38px; }
+  .portada .pasos { grid-template-columns: 1fr; }
+  .portada-logo { transform: none; }
+  .columna-lateral { position: static; }
+  .lateral { min-height: 0; grid-template-rows: auto; }
+  .lateral .menu { grid-template-columns: 1fr 1fr; }
+  .lateral .item-principal { grid-column: 1 / -1; margin-bottom: 0; }
+  .lateral .pie { grid-auto-flow: column; justify-content: space-between; align-items: center; }
+  .ficha-pie { grid-template-columns: 1fr; }
+  .ficha .bloque-paso { border-left: 0; border-top: 1px solid var(--borde); }
 }
 @media (max-width: 640px) {
   .gradio-container { padding-left: 12px !important; padding-right: 12px !important; }
-  .inicio h1 { font-size: 27px; }
-  .veredicto { padding: 20px 16px; } .veredicto h2 { font-size: 25px; }
-  .resultado .bloque { padding: 16px; }
-  .franja { grid-template-columns: 1fr; }
-  .tramo { min-height: 0; grid-template-columns: 1fr auto; align-items: center; }
-  .cabecera .lema { display: none; }
+  .portada h1 { font-size: 31px; }
+  .avisos { grid-template-columns: 1fr; }
+  .veredicto { padding: 20px 18px; } .veredicto h2 { font-size: 27px; }
+  .lateral .menu { grid-template-columns: 1fr; }
   .ventana-barra { padding: 14px 16px; } .ventana-cuerpo { padding: 16px 18px 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .resultado > *, .ventana[open], .hueso, .estado-cargando .punto { animation: none; }
+  .ficha > *, dialog.ventana[open], .hueso, .estado-cargando .punto { animation: none; }
   .interruptor-tema .indicador, .gradio-container button { transition: none !important; }
 }
 """
@@ -1040,41 +1066,42 @@ _EQUIPO = "Camilo Salazar, Juan Esteban Alzate, Isabella Idárraga y María Alej
 _REPO = "https://github.com/Isa-Idarraga/triage-dermatologico-ia"
 
 _HTML_INICIO = f"""
-<section class="inicio">
-  <div class="logo-marco"><img src="{_LOGO}" alt="Logo de Triaje dermatológico EAFIT: una ardilla con estetoscopio dentro de un escudo"></div>
-  <div class="texto">
+<section class="portada">
+  <div class="portada-texto">
+    <p class="origen">Prototipo académico de estudiantes de la Universidad EAFIT</p>
     <h1>Apoyo para priorizar lesiones de piel en el triaje</h1>
-    <p>Usted describe la lesión y, si puede, adjunta una foto. La herramienta sugiere si el caso conviene
-    referirlo con prioridad a dermatología o puede ir a cita de rutina, y muestra qué dijo cada señal y por qué.
-    No diagnostica: la decisión es del profesional.</p>
+    <p class="bajada">Usted describe la lesión y, si puede, adjunta una foto. La herramienta sugiere si conviene
+    referir con prioridad a dermatología o dar cita de rutina, y muestra qué dijo cada señal y por qué.</p>
     <ol class="pasos">
-      <li><strong>Describa la lesión</strong> como la cuenta el paciente: cuánto tiempo lleva y si cambió de
-      tamaño, color o forma, sangra, pica o no sana.</li>
-      <li><strong>Adjunte una foto</strong> si la tiene: enfocada, con buena luz y la lesión centrada.</li>
-      <li><strong>Lea la sugerencia y el porqué.</strong> Si cualquier señal indica urgencia, sugiere referir. Si
-      ninguna responde, pide revisión manual, nunca «puede esperar».</li>
+      <li><strong>Describa la lesión</strong><span>Tiempo de evolución y si cambió de tamaño, color o forma, sangra, pica o no sana.</span></li>
+      <li><strong>Adjunte una foto</strong><span>Opcional. Enfocada, con buena luz y la lesión centrada.</span></li>
+      <li><strong>Lea la ficha</strong><span>Si cualquier señal indica urgencia, sugiere referir. Si ninguna responde, pide revisión manual.</span></li>
     </ol>
   </div>
+  <div class="portada-logo">
+    <img src="{_LOGO}" alt="Logo de Triaje dermatológico EAFIT: una ardilla con estetoscopio dentro de un escudo">
+  </div>
+  <div class="portada-tema">{_INTERRUPTOR_TEMA}</div>
 </section>
-<section class="antes" role="note" aria-labelledby="antes-titulo">
+<section class="antes" aria-labelledby="antes-titulo">
   <h2 id="antes-titulo">Antes de usarla</h2>
-  <ul>
-    <li><strong>No es un dispositivo médico.</strong> No tiene registro sanitario del INVIMA ni validación clínica.
-    Es un trabajo de estudiantes para un curso.</li>
-    <li><strong>Se equivoca.</strong> En 37 casos de prueba detectó 14 de 20 urgentes. En fotos clínicas de un
-    hospital que no vio al entrenar detectó el 71 % de los casos urgentes y 25 de 59 melanomas.</li>
-    <li><strong>No la use para decidir la atención de un paciente real.</strong> Úsela con casos de ejemplo o
-    descripciones inventadas.</li>
-    <li><strong>No escriba datos que identifiquen al paciente</strong> (nombre, documento, historia clínica,
-    teléfono, dirección) ni suba fotos con la cara, tatuajes u otros rasgos.</li>
+  <ul class="avisos">
+    <li><strong>No es un dispositivo médico</strong><span>No tiene registro sanitario del INVIMA ni validación clínica.
+    Es un trabajo de estudiantes para un curso.</span></li>
+    <li><strong>Se equivoca</strong><span>En 37 casos de prueba detectó 14 de 20 urgentes. En fotos clínicas de un
+    hospital que no vio al entrenar, el 71 % de los urgentes y 25 de 59 melanomas.</span></li>
+    <li><strong>No decide por usted</strong><span>No la use para decidir la atención de un paciente real. Úsela con
+    casos de ejemplo o descripciones inventadas.</span></li>
+    <li><strong>Sin datos que identifiquen</strong><span>Nada de nombre, documento, historia clínica, teléfono ni
+    dirección. Nada de fotos con la cara, tatuajes u otros rasgos.</span></li>
   </ul>
-</section>
-<div class="leer">
-  <p>Antes de aceptar, puede leer:</p>
-  <button type="button" class="boton-ventana" data-abrir="como">Cómo funciona</button>
-  <button type="button" class="boton-ventana" data-abrir="terminos">Términos de uso</button>
-  <button type="button" class="boton-ventana" data-abrir="privacidad">Privacidad y datos</button>
-</div>"""
+  <div class="leer">
+    <span>Léalo completo:</span>
+    <button type="button" class="boton-ventana" data-abrir="como">Cómo funciona</button>
+    <button type="button" class="boton-ventana" data-abrir="terminos">Términos de uso</button>
+    <button type="button" class="boton-ventana" data-abrir="privacidad">Privacidad y datos</button>
+  </div>
+</section>"""
 
 _HTML_COMO_FUNCIONA = """
   <p>Un agente (un modelo de lenguaje, Qwen2.5-3B) decide qué herramientas consultar. Hay tres, y cada una da su
@@ -1198,91 +1225,90 @@ def _limpiar():
 
 def construir_app():
     with gr.Blocks(title="Triaje dermatológico", theme=_TEMA, css=_CSS, js=_JS_TEMA) as demo:
-        encabezado = gr.HTML(_html_encabezado(), padding=False)
         gr.HTML(_HTML_VENTANAS, padding=False)  # ventanas superpuestas; se abren con data-abrir
 
         # Qué versión de los términos aceptó este navegador (localStorage, vía Gradio). Solo
         # guarda la fecha de la versión, nada del paciente.
         aceptado = gr.BrowserState(None, storage_key="triaje_terminos")
 
-        # --- Inicio: qué es, cómo se usa, avisos y aceptación -----------------------
-        with gr.Column(visible=True) as inicio:
+        # --- Inicio: portada, avisos y aceptación -----------------------------------
+        with gr.Column(visible=True, elem_classes=["vista-inicio"]) as inicio:
             gr.HTML(_HTML_INICIO, padding=False)
-            with gr.Row(equal_height=True):
+            with gr.Row(equal_height=True, elem_classes=["aceptar"]):
                 acepto = gr.Checkbox(label=_TEXTO_ACEPTO, value=False, elem_id="acepto", scale=3)
                 entrar = gr.Button("Entrar a la herramienta", variant="primary", size="lg", interactive=False,
                                    scale=1, min_width=240)
 
-        # --- Herramienta ---------------------------------------------------------------
-        with gr.Column(visible=False) as herramienta:
-            # render=False: se crean aquí para referenciarlos en gr.Examples (izquierda) y se
-            # ubican en la columna derecha con .render().
-            resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
-            detalle_md = gr.Markdown(render=False)
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=5, min_width=320, elem_classes=["panel-caso"]):
-                    gr.HTML("<h2>El caso</h2>", padding=False, elem_classes=["titulo-panel"])
-                    sintoma = gr.Textbox(
-                        label="1. ¿Qué le pasa a la lesión?", lines=5,
-                        placeholder=("Ej.: lunar en la espalda que en los últimos tres meses creció, "
-                                     "tiene bordes irregulares y varios tonos de café y negro."),
-                        info=("Cuánto tiempo lleva y si cambió de tamaño, color o forma, sangra, pica o no "
-                              "sana. Sin nombre, documento ni datos que identifiquen al paciente."),
-                    )
-                    foto = gr.Image(label="2. Foto de la lesión (opcional)", type="filepath", height=240)
-                    gr.Markdown("Enfocada, con buena luz, la lesión centrada y sin la cara del paciente.",
-                                elem_classes=["nota-espera"])
-                    with gr.Row():
-                        boton = gr.Button("Consultar", variant="primary", size="lg", scale=3)
-                        limpiar = gr.Button("Nueva consulta", variant="secondary", size="lg", scale=2)
-                    gr.Markdown("Con foto, la consulta tarda unos 15 segundos.", elem_classes=["nota-espera"])
-                    gr.Examples(
-                        examples=[
-                            [_EJEMPLO_URGENTE_SINTOMA, None],
-                            [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
-                            [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
-                        ],
-                        inputs=[sintoma, foto],
-                        outputs=[resultado_html, detalle_md],
-                        fn=_consultar_evento,
-                        run_on_click=True,
-                        cache_examples=False,
-                        label="Probar con un caso de ejemplo",
-                        elem_id="ejemplos",
-                        example_labels=[
-                            "Cambios en un lunar (sin foto)",
-                            "Lesión estable (con foto)",
-                            "Foto borrosa (no evaluable)",
-                        ],
-                    )
-                with gr.Column(scale=7, min_width=320):
-                    resultado_html.render()
-                    with gr.Accordion("Detalle técnico (para auditar)", open=False):
-                        detalle_md.render()
-            with gr.Accordion("Estado del sistema", open=False):
-                estado_md = gr.Markdown()
-                gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
+        # --- Herramienta: menú lateral + caso arriba + ficha abajo ----------------------
+        with gr.Row(visible=False, equal_height=False, elem_classes=["vista-herramienta"]) as herramienta:
+            with gr.Column(scale=0, min_width=250, elem_classes=["columna-lateral"]):
+                lateral = gr.HTML(_html_lateral(), padding=False)
+            with gr.Column(scale=1, min_width=320, elem_classes=["columna-trabajo"]):
+                resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
+                detalle_md = gr.Markdown(render=False)
+                with gr.Column(elem_classes=["caso"]):
+                    gr.HTML("<h2>Nuevo caso</h2>", padding=False, elem_classes=["caso-titulo"])
+                    with gr.Row(equal_height=True):
+                        sintoma = gr.Textbox(
+                            label="¿Qué le pasa a la lesión?", lines=6, scale=3, elem_id="sintoma",
+                            placeholder=("Ej.: lunar en la espalda que en los últimos tres meses creció, "
+                                         "tiene bordes irregulares y varios tonos de café y negro."),
+                            info=("Cuánto tiempo lleva y si cambió de tamaño, color o forma, sangra, pica o no "
+                                  "sana. Sin datos que identifiquen al paciente."),
+                        )
+                        foto = gr.Image(label="Foto (opcional)", type="filepath", height=210, scale=2,
+                                        min_width=220)
+                    with gr.Row(equal_height=True, elem_classes=["caso-acciones"]):
+                        boton = gr.Button("Consultar", variant="primary", size="lg", scale=0, min_width=220)
+                        gr.Markdown("Con foto tarda unos 15 segundos. La foto: enfocada, con buena luz y sin la "
+                                    "cara del paciente.", elem_classes=["nota-espera"])
+                gr.Examples(
+                    examples=[
+                        [_EJEMPLO_URGENTE_SINTOMA, None],
+                        [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
+                        [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
+                    ],
+                    inputs=[sintoma, foto],
+                    outputs=[resultado_html, detalle_md],
+                    fn=_consultar_evento,
+                    run_on_click=True,
+                    cache_examples=False,
+                    label="O pruebe con un caso de ejemplo",
+                    elem_id="ejemplos",
+                    example_labels=[
+                        "Cambios en un lunar (sin foto)",
+                        "Lesión estable (con foto)",
+                        "Foto borrosa (no evaluable)",
+                    ],
+                )
+                resultado_html.render()
+                with gr.Accordion("Detalle técnico (para auditar)", open=False):
+                    detalle_md.render()
+                with gr.Accordion("Estado del sistema", open=False):
+                    estado_md = gr.Markdown()
+                    gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
 
-        # El ícono de la cabecera lleva al inicio: el JS hace clic en este botón oculto.
+        # Botones ocultos que el menú lateral acciona desde el JS.
         volver = gr.Button("Inicio", elem_id="btn-inicio", elem_classes=["oculto"])
+        limpiar = gr.Button("Nueva consulta", elem_id="btn-limpiar", elem_classes=["oculto"])
 
         # --- Eventos -------------------------------------------------------------------
         acepto.change(lambda v: gr.update(interactive=bool(v)), inputs=acepto, outputs=entrar, queue=False)
         entrar.click(_entrar, inputs=acepto, outputs=[aceptado, inicio, herramienta], queue=False)
         volver.click(_volver_al_inicio, outputs=[inicio, herramienta], queue=False)
+        limpiar.click(_limpiar, outputs=[sintoma, foto, resultado_html, detalle_md], queue=False)
 
-        # show_progress="hidden": la tarjeta ya muestra su propio esqueleto de carga.
+        # show_progress="hidden": la ficha ya muestra su propio esqueleto de carga.
         boton.click(_iniciar_consulta, outputs=[boton, resultado_html], queue=False).then(
             _consultar_evento, inputs=[sintoma, foto], outputs=[resultado_html, detalle_md],
             show_progress="hidden",
         ).then(
             _finalizar_consulta, outputs=[boton],
         )
-        limpiar.click(_limpiar, outputs=[sintoma, foto, resultado_html, detalle_md], queue=False)
 
         demo.load(_vista_inicial, inputs=aceptado, outputs=[inicio, herramienta], queue=False)
-        demo.load(lambda: (_html_encabezado(health()), _resumen_estado()),
-                  outputs=[encabezado, estado_md], show_progress="hidden")
+        demo.load(lambda: (_html_lateral(health()), _resumen_estado()),
+                  outputs=[lateral, estado_md], show_progress="hidden")
     return demo
 
 

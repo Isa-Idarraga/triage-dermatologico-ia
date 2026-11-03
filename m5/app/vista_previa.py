@@ -80,12 +80,12 @@ import app  # noqa: E402
 app.health = lambda: {"status": "ok", "version": "vista previa", "nota": "sin modelos"}
 app.log_consulta = lambda **kwargs: None
 
-_encabezado_real = app._html_encabezado
-app._html_encabezado = lambda estado=None: (
-    '<p style="margin:0 0 8px;padding:10px 14px;border-radius:8px;background:#fdecea;color:#8a1c1c;'
-    'font-weight:700">Vista previa del diseño: los resultados son respuestas de ejemplo, no salen de '
-    'ningún modelo.</p>' + _encabezado_real(estado)
-)
+_AVISO = ('<p style="margin:0 0 12px;padding:10px 14px;border-radius:8px;background:#fdecea;color:#8a1c1c;'
+          'font-weight:700">Vista previa del diseño: los resultados son respuestas de ejemplo, no salen de '
+          'ningún modelo.</p>')
+app._HTML_INICIO = _AVISO + app._HTML_INICIO
+_lateral_real = app._html_lateral
+app._html_lateral = lambda estado=None: _AVISO + _lateral_real(estado)
 
 if __name__ == "__main__":
     os.chdir(_RAIZ)  # Gradio solo sirve archivos de la carpeta desde donde arranca (imágenes de ejemplo)
