@@ -8,3 +8,4 @@ queda escrito aquí igual.
 |---|---|---|
 | [biopsia/](biopsia/README.md) | ¿`ver()` falla en las 40 reservadas porque todas están confirmadas por biopsia? | corrido: **parcial** ([resultados](biopsia/resultados/RESULTADOS.md)) |
 | [reentrenar_ver/](reentrenar_ver/README.md) | ¿Reentrenar `ver()` con fotos de celular y elegirlo con validación con biopsia mejora el producto? | corrido: **no se adopta** ([resultados](reentrenar_ver/resultados/RESULTADOS.md)) |
+| [foto_clinica/](foto_clinica/README.md) | A: ¿la válvula distingue piel de otros objetos? B: ¿los candidatos sirven en fotos clínicas de otra fuente (DDI)? | reglas escritas, sin correr |
