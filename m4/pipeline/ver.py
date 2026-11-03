@@ -38,6 +38,7 @@ DESCRIPCION_TOOL = (
 
 MODELO_CLIP = "openai/clip-vit-base-patch32"
 MODELO_VIT = "google/vit-base-patch16-224-in21k"
+MODELO_DINO = "facebook/dinov2-base"
 
 # Prompts fijados ANTES de correr cualquier evaluación (no se ajustan mirando resultados).
 PROMPTS_BINARIOS = (
@@ -56,7 +57,7 @@ PROMPTS_7_CLASES = {
 CLASES_URGENTES = ("mel", "bcc", "akiec")  # igual que MAPEO_URGENCIA en ham10000.py
 
 CONFIG_POR_DEFECTO = {
-    "backend": "clip_binario",  # clip_binario | clip_7clases | lr_clip | lr_vit | vit_lora
+    "backend": "clip_binario",  # clip_binario | clip_7clases | lr_clip | lr_vit | vit_lora | dinov2_lora
     "modelo": MODELO_CLIP,
     "umbral": 0.5,
     "banda_incertidumbre": 0.0,
@@ -66,9 +67,17 @@ CONFIG_POR_DEFECTO = {
 
 
 # ---------------------------------------------------------------- configuración
+def ruta_config_activa():
+    """ver_config.json, o ver_config_<nombre>.json si la variable TRIAGE_VER=<nombre> está puesta
+    (por ejemplo TRIAGE_VER=c0 para volver al modelo de M4)."""
+    import os
+    nombre = os.environ.get("TRIAGE_VER", "").strip()
+    return AQUI / f"ver_config_{nombre}.json" if nombre else RUTA_CONFIG
+
+
 def cargar_config(ruta=None):
     cfg = copy.deepcopy(CONFIG_POR_DEFECTO)
-    ruta = Path(ruta) if ruta else RUTA_CONFIG
+    ruta = Path(ruta) if ruta else ruta_config_activa()
     if ruta.exists():
         guardada = json.loads(ruta.read_text(encoding="utf-8"))
         for clave, valor in guardada.items():
@@ -308,6 +317,40 @@ class ViTLoRA:
         return np.concatenate(salida) if salida else np.zeros(0)
 
 
+class DINOv2LoRA:
+    """DINOv2-base con adaptador LoRA (F2, experimentos/ronda2). Entrada 224x224 bilineal con la
+    normalización de ImageNet, igual que en el entrenamiento."""
+
+    MEDIA = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+    STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+
+    def __init__(self, base, ruta_adaptador, dispositivo=None):
+        import torch
+        from peft import PeftModel
+        from transformers import AutoModelForImageClassification
+
+        self._torch = torch
+        self.dispositivo = _dispositivo(torch, dispositivo)
+        modelo = AutoModelForImageClassification.from_pretrained(base, num_labels=2)
+        self.modelo = PeftModel.from_pretrained(modelo, str(ruta_adaptador)).to(self.dispositivo).eval()
+
+    def _preprocesar(self, img):
+        from PIL import Image
+
+        r = img.resize((224, 224), Image.Resampling.BILINEAR)
+        x = (np.asarray(r, dtype=np.float32) / 255.0 - self.MEDIA) / self.STD
+        return x.transpose(2, 0, 1)
+
+    def puntuar(self, imagenes, tam_lote=32):
+        torch, salida = self._torch, []
+        for i in range(0, len(imagenes), tam_lote):
+            lote = np.stack([self._preprocesar(im) for im in imagenes[i:i + tam_lote]])
+            with torch.no_grad():
+                logits = self.modelo(pixel_values=torch.from_numpy(lote).to(self.dispositivo)).logits
+                salida.append(torch.softmax(logits.float(), dim=-1)[:, 1].cpu().numpy())
+        return np.concatenate(salida) if salida else np.zeros(0)
+
+
 def construir_clasificador(cfg, dispositivo=None):
     backend, modelo = cfg["backend"], cfg["modelo"]
     pesos = (AQUI / cfg["pesos"]) if cfg.get("pesos") else None
@@ -319,6 +362,8 @@ def construir_clasificador(cfg, dispositivo=None):
         return RegresionLogistica(ExtractorViT(modelo, dispositivo), pesos)
     if backend == "vit_lora":
         return ViTLoRA(modelo, pesos, dispositivo)
+    if backend == "dinov2_lora":
+        return DINOv2LoRA(modelo, pesos, dispositivo)
     raise ValueError(f"backend desconocido: {backend}")
 
 

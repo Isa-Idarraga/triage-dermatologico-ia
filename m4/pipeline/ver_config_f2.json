@@ -1,0 +1,21 @@
+{
+  "backend": "dinov2_lora",
+  "modelo": "facebook/dinov2-base",
+  "umbral": 0.733071,
+  "banda_incertidumbre": 0.0,
+  "pesos": "ver_f2",
+  "calidad": {
+    "lado_minimo": 64,
+    "desviacion_minima": 8.0,
+    "nitidez_minima": 11.332866191864014
+  },
+  "calibracion": {
+    "regla": "umbral más alto con recall de urgentes >= 0,85 en MILK10k validación, fotos clínicas (experimentos/ronda2)",
+    "recall_val": 0.8508,
+    "especificidad_val": 0.7932,
+    "n_validacion": 780,
+    "semilla": 42,
+    "hardware": "Tesla T4",
+    "entrenamiento": "HAM10000 + PAD-UFES-20 + MILK10k entrenamiento; melanoma x3; variación de brillo y color; LoRA r 8, alpha 16, 4 épocas"
+  }
+}
