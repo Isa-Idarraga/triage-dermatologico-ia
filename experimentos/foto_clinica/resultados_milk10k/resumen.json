@@ -1,0 +1,384 @@
+{
+  "segundos": 1023,
+  "auc_pad_validacion": {
+    "C1": 0.9532,
+    "C2": 0.9624
+  },
+  "elegido": "C1",
+  "umbrales": {
+    "C0": 0.5310078860115258,
+    "C1": 0.8901702761650085,
+    "C2": 0.9794939756393433
+  },
+  "T1_auc_elegido": 0.7958,
+  "milk10k": {
+    "clinical: close-up": {
+      "n": 5240,
+      "quitados_por_duplicado": 0,
+      "C0": {
+        "todas": {
+          "n": 5240,
+          "n_urgentes": 3757,
+          "n_no_urgentes": 1483,
+          "auc": 0.6602,
+          "recall_urgente": 0.4086,
+          "recall_ic95": [
+            0.393,
+            0.4244
+          ],
+          "especificidad": 0.7869,
+          "especificidad_ic95": [
+            0.7653,
+            0.807
+          ],
+          "detectados": "1535/3757",
+          "falsas_alarmas": "316/1483"
+        },
+        "oscura_0_1": {
+          "n": 111,
+          "n_urgentes": 57,
+          "n_no_urgentes": 54,
+          "auc": 0.6738,
+          "recall_urgente": 0.1754,
+          "recall_ic95": [
+            0.0982,
+            0.2937
+          ],
+          "especificidad": 0.9074,
+          "especificidad_ic95": [
+            0.8009,
+            0.9598
+          ],
+          "detectados": "10/57",
+          "falsas_alarmas": "5/54"
+        },
+        "clara_4_5": {
+          "n": 1449,
+          "n_urgentes": 1046,
+          "n_no_urgentes": 403,
+          "auc": 0.6612,
+          "recall_urgente": 0.4474,
+          "recall_ic95": [
+            0.4175,
+            0.4777
+          ],
+          "especificidad": 0.7841,
+          "especificidad_ic95": [
+            0.7414,
+            0.8215
+          ],
+          "detectados": "468/1046",
+          "falsas_alarmas": "87/403"
+        },
+        "recall_melanoma": 0.2289,
+        "recall_basocelular": 0.3735,
+        "recall_urgentes_sin_basocelular": 0.4802
+      },
+      "C1": {
+        "todas": {
+          "n": 5240,
+          "n_urgentes": 3757,
+          "n_no_urgentes": 1483,
+          "auc": 0.7908,
+          "recall_urgente": 0.7482,
+          "recall_ic95": [
+            0.7341,
+            0.7618
+          ],
+          "especificidad": 0.704,
+          "especificidad_ic95": [
+            0.6802,
+            0.7267
+          ],
+          "detectados": "2811/3757",
+          "falsas_alarmas": "439/1483"
+        },
+        "oscura_0_1": {
+          "n": 111,
+          "n_urgentes": 57,
+          "n_no_urgentes": 54,
+          "auc": 0.7687,
+          "recall_urgente": 0.2807,
+          "recall_ic95": [
+            0.1808,
+            0.4083
+          ],
+          "especificidad": 0.9074,
+          "especificidad_ic95": [
+            0.8009,
+            0.9598
+          ],
+          "detectados": "16/57",
+          "falsas_alarmas": "5/54"
+        },
+        "clara_4_5": {
+          "n": 1449,
+          "n_urgentes": 1046,
+          "n_no_urgentes": 403,
+          "auc": 0.8098,
+          "recall_urgente": 0.7553,
+          "recall_ic95": [
+            0.7283,
+            0.7803
+          ],
+          "especificidad": 0.727,
+          "especificidad_ic95": [
+            0.6816,
+            0.7682
+          ],
+          "detectados": "790/1046",
+          "falsas_alarmas": "110/403"
+        },
+        "recall_melanoma": 0.2067,
+        "recall_basocelular": 0.8077,
+        "recall_urgentes_sin_basocelular": 0.6267
+      },
+      "C2": {
+        "todas": {
+          "n": 5240,
+          "n_urgentes": 3757,
+          "n_no_urgentes": 1483,
+          "auc": 0.8316,
+          "recall_urgente": 0.7171,
+          "recall_ic95": [
+            0.7024,
+            0.7312
+          ],
+          "especificidad": 0.8024,
+          "especificidad_ic95": [
+            0.7814,
+            0.8219
+          ],
+          "detectados": "2694/3757",
+          "falsas_alarmas": "293/1483"
+        },
+        "oscura_0_1": {
+          "n": 111,
+          "n_urgentes": 57,
+          "n_no_urgentes": 54,
+          "auc": 0.7904,
+          "recall_urgente": 0.2456,
+          "recall_ic95": [
+            0.1523,
+            0.371
+          ],
+          "especificidad": 0.9815,
+          "especificidad_ic95": [
+            0.9023,
+            0.9967
+          ],
+          "detectados": "14/57",
+          "falsas_alarmas": "1/54"
+        },
+        "clara_4_5": {
+          "n": 1449,
+          "n_urgentes": 1046,
+          "n_no_urgentes": 403,
+          "auc": 0.8537,
+          "recall_urgente": 0.7122,
+          "recall_ic95": [
+            0.6841,
+            0.7389
+          ],
+          "especificidad": 0.8263,
+          "especificidad_ic95": [
+            0.7863,
+            0.8602
+          ],
+          "detectados": "745/1046",
+          "falsas_alarmas": "70/403"
+        },
+        "recall_melanoma": 0.14,
+        "recall_basocelular": 0.8144,
+        "recall_urgentes_sin_basocelular": 0.5182
+      }
+    },
+    "dermoscopic": {
+      "n": 5210,
+      "quitados_por_duplicado": 30,
+      "C0": {
+        "todas": {
+          "n": 5210,
+          "n_urgentes": 3735,
+          "n_no_urgentes": 1475,
+          "auc": 0.7337,
+          "recall_urgente": 0.6153,
+          "recall_ic95": [
+            0.5995,
+            0.6307
+          ],
+          "especificidad": 0.7275,
+          "especificidad_ic95": [
+            0.7042,
+            0.7496
+          ],
+          "detectados": "2298/3735",
+          "falsas_alarmas": "402/1475"
+        },
+        "oscura_0_1": {
+          "n": 110,
+          "n_urgentes": 56,
+          "n_no_urgentes": 54,
+          "auc": 0.8089,
+          "recall_urgente": 0.6964,
+          "recall_ic95": [
+            0.5666,
+            0.801
+          ],
+          "especificidad": 0.7593,
+          "especificidad_ic95": [
+            0.6305,
+            0.8536
+          ],
+          "detectados": "39/56",
+          "falsas_alarmas": "13/54"
+        },
+        "clara_4_5": {
+          "n": 1445,
+          "n_urgentes": 1042,
+          "n_no_urgentes": 403,
+          "auc": 0.7325,
+          "recall_urgente": 0.5864,
+          "recall_ic95": [
+            0.5562,
+            0.6159
+          ],
+          "especificidad": 0.7568,
+          "especificidad_ic95": [
+            0.7126,
+            0.7962
+          ],
+          "detectados": "611/1042",
+          "falsas_alarmas": "98/403"
+        },
+        "recall_melanoma": 0.5963,
+        "recall_basocelular": 0.611,
+        "recall_urgentes_sin_basocelular": 0.6242
+      },
+      "C1": {
+        "todas": {
+          "n": 5210,
+          "n_urgentes": 3735,
+          "n_no_urgentes": 1475,
+          "auc": 0.7813,
+          "recall_urgente": 0.4552,
+          "recall_ic95": [
+            0.4392,
+            0.4712
+          ],
+          "especificidad": 0.8651,
+          "especificidad_ic95": [
+            0.8467,
+            0.8816
+          ],
+          "detectados": "1700/3735",
+          "falsas_alarmas": "199/1475"
+        },
+        "oscura_0_1": {
+          "n": 110,
+          "n_urgentes": 56,
+          "n_no_urgentes": 54,
+          "auc": 0.8009,
+          "recall_urgente": 0.375,
+          "recall_ic95": [
+            0.2601,
+            0.5059
+          ],
+          "especificidad": 0.9074,
+          "especificidad_ic95": [
+            0.8009,
+            0.9598
+          ],
+          "detectados": "21/56",
+          "falsas_alarmas": "5/54"
+        },
+        "clara_4_5": {
+          "n": 1445,
+          "n_urgentes": 1042,
+          "n_no_urgentes": 403,
+          "auc": 0.7942,
+          "recall_urgente": 0.4559,
+          "recall_ic95": [
+            0.4258,
+            0.4862
+          ],
+          "especificidad": 0.9032,
+          "especificidad_ic95": [
+            0.8704,
+            0.9284
+          ],
+          "detectados": "475/1042",
+          "falsas_alarmas": "39/403"
+        },
+        "recall_melanoma": 0.2251,
+        "recall_basocelular": 0.472,
+        "recall_urgentes_sin_basocelular": 0.4202
+      },
+      "C2": {
+        "todas": {
+          "n": 5210,
+          "n_urgentes": 3735,
+          "n_no_urgentes": 1475,
+          "auc": 0.7911,
+          "recall_urgente": 0.2305,
+          "recall_ic95": [
+            0.2173,
+            0.2443
+          ],
+          "especificidad": 0.9478,
+          "especificidad_ic95": [
+            0.9352,
+            0.958
+          ],
+          "detectados": "861/3735",
+          "falsas_alarmas": "77/1475"
+        },
+        "oscura_0_1": {
+          "n": 110,
+          "n_urgentes": 56,
+          "n_no_urgentes": 54,
+          "auc": 0.8194,
+          "recall_urgente": 0.2321,
+          "recall_ic95": [
+            0.141,
+            0.3577
+          ],
+          "especificidad": 0.9815,
+          "especificidad_ic95": [
+            0.9023,
+            0.9967
+          ],
+          "detectados": "13/56",
+          "falsas_alarmas": "1/54"
+        },
+        "clara_4_5": {
+          "n": 1445,
+          "n_urgentes": 1042,
+          "n_no_urgentes": 403,
+          "auc": 0.8129,
+          "recall_urgente": 0.2351,
+          "recall_ic95": [
+            0.2104,
+            0.2618
+          ],
+          "especificidad": 0.9653,
+          "especificidad_ic95": [
+            0.9425,
+            0.9792
+          ],
+          "detectados": "245/1042",
+          "falsas_alarmas": "14/403"
+        },
+        "recall_melanoma": 0.0626,
+        "recall_basocelular": 0.258,
+        "recall_urgentes_sin_basocelular": 0.1735
+      }
+    }
+  },
+  "reglas": {
+    "1_recall_mas_0_15_y_esp_0_50": true,
+    "2_brecha_oscura_vs_clara_0_15": false,
+    "3_T1_auc_0_765": true
+  },
+  "veredicto": "no se adopta"
+}
