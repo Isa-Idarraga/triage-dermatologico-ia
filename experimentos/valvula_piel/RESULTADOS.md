@@ -52,3 +52,19 @@ personas y el gris liso.
 Dermatoscopias de piel oscura para entrenar que no sean las de la prueba, y otra prueba nueva
 para medir. MSKCC es la única fuente con fototipo que tenemos, y ya es prueba; habría que
 partirla por paciente en una ronda nueva, con su propia regla escrita antes de correr.
+
+## Decisión: se usa solo como aviso (tomada después de ver los resultados)
+
+V4 no pasó la regla para **bloquear** fotos, y no bloquea. Se adopta como **aviso**: si la
+válvula dice que la foto no parece piel, la tarjeta lo advierte («revise que sea una foto de la
+lesión»), pero la foto se analiza y vota igual que antes. Así:
+
+- Una hoja de papel o un objeto ya no pasa en silencio.
+- Si la válvula se equivoca con una piel oscura, el costo es un aviso de más; el paciente no pierde
+  la señal de la foto. Bloquear le habría quitado esa señal a 1 de cada 10 dermatoscopias de piel
+  oscura (frente a 1 de cada 100 de piel clara).
+- Los veredictos no cambian, porque la válvula no toca la clase ni el score.
+
+Integración: `ver_config.json` → `"valvula_piel": {"pesos": "valvula_v4.npz", "modo": "aviso"}`;
+`ver()` agrega `parece_piel` y `score_piel`; la app muestra el aviso. Sin el archivo de pesos, la
+válvula no se activa y todo funciona como antes.

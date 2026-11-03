@@ -176,6 +176,12 @@ def _bloque_evidencia(resultado, hay_foto):
     return f"### Evidencia de las guías\n{det.get('respuesta', '')}\n\n**Fuentes:** {fuentes}{nota}"
 
 
+def _texto_piel(ver):
+    if ver.get("parece_piel") is None:
+        return "n/d"
+    return f"{'parece piel' if ver['parece_piel'] else 'NO parece piel'} (score {ver.get('score_piel')})"
+
+
 def _bloque_detalle_tecnico(resultado, interpretacion, latencia):
     """Para quien quiera auditar: nombres de herramientas, scores exactos (sin
     redondear) y ruta de cierre. Todo sale de resultado/interpretacion, nada
@@ -192,6 +198,7 @@ def _bloque_detalle_tecnico(resultado, interpretacion, latencia):
         f"**Señal por herramienta:** {señales_txt}\n\n"
         f"**Score exacto de la foto (ver_imagen):** {score_ver if score_ver is not None else 'n/d'}\n\n"
         f"**Confianza exacta de BETO:** {confianza_beto if confianza_beto is not None else 'n/d'}\n\n"
+        f"**Válvula de piel (solo aviso):** {_texto_piel(ver)}\n\n"
         f"**Ruta de cierre:** {interpretacion['ruta_cierre'] or 'n/d'}\n\n"
         f"**Latencia de esta consulta:** {latencia} s"
     )
@@ -455,10 +462,14 @@ def _criterio_foto(d, hay_foto):
         detalle = f"La clasificó como {_palabra(etq)}."
     alcance = ("Detecta cerca del 71 % de los casos urgentes en fotos clínicas, así que una"
                if cfg["backend"] == "dinov2_lora" else "Una")
-    cuerpo = (f"<p>La analizó {modelo}. {detalle}</p>"
+    aviso_piel = ""
+    if d.get("parece_piel") is False:
+        aviso_piel = ('<p class="aviso">Esta foto no parece mostrar piel. Revise que sea una foto de la '
+                      'lesión: si no lo es, ignore lo que dice la foto.</p>')
+    cuerpo = (aviso_piel + f"<p>La analizó {modelo}. {detalle}</p>"
               f"<p class=\"nota\">El modelo no describe la lesión: da un valor de 0 a 1. {alcance}"
               " foto «no urgente» no descarta nada.</p>")
-    return _item_criterio("Foto", etq, cuerpo)
+    return _item_criterio("Foto", etq, cuerpo, aviso=d.get("parece_piel") is False)
 
 
 def _criterio_guias(d, hay_foto):
@@ -1041,7 +1052,10 @@ _HTML_COMO_FUNCIONA = """
     explica qué palabras pesaron.</li>
     <li><strong>Foto:</strong> un modelo de imagen (DINOv2 con ajuste LoRA) entrenado con dermatoscopias y fotos
     clínicas. Da un valor de 0 a 1; desde 0,73 la marca urgente. Antes revisa si la foto se puede leer
-    (tamaño y nitidez). Si no, la foto no vota.</li>
+    (tamaño y nitidez); si no, la foto no vota. También avisa cuando la foto no parece mostrar piel
+    (por ejemplo, un papel o un objeto). Ese aviso solo advierte, no descarta la foto: en las pruebas
+    se equivocó más con dermatoscopias de piel oscura (1 de cada 10) que de piel clara (1 de cada 100),
+    y descartarla le quitaría la señal de la foto justo a esos pacientes.</li>
     <li><strong>Guías clínicas:</strong> busca en 13 documentos con fuente (del Instituto Nacional del Cáncer
     de EE. UU., los CDC y una revista colombiana de dermatología, entre otros) y redacta una justificación citando los documentos que usó. Esa evidencia es
     texto de las guías, no una descripción de la foto.</li>
@@ -1079,8 +1093,8 @@ _HTML_TERMINOS = f"""
   diagnostica, no reemplaza la valoración de un profesional de la salud y no emite órdenes médicas.</p>
   <h3>4. Limitaciones conocidas</h3>
   <p>Se equivoca en los dos sentidos: deja pasar casos urgentes (detecta cerca del 70 % en nuestras pruebas) y
-  refiere lesiones benignas. Fue evaluada con pocos casos de piel oscura. La foto no detecta si la imagen no es
-  de piel. Las cifras están en «Cómo funciona» y en el repositorio.</p>
+  refiere lesiones benignas. Fue evaluada con pocos casos de piel oscura. Cuando la foto no parece piel, solo lo
+  avisa: no la descarta, y ese aviso se equivoca más con dermatoscopias de piel oscura. Las cifras están en «Cómo funciona» y en el repositorio.</p>
   <h3>5. Responsabilidad</h3>
   <p>La herramienta se ofrece tal como está, sin garantías. Cualquier decisión clínica es de quien la toma. Si
   usted es profesional de la salud, siga los protocolos de su institución.</p>

@@ -60,9 +60,14 @@ def _respuesta_ejemplo(pregunta, imagen=None):
         elif "img_02" in nombre:
             det["ver_imagen"] = {"herramienta": "ver_imagen", "etiqueta": "no_urgente", "score": 0.2795,
                                  "no_evaluable": False, "motivo_no_evaluable": None}
-        else:
+        elif "img_07" in nombre:  # hoja de papel: la válvula de piel avisa
             det["ver_imagen"] = {"herramienta": "ver_imagen", "etiqueta": "urgente", "score": 0.8357,
-                                 "no_evaluable": False, "motivo_no_evaluable": None}
+                                 "no_evaluable": False, "motivo_no_evaluable": None,
+                                 "parece_piel": False, "score_piel": 0.12}
+        else:
+            det["ver_imagen"] = {"herramienta": "ver_imagen", "etiqueta": "urgente", "score": 0.9978,
+                                 "no_evaluable": False, "motivo_no_evaluable": None,
+                                 "parece_piel": True, "score_piel": 0.99}
     return {"respuesta": "", "contexto": [], "fuentes": [], "tools_usadas": list(det),
             "detalle_tools": det, "pasos_debug": [{"cierre": "sintesis_por_repeticion"}]}
 
