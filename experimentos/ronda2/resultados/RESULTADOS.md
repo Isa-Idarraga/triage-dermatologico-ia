@@ -45,8 +45,10 @@ Elegido: **F2** (DINOv2 + LoRA), con especificidad 0,793 en validación (E3: 0,7
 ## Qué significa
 
 - **F2 es el mejor modelo hasta ahora, y es parejo:** no compra el melanoma soltando otros
-  cánceres, ni marca los lunares como urgentes (7 de 53). Mejora en todo frente a `ver()`
-  actual: foto clínica, dermatoscopia y piel oscura.
+  cánceres, ni marca los lunares como urgentes (7 de 53). Frente a `ver()` actual mejora en foto
+  clínica, piel oscura y AUC de dermatoscopia. **Excepción** (anotada después): con su umbral,
+  en las dermatoscopias de HAM10000 con biopsia detecta menos (recall 0,55 contra 0,73) a
+  cambio de más especificidad (0,89 contra 0,68).
 - **Por primera vez se cumple la brecha de piel oscura** (0,14, límite 0,15). Con 57 casos el
   margen de error es amplio, así que es un resultado frágil.
 - **En un hospital nuevo, el umbral queda corto.** Con el umbral elegido en MILK10k, F2 detecta

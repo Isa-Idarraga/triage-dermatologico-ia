@@ -28,12 +28,21 @@ Los veredictos finales no cambiaron. Cambiaron los scores de `ver()`:
 
 | Caso | Esperado | Score C0 | Score F2 | Etiqueta de `ver()` (C0 → F2) |
 |---|---|---|---|---|
+| img_01 (melanoma, dermatoscopia) | urgente | 0,915 | 0,608 | **urgente → no urgente** |
 | img_02 | no urgente | 0,142 | 0,280 | no urgente → no urgente |
 | img_03 (ISIC_0024876) | no urgente | 0,157 | 0,174 | no urgente → no urgente |
+| img_04 (melanoma, dermatoscopia) | urgente | 0,676 | 0,128 | **urgente → no urgente** |
 | img_05 (melanoma) | urgente | 0,255 | 0,257 | no urgente → no urgente |
 | img_07 (hoja de papel) | no evaluable | 0,497 | 0,836 | no urgente → **urgente** |
 | img_09 | no urgente | 0,009 | 0,130 | no urgente → no urgente |
+| img_10 (escamocelular, foto clínica, fototipo V) | urgente | 0,813 | 0,998 | urgente → urgente |
 
+- **`ver()` deja de marcar dos melanomas en dermatoscopia (img_01 e img_04).** El veredicto
+  final no cambia porque BETO dice urgente en los dos, pero la foto ya no los respalda. Coincide
+  con la ronda 2: con su umbral, F2 detecta el 55 % de los urgentes en dermatoscopias de
+  HAM10000, frente al 73 % de C0. La regla de no regresión no lo atrapó porque medía el
+  veredicto final, no la señal de la foto. Contando solo `ver()` en los 4 urgentes con score de
+  la foto (img_08 no tiene), C0 marca 3 (img_01, img_04, img_10) y F2 marca 1 (img_10).
 - **img_05 sigue sin detectarse.** Es el melanoma con el texto que lo minimiza, el peor caso
   del proyecto. F2 tampoco lo marca.
 - **img_07 (papel) ahora sale urgente en `ver()`.** El veredicto final ya era urgente por BETO.

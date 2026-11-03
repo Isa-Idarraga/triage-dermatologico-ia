@@ -111,11 +111,16 @@ ningún modelo vio.
 | Melanoma en HIBA (n=59) | 8 | 25 |
 | Carcinoma basocelular en HIBA (n=112) | 19 | 94 |
 | Piel oscura, MILK10k: urgentes detectados (n=57) | 10 | 38 (piel clara: 0,81) |
-| Dermatoscopias de HIBA: AUC | 0,842 | 0,937 |
+| Dermatoscopias de HIBA: AUC / recall | 0,842 / 0,57 | 0,937 / 0,70 |
+| Dermatoscopias de HAM10000 con biopsia (n=1055): AUC / recall / especificidad | 0,795 / 0,73 / 0,68 | 0,836 / **0,55** / 0,89 |
 
 **F2 no cumple las metas clínicas** que fijamos antes de correr (recall ≥ 0,80 y melanoma ≥
 0,60 en HIBA), y por esa regla no se adoptaba. **Lo adoptamos por una decisión tomada después de
-ver los resultados, y así lo declaramos:** C0 es peor en todo lo que el producto promete. Antes
+ver los resultados, y así lo declaramos:** en foto clínica, que es lo que el producto promete,
+C0 detecta muy poco. **Lo que se pierde:** en las dermatoscopias de HAM10000, F2 con su umbral
+detecta menos que C0 (0,55 contra 0,73). En los casos con foto del harness, img_01 e img_04
+(melanomas en dermatoscopia) pasan de urgente a no urgente en `ver()`; el veredicto final sigue
+siendo urgente porque BETO los marca. Antes
 de cambiarlo escribimos una regla de no regresión del sistema completo y F2 la pasó 5 de 5: mismo
 D1 y recall en los 37 casos, mismos exactos con foto, misma válvula, y latencia p50 con foto de
 14,72 s frente a 14,46 s ([resultados](experimentos/integracion_f2/RESULTADOS.md)).

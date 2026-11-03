@@ -8,9 +8,15 @@ regla no se adoptaba.
 
 Pero la versión de M4 que está hoy en `ver()` (C0) es mucho peor en lo que el producto promete,
 que es leer la foto que toma una enfermera. En las fotos clínicas de un hospital que ningún
-modelo vio (HIBA), C0 detecta el 16 % de los urgentes y F2 el 71 %. F2 es mejor que C0 en todo
-lo medido (urgentes, melanoma, basocelular, escamocelular, piel oscura, dermatoscopia y HAM10000)
-y solo pierde especificidad (0,87 frente a 0,96).
+modelo vio (HIBA), C0 detecta el 16 % de los urgentes y F2 el 71 %. En foto clínica F2 es
+mejor en urgentes, melanoma, basocelular, escamocelular y piel oscura, y pierde especificidad
+(0,87 frente a 0,96). En AUC también es mejor en dermatoscopia.
+
+**Corrección (después de la corrida):** con su umbral, F2 es menos sensible que C0 en las
+dermatoscopias de HAM10000 con biopsia: recall 0,55 frente a 0,73, con especificidad 0,89 frente
+a 0,68 (ronda 2, `T1_ham_biopsia` en `resumen.json`). El umbral se eligió con fotos clínicas y
+en dermatoscopia de HAM queda alto. En las dermatoscopias de HIBA, en cambio, F2 detecta más
+(0,70 frente a 0,57). Al escribir esta regla dijimos «mejor en todo», y no era cierto.
 
 **Decisión, tomada después de ver los resultados y declarada como tal:** reemplazar C0 por F2
 en `ver()`, si el sistema completo no empeora en nada de lo que ya medíamos. Ninguno de los dos
