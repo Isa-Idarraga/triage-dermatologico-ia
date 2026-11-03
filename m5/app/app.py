@@ -307,18 +307,24 @@ def _decision_clinica(interpretacion):
             f"Ninguna señal indicó urgencia: {_lista_humana(no_urg)} dijeron no urgente.")
 
 
-def _html_senales(señales):
-    """Una marca por señal, con el color de lo que dijo ESA señal (verde = no
-    urgente, rojo = urgente) y la palabra escrita, no solo el color."""
-    if not señales:
-        return ""
-    marcas = "".join(
-        f'<li class="senal senal-{"urgente" if señales[n] == "urgente" else "rutina"}">'
-        f'<span class="senal-punto" aria-hidden="true"></span>'
-        f'{html.escape(_ETIQUETA_SEÑAL.get(n, n))}: <strong>{_palabra(señales[n])}</strong></li>'
-        for n in _ORDEN_SEÑALES if n in señales
-    )
-    return f'<ul class="senales" aria-label="Qué indicó cada señal">{marcas}</ul>'
+def _html_senales(señales, det=None, hay_foto=False):
+    """Franja de tres tramos (texto, foto, guías). Cada tramo lleva el color de lo que dijo ESA
+    señal y la palabra escrita; si una señal no respondió, el tramo queda vacío y lo dice."""
+    det = det or {}
+    tramos = []
+    for n in _ORDEN_SEÑALES:
+        v = señales.get(n)
+        if v in ("urgente", "no_urgente"):
+            clase, valor = ("urgente" if v == "urgente" else "rutina"), _mayuscula(_palabra(v))
+        elif n == "ver_imagen" and not hay_foto:
+            clase, valor = "vacio", "Sin foto"
+        elif n == "ver_imagen" and (det.get(n) or {}).get("no_evaluable"):
+            clase, valor = "vacio", "No evaluable"
+        else:
+            clase, valor = "vacio", "Sin respuesta"
+        tramos.append(f'<li class="tramo tramo-{clase}"><span class="tramo-nombre">'
+                      f'{html.escape(_ETIQUETA_SEÑAL[n])}</span><span class="tramo-valor">{valor}</span></li>')
+    return f'<ul class="franja" aria-label="Qué indicó cada señal">{"".join(tramos)}</ul>'
 
 
 # --- Datos de apoyo para explicar cada señal ---------------------------------
@@ -524,9 +530,9 @@ def _html_resultado(resultado, interpretacion, hay_foto, sintoma=""):
     items = "".join(f() for _, f in criterios)
     return f"""
 <section class="resultado" aria-live="polite">
-  <div class="decision tono-{tono}">
+  <div class="veredicto tono-{tono}">
     <h2>{html.escape(titulo)}</h2>
-    {_html_senales(señales)}
+    {_html_senales(señales, det, hay_foto)}
     <p class="por-que">{html.escape(por_que)}</p>
   </div>
   <div class="bloque">
@@ -545,12 +551,17 @@ def _html_resultado(resultado, interpretacion, hay_foto, sintoma=""):
 </section>"""
 
 
-def _html_vacio(mensaje="Escriba el síntoma, adjunte la foto si la tiene y pulse Consultar. "
-                        "La sugerencia aparece aquí."):
+def _html_vacio(mensaje="Describa la lesión, adjunte la foto si la tiene y pulse «Consultar». "
+                        "Aquí verá la prioridad sugerida y qué dijo cada señal."):
     return f"""
 <section class="resultado resultado-vacio">
-  <h2>Resultado</h2>
+  <h2>Aún no hay un caso</h2>
   <p>{html.escape(mensaje)}</p>
+  <ul class="franja franja-muestra" aria-hidden="true">
+    <li class="tramo tramo-vacio"><span class="tramo-nombre">Texto del síntoma</span><span class="tramo-valor">—</span></li>
+    <li class="tramo tramo-vacio"><span class="tramo-nombre">Foto</span><span class="tramo-valor">—</span></li>
+    <li class="tramo tramo-vacio"><span class="tramo-nombre">Guías clínicas</span><span class="tramo-valor">—</span></li>
+  </ul>
 </section>"""
 
 
@@ -558,20 +569,20 @@ def _html_vacio(mensaje="Escriba el síntoma, adjunte la foto si la tiene y puls
 # el layout no salta cuando llega la respuesta.
 _HTML_CARGANDO = """
 <section class="resultado resultado-cargando" aria-busy="true">
-  <div class="decision">
-    <p class="cargando-texto">Analizando el caso…</p>
-    <span class="barra barra-titulo"></span>
-    <span class="barra"></span>
-    <span class="barra barra-corta"></span>
+  <div class="veredicto">
+    <p class="cargando-texto">Analizando el caso: texto, foto y guías clínicas…</p>
+    <span class="hueso hueso-titulo"></span>
+    <span class="hueso hueso-franja"></span>
+    <span class="hueso hueso-corto"></span>
   </div>
-  <div class="bloque"><h3>Por qué: qué dijo cada señal y con qué criterio</h3><span class="barra"></span><span class="barra"></span><span class="barra barra-corta"></span></div>
-  <div class="bloque"><h3>Signos de alarma que aparecen en el texto</h3><span class="barra barra-corta"></span></div>
+  <div class="bloque"><h3>Por qué: qué dijo cada señal y con qué criterio</h3><span class="hueso"></span><span class="hueso"></span><span class="hueso hueso-corto"></span></div>
+  <div class="bloque"><h3>Signos de alarma que aparecen en el texto</h3><span class="hueso hueso-corto"></span></div>
 </section>"""
 
 _HTML_ERROR = """
 <section class="resultado resultado-error" role="alert">
   <h2>No se pudo completar la consulta</h2>
-  <p>Hubo un error al analizar el caso. Intente de nuevo; si se repite, revise el estado del sistema al final de la página.</p>
+  <p>Hubo un error al analizar el caso. Intente de nuevo; si se repite, abra «Estado del sistema» al final de la página.</p>
 </section>"""
 
 
@@ -601,21 +612,26 @@ def _resumen_estado():
     return "\n\n".join(lineas)
 
 
-# Marca del producto: una lesión dibujada dentro de un recuadro, en vez de una
-# letra. Los colores salen de variables CSS para que se invierta en modo oscuro.
-_MARCA_SVG = (
-    '<svg class="logo" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">'
-    '<rect class="logo-fondo" width="36" height="36" rx="8"/>'
-    '<circle class="logo-trazo" cx="18" cy="18" r="10" fill="none" stroke-width="2"/>'
-    '<ellipse cx="19.5" cy="16.8" rx="4.2" ry="3.4" fill="#e9a48f"/>'
-    '</svg>'
-)
+# Marca del producto: el logo del equipo (m5/app/assets). Va incrustado como data URI para no
+# depender de cómo Gradio sirve archivos estáticos en Kaggle o en el Space.
+_ASSETS = os.path.join(_AQUI, "assets")
+FAVICON = os.path.join(_ASSETS, "favicon.png")
 
 
-# Interruptor claro/oscuro: lo maneja _JS_TEMA (un solo listener en document, así
-# sigue funcionando aunque el encabezado se vuelva a pintar en demo.load).
-# Control de dos opciones (Claro | Oscuro) con un fondo que se desliza bajo la
-# opción activa: dice para qué es y en qué modo se está.
+def _data_uri(nombre, mime):
+    import base64
+    try:
+        with open(os.path.join(_ASSETS, nombre), "rb") as f:
+            return f"data:{mime};base64," + base64.b64encode(f.read()).decode("ascii")
+    except OSError:
+        return ""
+
+
+_ICONO = _data_uri("icono.webp", "image/webp")
+_LOGO = _data_uri("logo.webp", "image/webp")
+
+
+# Interruptor claro/oscuro: dos opciones con texto e ícono; un fondo se desliza bajo la activa.
 _INTERRUPTOR_TEMA = (
     '<button type="button" class="interruptor-tema" aria-label="Cambiar a modo oscuro" aria-pressed="false" '
     'title="Cambiar entre modo claro y oscuro">'
@@ -632,8 +648,8 @@ _INTERRUPTOR_TEMA = (
     '</button>'
 )
 
-# Aplica la preferencia guardada (si no hay, Gradio ya siguió el modo del
-# dispositivo) y alterna la clase .dark de <body>, que es la que usa el tema.
+# Un solo listener en document (sigue funcionando aunque Gradio vuelva a pintar el HTML):
+# tema claro/oscuro, ventanas superpuestas (<dialog>) y el enlace «Inicio» del encabezado.
 _JS_TEMA = """
 () => {
   const sincronizar = () => {
@@ -644,37 +660,50 @@ _JS_TEMA = """
     });
   };
   let guardado = null;
-  try { guardado = localStorage.getItem('triage-tema'); } catch (e) {}
+  try { guardado = localStorage.getItem('triaje-tema'); } catch (e) {}
   if (guardado) document.body.classList.toggle('dark', guardado === 'oscuro');
   document.addEventListener('click', (e) => {
+    const abrir = e.target.closest('[data-abrir]');
+    if (abrir) {
+      const d = document.getElementById('dlg-' + abrir.dataset.abrir);
+      if (d && typeof d.showModal === 'function' && !d.open) { d.showModal(); d.querySelector('.ventana-cuerpo')?.scrollTo(0, 0); }
+      return;
+    }
+    const cerrar = e.target.closest('[data-cerrar]');
+    if (cerrar) { cerrar.closest('dialog')?.close(); return; }
+    if (e.target.tagName === 'DIALOG') { e.target.close(); return; }  // clic fuera del contenido
+    if (e.target.closest('[data-accion="inicio"]')) { document.querySelector('#btn-inicio')?.click(); return; }
     if (!e.target.closest('.interruptor-tema')) return;
     const oscuro = !document.body.classList.contains('dark');
     document.body.classList.toggle('dark', oscuro);
-    try { localStorage.setItem('triage-tema', oscuro ? 'oscuro' : 'claro'); } catch (e) {}
+    try { localStorage.setItem('triaje-tema', oscuro ? 'oscuro' : 'claro'); } catch (e) {}
     sincronizar();
   });
   new MutationObserver(sincronizar).observe(document.body, { childList: true, subtree: true });
   sincronizar();
-  // La entrada de los recuadros (.entrada) es solo al abrir la página: pasado
-  // ese momento se marca el body y nada más vuelve a "entrar" al re-pintarse.
-  setTimeout(() => document.body.classList.add('ya-cargo'), 900);
 }
 """
+
+_ENLACES_AYUDA = (
+    '<button type="button" class="enlace" data-abrir="como">Cómo funciona</button>'
+    '<button type="button" class="enlace" data-abrir="terminos">Términos de uso</button>'
+    '<button type="button" class="enlace" data-abrir="privacidad">Privacidad y datos</button>'
+)
 
 
 def _html_encabezado(estado=None):
     status = estado.get("status") if isinstance(estado, dict) else None
     texto = _ESTADO_LEGIBLE.get(status, "Comprobando estado")
     clase = {"ok": "estado-ok", "calentando": "estado-cargando", "error": "estado-error"}.get(status, "")
+    icono = f'<img class="icono" src="{_ICONO}" alt="" width="44" height="44">' if _ICONO else ""
     return f"""
-<header class="encabezado">
-  <div class="marca">
-    {_MARCA_SVG}
-    <div>
-      <h1>Triage dermatológico</h1>
-      <p>Herramienta de apoyo a la decisión para personal médico de triage. No diagnostica. · versión {html.escape(_version_tag())}</p>
-    </div>
-  </div>
+<header class="cabecera">
+  <button type="button" class="marca" data-accion="inicio" title="Volver a la página de inicio">
+    {icono}
+    <span class="marca-texto"><span class="nombre">Triaje dermatológico</span>
+    <span class="lema">Prototipo académico. No diagnostica.</span></span>
+  </button>
+  <nav class="enlaces" aria-label="Información de la herramienta">{_ENLACES_AYUDA}</nav>
   <div class="acciones">
     <p class="estado {clase}"><span class="punto" aria-hidden="true"></span>{html.escape(texto)}</p>
     {_INTERRUPTOR_TEMA}
@@ -690,7 +719,7 @@ def _iniciar_consulta():
 
 
 def _finalizar_consulta():
-    return gr.Button("3. Consultar", interactive=True)
+    return gr.Button("Consultar", interactive=True)
 
 
 def _consultar_evento(sintoma, foto):
@@ -713,25 +742,24 @@ def _consultar_evento(sintoma, foto):
     return _html_resultado(resultado, interpretacion, hay_foto, sintoma), detalle_md
 
 
-# Diseño: herramienta clínica de trabajo, no página de demo. Superficies planas
-# separadas por un borde de 1px (sin vidrio, sin degradados, sin sombras en
-# reposo); el color solo aparece en la decisión, que es lo único que significa
-# algo. Botón principal neutro (casi negro en claro, casi blanco en oscuro), para
-# que el rojo quede reservado a "urgente". Atkinson Hyperlegible: diseñada para
-# baja visión, legible con prisa. Sigue el modo claro/oscuro del sistema.
-_CLARO = {"fondo": "#f4f5f7", "superficie": "#ffffff", "borde": "#e3e6ea", "control": "#cfd4da",
-          "tinta": "#111418", "suave": "#4b535c", "hover": "#f1f3f5",
-          "primario": "#1d1f20", "primario_hover": "#33373b", "primario_texto": "#ffffff"}
-_OSCURO = {"fondo": "#0f1113", "superficie": "#181a1d", "borde": "#2c3035", "control": "#3d434a",
-           "tinta": "#f1f3f5", "suave": "#aab1b9", "hover": "#23272b",
-           "primario": "#f1f3f5", "primario_hover": "#d9dde1", "primario_texto": "#111418"}
+# Diseño: herramienta clínica con la identidad del logo del equipo. Fondo azul muy claro de
+# consultorio, superficies blancas, títulos en el marino del logo y el azul petróleo para enlaces
+# y foco. El verde de la hoja solo aparece en la marca; rojo, verde y ámbar quedan reservados al
+# veredicto. Títulos en Lexend (geométrica y gruesa, como la letra del logo); texto en Atkinson
+# Hyperlegible, diseñada para leerse con baja visión y con prisa. Sigue el modo del sistema.
+_CLARO = {"fondo": "#eef3f7", "superficie": "#ffffff", "borde": "#d9e2ea", "control": "#b8c6d3",
+          "tinta": "#132233", "suave": "#4a5b6c", "hover": "#e6edf3",
+          "primario": "#0f355e", "primario_hover": "#164a80", "primario_texto": "#ffffff"}
+_OSCURO = {"fondo": "#0b1624", "superficie": "#12223a", "borde": "#25384f", "control": "#3a5068",
+           "tinta": "#e8eef5", "suave": "#a7b6c6", "hover": "#1a2e48",
+           "primario": "#cfe3f5", "primario_hover": "#e3effa", "primario_texto": "#0b1624"}
 
 
 def _tema():
     c, o = _CLARO, _OSCURO
     return gr.themes.Base(
-        primary_hue="neutral",
-        neutral_hue="neutral",
+        primary_hue="blue",
+        neutral_hue="slate",
         font=[gr.themes.GoogleFont("Atkinson Hyperlegible"), "system-ui", "sans-serif"],
         radius_size="md",
     ).set(
@@ -741,7 +769,7 @@ def _tema():
         body_text_size="17px",
         block_background_fill=c["superficie"], block_background_fill_dark=o["superficie"],
         block_border_color=c["borde"], block_border_color_dark=o["borde"],
-        block_border_width="1px", block_radius="8px", block_shadow="none", block_shadow_dark="none",
+        block_border_width="1px", block_radius="12px", block_shadow="none", block_shadow_dark="none",
         block_label_background_fill=c["superficie"], block_label_background_fill_dark=o["superficie"],
         block_label_text_color=c["tinta"], block_label_text_color_dark=o["tinta"],
         block_label_text_size="16px", block_label_text_weight="700", block_label_border_width="0px",
@@ -750,8 +778,10 @@ def _tema():
         block_info_text_color=c["suave"], block_info_text_color_dark=o["suave"], block_info_text_size="15px",
         input_background_fill=c["superficie"], input_background_fill_dark=o["fondo"],
         input_border_color=c["control"], input_border_color_dark=o["control"],
-        input_border_color_focus=c["tinta"], input_border_color_focus_dark=o["tinta"],
-        input_radius="8px", input_text_size="17px", input_shadow="none", input_shadow_focus="none",
+        input_border_color_focus="#1c6e8c", input_border_color_focus_dark="#7cc3dd",
+        input_radius="10px", input_text_size="17px", input_shadow="none", input_shadow_focus="none",
+        checkbox_background_color_selected="#1c6e8c", checkbox_background_color_selected_dark="#7cc3dd",
+        checkbox_border_color_selected="#1c6e8c", checkbox_border_color_selected_dark="#7cc3dd",
         button_primary_background_fill=c["primario"], button_primary_background_fill_dark=o["primario"],
         button_primary_background_fill_hover=c["primario_hover"], button_primary_background_fill_hover_dark=o["primario_hover"],
         button_primary_text_color=c["primario_texto"], button_primary_text_color_dark=o["primario_texto"],
@@ -760,8 +790,8 @@ def _tema():
         button_secondary_background_fill_hover=c["hover"], button_secondary_background_fill_hover_dark=o["hover"],
         button_secondary_border_color=c["control"], button_secondary_border_color_dark=o["control"],
         button_secondary_text_color=c["tinta"], button_secondary_text_color_dark=o["tinta"],
-        button_large_radius="8px", button_large_text_size="17px", button_large_text_weight="700",
-        button_small_radius="8px",
+        button_large_radius="10px", button_large_text_size="17px", button_large_text_weight="700",
+        button_small_radius="10px",
         border_color_primary=c["borde"], border_color_primary_dark=o["borde"],
         color_accent_soft=c["hover"], color_accent_soft_dark=o["hover"],
         layout_gap="16px",
@@ -770,234 +800,233 @@ def _tema():
 
 _TEMA = _tema()
 
-# Colores propios de la tarjeta y el encabezado. Gradio marca el modo oscuro con
-# la clase .dark en <body>; las mismas variables cambian ahí. Cada par fondo/texto
-# de la decisión pasa 7:1 de contraste en los dos modos.
+# Colores propios. Gradio marca el modo oscuro con la clase .dark en <body>; las mismas variables
+# cambian ahí. Cada par fondo/texto del veredicto y de la franja pasa 4,5:1 de contraste.
 _CSS_COLORES = """
 :root {
-  --fondo: #f4f5f7; --superficie: #ffffff; --superficie-2: #f9fafb; --borde: #e3e6ea; --control: #cfd4da;
-  --tinta: #111418; --tinta-suave: #4b535c; --hover: #f1f3f5; --seleccion: #d7dde4; --barra: #e9ecef;
-  --primario: #1d1f20; --primario-hover: #33373b; --primario-texto: #ffffff;
-  --urg-fondo: #fdecea; --urg-tinta: #8a1c1c;
-  --rut-fondo: #e3f4e9; --rut-tinta: #0f4d2c;
-  --sin-fondo: #fff1cc; --sin-tinta: #7a3d00;
-  --ok: #1f7a48; --cargando: #b45309; --error: #c4242a;
-  --punto-urg: #c4242a; --punto-rut: #1f7a48;
+  --fondo: #eef3f7; --superficie: #ffffff; --superficie-2: #f6f9fb; --borde: #d9e2ea; --control: #b8c6d3;
+  --tinta: #132233; --tinta-suave: #4a5b6c; --hover: #e6edf3; --hueso: #e1e9f0;
+  --marino: #0f355e; --petroleo: #1c6e8c; --hoja: #4e9f68;
+  --primario: #0f355e; --primario-texto: #ffffff;
+  --urg: #a4262c; --urg-fondo: #fbe9ea; --urg-tinta: #7d1b20;
+  --rut: #1e6b48; --rut-fondo: #e3f2e9; --rut-tinta: #164f36;
+  --sin: #8a4b00; --sin-fondo: #fff2d6; --sin-tinta: #6b3a00;
+  --ok: #1e6b48; --cargando: #b45309; --error: #a4262c;
+  --cabecera: #0f355e; --cabecera-tinta: #ffffff; --cabecera-suave: #c4d6e8;
 }
 .dark {
-  --fondo: #0f1113; --superficie: #181a1d; --superficie-2: #1e2124; --borde: #2c3035; --control: #3d434a;
-  --tinta: #f1f3f5; --tinta-suave: #aab1b9; --hover: #23272b; --seleccion: #3a4048; --barra: #2a2e33;
-  --primario: #f1f3f5; --primario-hover: #d9dde1; --primario-texto: #111418;
-  --urg-fondo: #3b1a1a; --urg-tinta: #ffb4ab;
-  --rut-fondo: #13301f; --rut-tinta: #8fe0b0;
-  --sin-fondo: #3a2c0c; --sin-tinta: #ffd27a;
-  --ok: #4fc283; --cargando: #f0a54a; --error: #ff8a80;
-  --punto-urg: #ff8a80; --punto-rut: #4fc283;
+  --fondo: #0b1624; --superficie: #12223a; --superficie-2: #0f1d31; --borde: #25384f; --control: #3a5068;
+  --tinta: #e8eef5; --tinta-suave: #a7b6c6; --hover: #1a2e48; --hueso: #1d324c;
+  --marino: #cfe3f5; --petroleo: #7cc3dd; --hoja: #7cc28f;
+  --primario: #cfe3f5; --primario-texto: #0b1624;
+  --urg: #e0656b; --urg-fondo: #3a1a20; --urg-tinta: #ffc2c5;
+  --rut: #4fb987; --rut-fondo: #10301f; --rut-tinta: #b4ecd0;
+  --sin: #f0a54a; --sin-fondo: #3a2c0c; --sin-tinta: #ffd9a0;
+  --ok: #4fb987; --cargando: #f0a54a; --error: #e0656b;
+  --cabecera: #0a2440; --cabecera-tinta: #e8eef5; --cabecera-suave: #a7c0d8;
 }
 """
 
-_CSS_COMPARTIDO = """
+_CSS_BASE = """
 .gradio-container { max-width: 1240px !important; margin: 0 auto !important; }
-.gradio-container ::selection { background: var(--seleccion); }
-
-.encabezado { display: flex; align-items: center; justify-content: space-between; gap: 16px;
-              flex-wrap: wrap; padding: 4px 0 8px; }
-.encabezado .marca { display: flex; align-items: center; gap: 12px; }
-.encabezado h1 { font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; color: var(--tinta); }
-.encabezado .marca p { margin: 2px 0 0; font-size: 15px; color: var(--tinta-suave); }
-.logo { flex: none; }
-.logo-fondo { fill: var(--primario); }
-.logo-trazo { stroke: var(--primario-texto); }
-
-.resultado { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; overflow: hidden;
-             color: var(--tinta); }
-/* Al abrir la página (antes de body.ya-cargo): los recuadros entran una sola vez,
-   escalonados de arriba abajo, en menos de medio segundo en total. */
-body:not(.ya-cargo) .entrada { animation: entrar 420ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-body:not(.ya-cargo) .entrada-2 { animation-delay: 70ms; }
-body:not(.ya-cargo) .entrada-3 { animation-delay: 140ms; }
-body:not(.ya-cargo) .entrada-4 { animation-delay: 210ms; }
-/* Gradio repite elem_classes en el div interno: que no se anime dos veces. */
-body:not(.ya-cargo) .entrada .entrada { animation: none; }
-
-/* Cada resultado nuevo entra por secciones (decisión, foto, evidencia): se lee
-   en el orden en que importa. No depende de body.ya-cargo a propósito: si lo
-   hiciera, al añadirse esa clase la tarjeta ya visible volvería a animarse. */
-.resultado > * { animation: entrar 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-.resultado > *:nth-child(2) { animation-delay: 70ms; }
-.resultado > *:nth-child(3) { animation-delay: 140ms; }
-.resultado h2 { margin: 0; }
-.resultado p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--tinta); }
-.resultado .decision { padding: 24px; display: grid; gap: 10px; }
-.resultado .decision h2 { font-size: 30px; font-weight: 700; line-height: 1.18; letter-spacing: -0.01em; }
-.resultado .decision .apoyo { font-size: 15px; color: var(--tinta-suave); }
-.resultado .bloque { padding: 20px 24px; border-top: 1px solid var(--borde); display: grid; gap: 8px; }
-.resultado .bloque h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--tinta); }
-.resultado .bloque .fuentes, .resultado .bloque .nota { font-size: 15px; color: var(--tinta-suave); }
-.resultado .bloque .aviso { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 6px; padding: 10px 12px; }
-
-/* Marcas por señal: fondo neutro (para que se lean igual sobre cualquier tono
-   de la decisión), punto del color de lo que dijo esa señal y la palabra. */
-.senales { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.senal { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px;
-         background: var(--superficie); border: 1px solid var(--borde); font-size: 15px; color: var(--tinta);
-         white-space: nowrap; }
-.senal strong { font-weight: 700; }
-.senal-punto { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-.senal-urgente .senal-punto { background: var(--punto-urg); }
-.senal-rutina .senal-punto { background: var(--punto-rut); }
-
-.tono-urgente { background: var(--urg-fondo); }
-.tono-urgente h2 { color: var(--urg-tinta); }
-.tono-rutina { background: var(--rut-fondo); }
-.tono-rutina h2 { color: var(--rut-tinta); }
-.tono-sin-senal { background: var(--sin-fondo); }
-.tono-sin-senal h2 { color: var(--sin-tinta); }
-
-@keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
-
-.gradio-container .label-wrap span { font-size: 16px; font-weight: 700; color: var(--tinta); }
+.gradio-container h1, .gradio-container h2, .gradio-container h3, .cabecera .nombre {
+  font-family: 'Lexend', 'Atkinson Hyperlegible', system-ui, sans-serif; letter-spacing: -0.01em; }
 footer { display: none !important; }
+.oculto { display: none !important; }
+.gradio-container :focus-visible { outline: 3px solid var(--petroleo); outline-offset: 2px; }
 
-/* Interruptor claro/oscuro: dos opciones con texto e ícono; un fondo se
-   desliza bajo la activa. */
-.acciones { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+/* --- Cabecera: barra marino con el ícono del logo ------------------------------------- */
+.cabecera { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; padding: 12px 18px;
+            background: var(--cabecera); color: var(--cabecera-tinta); border-radius: 14px; }
+.cabecera .marca { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0;
+                   cursor: pointer; text-align: left; color: inherit; min-height: 0; }
+.cabecera .icono { width: 44px; height: 44px; border-radius: 50%; background: #fff; flex: none;
+                   box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+.cabecera .marca-texto { display: grid; gap: 1px; }
+.cabecera .nombre { font-size: 20px; font-weight: 700; line-height: 1.2; color: var(--cabecera-tinta); }
+.cabecera .lema { font-size: 14px; color: var(--cabecera-suave); }
+.cabecera .enlaces { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.cabecera .enlace { background: none; border: 0; color: var(--cabecera-tinta); font: inherit; font-size: 15px;
+                    padding: 8px 10px; white-space: nowrap; border-radius: 8px; cursor: pointer; min-height: 40px;
+                    text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px;
+                    transition: text-decoration-color 150ms ease-out, background-color 150ms ease-out; }
+.cabecera .enlace:hover { text-decoration-color: currentColor; background: rgba(255,255,255,.08); }
+.cabecera :focus-visible { outline-color: #9fd3e6; }
+.cabecera .acciones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cabecera .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px;
+                    color: var(--cabecera-tinta); border: 1px solid rgba(255,255,255,.28); border-radius: 999px;
+                    padding: 6px 12px; }
+.cabecera .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--cabecera-suave); }
+.estado-ok .punto { background: #5fd39b; }
+.estado-cargando .punto { background: #f6b45e; animation: latido 0.9s ease-in-out infinite alternate; }
+.estado-error .punto { background: #ff8a80; }
+
+/* Interruptor claro/oscuro sobre la barra marino */
 .gradio-container .interruptor-tema { position: relative; flex: none; display: inline-grid;
-    grid-template-columns: 1fr 1fr; align-items: center; height: 40px; min-height: 0; padding: 3px;
-    border-radius: 999px; border: 1px solid var(--control); background: var(--superficie); cursor: pointer;
-    transition: border-color 200ms ease-out; }
-.gradio-container .interruptor-tema:hover { border-color: var(--tinta-suave); }
-.gradio-container .interruptor-tema:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+    grid-template-columns: 1fr 1fr; align-items: center; height: 38px; min-height: 0; padding: 3px;
+    border-radius: 999px; border: 1px solid rgba(255,255,255,.28); background: transparent; cursor: pointer; }
 .interruptor-tema .indicador { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
-    border-radius: 999px; background: var(--tinta); transition: transform 280ms cubic-bezier(0.23, 1, 0.32, 1); }
+    border-radius: 999px; background: #ffffff; transition: transform 280ms cubic-bezier(0.23, 1, 0.32, 1); }
 .dark .interruptor-tema .indicador { transform: translateX(100%); }
 .interruptor-tema .opcion { position: relative; z-index: 1; display: inline-flex; align-items: center;
-    justify-content: center; gap: 6px; height: 100%; padding: 0 12px; font-size: 14px; font-weight: 700;
-    color: var(--tinta-suave); transition: color 200ms ease-out; }
-/* Gradio pinta los SVG de los botones con su propio color: aquí el ícono
-   sigue el color del texto de su opción. */
-.interruptor-tema .opcion svg { color: inherit !important; flex: none; }
-.interruptor-tema .opcion svg * { color: inherit !important; }
-.interruptor-tema .opcion svg, .interruptor-tema .opcion svg * { stroke: currentColor !important; fill: none !important; }
-.interruptor-tema .opcion-claro { color: var(--superficie); }
-.dark .interruptor-tema .opcion-claro { color: var(--tinta-suave); }
-.dark .interruptor-tema .opcion-oscuro { color: var(--superficie); }
-.interruptor-tema:active .indicador { transform: scale(0.96); }
-.dark .interruptor-tema:active .indicador { transform: translateX(100%) scale(0.96); }
+    justify-content: center; gap: 6px; height: 100%; padding: 0 11px; font-size: 14px; font-weight: 700;
+    color: var(--cabecera-suave); transition: color 200ms ease-out; }
+.interruptor-tema .opcion svg, .interruptor-tema .opcion svg * { color: inherit !important; stroke: currentColor !important; fill: none !important; }
+.interruptor-tema .opcion-claro { color: #0f355e; }
+.dark .interruptor-tema .opcion-claro { color: var(--cabecera-suave); }
+.dark .interruptor-tema .opcion-oscuro { color: #0a2440; }
 
-@media (max-width: 640px) {
-    .gradio-container { padding-left: 16px !important; padding-right: 16px !important; }
-    .resultado .decision { padding: 20px 16px; }
-    .resultado .decision h2 { font-size: 26px; }
-    .resultado .bloque { padding: 16px; }
-}
+/* --- Inicio --------------------------------------------------------------------------- */
+.inicio { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 32px; align-items: center;
+          background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 32px; }
+.inicio .logo-marco { background: #ffffff; border-radius: 14px; padding: 12px; display: grid; place-items: center; }
+.inicio .logo-marco img { width: 100%; height: auto; max-width: 460px; }
+.inicio .texto { display: grid; gap: 16px; max-width: 60ch; }
+.inicio h1 { margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--marino); }
+.inicio p { margin: 0; font-size: 18px; line-height: 1.6; color: var(--tinta); }
+.pasos { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 12px; counter-reset: paso; }
+.pasos li { counter-increment: paso; position: relative; padding-left: 46px; font-size: 17px; line-height: 1.5;
+            color: var(--tinta); min-height: 32px; }
+.pasos li::before { content: counter(paso); position: absolute; left: 0; top: -2px; width: 32px; height: 32px;
+    border-radius: 50%; background: var(--petroleo); color: #fff; font-weight: 700; display: grid; place-items: center;
+    font-family: 'Lexend', sans-serif; font-size: 15px; }
+.dark .pasos li::before { color: #0b1624; }
 
-@media (prefers-reduced-motion: reduce) {
-    .resultado > *, body:not(.ya-cargo) .entrada { animation: none; }
-    .interruptor-tema, .interruptor-tema .indicador, .interruptor-tema .opcion { transition: none; }
-}
-"""
-
-_CSS_APP = """
-/* Páginas de texto (inicio, cómo funciona, términos, privacidad): columna de
-   lectura de ~70 caracteres, jerarquía clara y nada de adornos. */
-.pagina { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 28px;
-          color: var(--tinta); display: grid; gap: 12px; }
-.pagina > * { max-width: 72ch; }
-.pagina h2 { margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2; color: var(--tinta); }
-.pagina h3 { margin: 10px 0 0; font-size: 18px; font-weight: 700; color: var(--tinta); }
-.pagina p, .pagina li { margin: 0; font-size: 17px; line-height: 1.6; color: var(--tinta); }
-.pagina ul, .pagina ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
-.pagina a { color: var(--tinta); text-decoration: underline; text-underline-offset: 3px; }
-.pagina .nota { font-size: 15px; color: var(--tinta-suave); }
-.inicio .sobretitulo { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-                       color: var(--tinta-suave); }
-.inicio h2 { font-size: 30px; }
-.inicio .entrada-texto { font-size: 18px; }
-.inicio .pasos { counter-reset: paso; list-style: none; padding: 0; gap: 12px; }
-.inicio .pasos li { counter-increment: paso; position: relative; padding-left: 44px; }
-.inicio .pasos li::before { content: counter(paso); position: absolute; left: 0; top: 0; width: 30px; height: 30px;
-    border-radius: 50%; background: var(--primario); color: var(--primario-texto); font-weight: 700;
-    display: grid; place-items: center; font-size: 15px; }
-.aviso-legal { background: var(--sin-fondo); border-radius: 8px; padding: 18px 20px; display: grid; gap: 10px;
-               max-width: none !important; }
-.aviso-legal h3, .aviso-legal li, .aviso-legal strong { color: var(--sin-tinta); margin: 0; }
-#acepto { border: 1px solid var(--control); }
+.antes { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 14px; padding: 20px 24px;
+         display: grid; gap: 10px; }
+.antes h2 { margin: 0; font-size: 20px; color: var(--sin-tinta); }
+.antes ul { margin: 0; padding-left: 20px; display: grid; gap: 8px 32px; grid-template-columns: 1fr 1fr; }
+.antes li { font-size: 16px; line-height: 1.5; color: var(--sin-tinta); }
+.antes strong { color: var(--sin-tinta); }
+.leer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.leer p { margin: 0; font-size: 16px; color: var(--tinta-suave); }
+.boton-ventana { font: inherit; font-size: 16px; font-weight: 700; color: var(--marino); background: var(--superficie);
+                 border: 1px solid var(--control); border-radius: 999px; padding: 9px 16px; min-height: 44px; cursor: pointer;
+                 transition: background-color 150ms ease-out; }
+.boton-ventana:hover { background: var(--hover); }
+#acepto { border: 1px solid var(--control); border-radius: 12px; }
 #acepto label span { font-size: 16px; line-height: 1.5; }
 
-/* Criterio por señal dentro del resultado: punto con el color de lo que dijo
-   esa señal y la palabra escrita. */
-.criterios { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-.criterio { display: grid; gap: 6px; padding-left: 14px; border-left: 3px solid var(--borde); }
-.criterio.crit-urgente { border-left-color: var(--punto-urg); }
-.criterio.crit-rutina { border-left-color: var(--punto-rut); }
+/* --- Ventanas superpuestas (<dialog>) ------------------------------------------------- */
+.ventana { border: 0; padding: 0; border-radius: 16px; width: min(760px, calc(100vw - 32px));
+           max-height: min(86vh, 900px); background: var(--superficie); color: var(--tinta);
+           box-shadow: 0 24px 64px rgba(6, 20, 38, .35); }
+.ventana[open] { display: flex; flex-direction: column; animation: aparecer 220ms cubic-bezier(0.23, 1, 0.32, 1); }
+.ventana::backdrop { background: rgba(8, 22, 40, .55); }
+.ventana-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+                 padding: 16px 20px 14px 28px; border-bottom: 1px solid var(--borde); }
+.ventana-barra h2 { margin: 0; font-size: 22px; color: var(--marino); }
+.ventana-cerrar { font: inherit; font-size: 15px; font-weight: 700; color: var(--tinta); background: var(--superficie-2);
+                  border: 1px solid var(--control); border-radius: 999px; padding: 8px 16px; min-height: 40px; cursor: pointer; }
+.ventana-cerrar:hover { background: var(--hover); }
+.ventana-cuerpo { overflow-y: auto; padding: 20px 28px 28px; display: grid; gap: 10px; }
+.ventana-cuerpo > * { max-width: 68ch; }
+.ventana-cuerpo h3 { margin: 12px 0 0; font-size: 18px; color: var(--marino); }
+.ventana-cuerpo p, .ventana-cuerpo li { margin: 0; font-size: 17px; line-height: 1.6; color: var(--tinta); }
+.ventana-cuerpo ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.ventana-cuerpo a { color: var(--petroleo); text-underline-offset: 3px; }
+.ventana-cuerpo .nota { font-size: 15px; color: var(--tinta-suave); }
+@keyframes aparecer { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+
+/* --- Resultado -------------------------------------------------------------------------- */
+.resultado { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; overflow: hidden;
+             color: var(--tinta); }
+.resultado > * { animation: entrar 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.resultado > *:nth-child(2) { animation-delay: 60ms; }
+.resultado > *:nth-child(3) { animation-delay: 120ms; }
+.resultado > *:nth-child(4) { animation-delay: 180ms; }
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
+.resultado h2 { margin: 0; }
+.resultado p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--tinta); }
+.veredicto { padding: 26px 26px 22px; display: grid; gap: 14px; }
+.veredicto h2 { font-size: 30px; font-weight: 700; line-height: 1.15; }
+.veredicto .por-que { font-size: 17px; }
+.tono-urgente { background: var(--urg-fondo); } .tono-urgente h2 { color: var(--urg-tinta); }
+.tono-rutina { background: var(--rut-fondo); } .tono-rutina h2 { color: var(--rut-tinta); }
+.tono-sin-senal { background: var(--sin-fondo); } .tono-sin-senal h2 { color: var(--sin-tinta); }
+
+/* La franja: tres tramos, uno por señal, pintados con lo que dijo cada una. */
+.franja { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.franja > li { margin: 0 !important; }
+.tramo { display: grid; gap: 2px; padding: 10px 14px; border-radius: 10px; min-height: 64px; align-content: center; }
+.tramo-nombre { font-size: 14px; }
+.tramo-valor { font-family: 'Lexend', sans-serif; font-size: 18px; font-weight: 700; }
+.tramo-urgente { background: var(--urg); color: #fff; }
+.tramo-rutina { background: var(--rut); color: #fff; }
+.dark .tramo-urgente, .dark .tramo-rutina { color: #0b1624; }
+.tramo-vacio { background: transparent; border: 2px dashed var(--control); color: var(--tinta-suave); }
+.resultado .bloque { padding: 20px 26px; border-top: 1px solid var(--borde); display: grid; gap: 10px; }
+.resultado .bloque h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--marino); }
+.resultado .nota, .resultado .fuentes { font-size: 15px; color: var(--tinta-suave); }
+.resultado .aviso { background: var(--sin-fondo); color: var(--sin-tinta); border-radius: 8px; padding: 10px 12px; }
+.resultado .apoyo { font-size: 15px; color: var(--tinta-suave); }
+.resultado .bloque-paso { background: var(--superficie-2); }
+.criterios { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.criterio { display: grid; gap: 6px; padding-left: 14px; border-left: 4px solid var(--borde); }
+.criterio.crit-urgente { border-left-color: var(--urg); }
+.criterio.crit-rutina { border-left-color: var(--rut); }
 .criterio.crit-aviso { border-left-color: var(--cargando); }
 .criterio .crit-titulo { display: flex; align-items: center; gap: 8px; font-weight: 700; }
-.crit-urgente .senal-punto { background: var(--punto-urg); }
-.crit-rutina .senal-punto { background: var(--punto-rut); }
-.crit-neutro .senal-punto, .crit-aviso .senal-punto { background: var(--tinta-suave); }
+.senal-punto { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--tinta-suave); }
+.crit-urgente .senal-punto { background: var(--urg); }
+.crit-rutina .senal-punto { background: var(--rut); }
 .resultado .fuentes-lista, .resultado .signos { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 .resultado .fuentes-lista li { font-size: 15px; color: var(--tinta-suave); }
 .resultado .signos li { font-size: 17px; color: var(--tinta); }
-.resultado .bloque-paso { background: var(--superficie-2); }
-.resultado .por-que { font-weight: 700; }
-
-/* Pestañas: la activa se distingue por texto oscuro y una línea debajo. */
-.gradio-container button[role="tab"] { font-size: 16px; color: var(--tinta-suave); min-height: 44px; }
-.gradio-container button[role="tab"][aria-selected="true"] { color: var(--tinta); font-weight: 700;
-    box-shadow: inset 0 -3px 0 var(--tinta); }
-
-@media (max-width: 640px) {
-    .pagina { padding: 20px 16px; }
-    .aviso-legal { padding: 16px 14px; }
-    .pagina ul, .pagina ol { padding-left: 18px; }
-    .inicio h2 { font-size: 25px; }
-}
-
-.encabezado .estado { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 15px;
-                      color: var(--tinta); background: var(--superficie); border: 1px solid var(--borde);
-                      border-radius: 999px; padding: 6px 12px; }
-.encabezado .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--tinta-suave); }
-.estado-ok .punto { background: var(--ok); }
-.estado-cargando .punto { background: var(--cargando); animation: latido 0.9s ease-in-out infinite alternate; }
-.estado-error .punto { background: var(--error); }
-
-.nota-espera, .nota-espera p { color: var(--tinta-suave) !important; font-size: 15px !important; margin: 0; }
-
-.resultado-vacio, .resultado-error { padding: 24px; display: grid; gap: 8px; }
-.resultado-vacio h2, .resultado-error h2 { font-size: 20px; font-weight: 700; }
+.resultado-vacio, .resultado-error { padding: 26px; display: grid; gap: 12px; }
+.resultado-vacio h2, .resultado-error h2 { font-size: 22px; font-weight: 700; color: var(--marino); }
 .resultado-vacio p { color: var(--tinta-suave); }
 .resultado-error h2 { color: var(--urg-tinta); }
-
 .resultado-cargando .cargando-texto { font-weight: 700; }
-.resultado-cargando .barra { display: block; height: 14px; width: 100%; border-radius: 4px;
-                             background: var(--barra); animation: latido 1.2s ease-in-out infinite alternate; }
-.resultado-cargando .barra-titulo { height: 30px; width: 70%; }
-.resultado-cargando .barra-corta { width: 45%; }
+.hueso { display: block; height: 14px; width: 100%; border-radius: 6px; background: var(--hueso);
+         animation: latido 1.2s ease-in-out infinite alternate; }
+.hueso-titulo { height: 32px; width: 70%; } .hueso-franja { height: 64px; } .hueso-corto { width: 45%; }
 @keyframes latido { from { opacity: 1; } to { opacity: 0.45; } }
 
-/* Botones: alto táctil de 48px y respuesta al presionar. El encabezado de los
-   acordeones también es un <button> (.label-wrap): se excluye, si no crece,
-   la flecha se sale y aparece un scroll horizontal. */
-.gradio-container button:not(.label-wrap):not(.interruptor-tema) { min-height: 48px; transition: transform 120ms ease-out, background-color 150ms ease-out; }
-.gradio-container button:not(.label-wrap):not(.interruptor-tema):active:not(:disabled) { transform: scale(0.98); }
-.gradio-container button:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
-.gradio-container button:not(.label-wrap):not(.interruptor-tema):disabled { opacity: 1; background: var(--tinta-suave) !important;
-                                                     color: var(--superficie) !important; cursor: progress; }
-
-#ejemplos button { background: var(--superficie); border: 1px solid var(--control); border-radius: 8px;
+/* --- Formulario ------------------------------------------------------------------------- */
+.panel-caso { background: var(--superficie); border: 1px solid var(--borde) !important; border-radius: 16px; padding: 8px; }
+.titulo-panel h2 { margin: 6px 8px 0; font-size: 22px; color: var(--marino); }
+.nota-espera, .nota-espera p { color: var(--tinta-suave) !important; font-size: 15px !important; margin: 0 8px; }
+.gradio-container button:not(.label-wrap):not(.interruptor-tema):not(.enlace):not(.marca) { min-height: 48px;
+    transition: transform 120ms ease-out, background-color 150ms ease-out; }
+.gradio-container button:not(.label-wrap):not(.interruptor-tema):not(.enlace):not(.marca):active:not(:disabled) { transform: scale(0.98); }
+.gradio-container button.primary:disabled { opacity: 1; background: var(--tinta-suave) !important;
+    color: var(--superficie) !important; cursor: progress; }
+.gradio-container button.secondary { border: 1px solid var(--control) !important; }
+.dark .cabecera { border: 1px solid var(--borde); }
+#ejemplos button { background: var(--superficie); border: 1px solid var(--control); border-radius: 999px;
                    color: var(--tinta); font-size: 15px; min-height: 44px; }
 #ejemplos button:hover { background: var(--hover); }
+.gradio-container .label-wrap span { font-size: 16px; font-weight: 700; color: var(--tinta); }
 
-@media (max-width: 640px) { .encabezado .estado { font-size: 14px; } }
+@media (max-width: 1180px) {
+  .cabecera .enlaces { margin-left: 0; order: 3; width: 100%; }
+  .cabecera .acciones { margin-left: auto; }
+}
+@media (max-width: 860px) {
+  .inicio { grid-template-columns: 1fr; padding: 22px; gap: 20px; }
+  .inicio .logo-marco img { max-width: 340px; }
+  .antes ul { grid-template-columns: 1fr; }
+  .cabecera .enlaces { margin-left: 0; order: 3; width: 100%; }
+}
+@media (max-width: 640px) {
+  .gradio-container { padding-left: 12px !important; padding-right: 12px !important; }
+  .inicio h1 { font-size: 27px; }
+  .veredicto { padding: 20px 16px; } .veredicto h2 { font-size: 25px; }
+  .resultado .bloque { padding: 16px; }
+  .franja { grid-template-columns: 1fr; }
+  .tramo { min-height: 0; grid-template-columns: 1fr auto; align-items: center; }
+  .cabecera .lema { display: none; }
+  .ventana-barra { padding: 14px 16px; } .ventana-cuerpo { padding: 16px 18px 22px; }
+}
 @media (prefers-reduced-motion: reduce) {
-    .resultado-cargando .barra, .estado-cargando .punto { animation: none; }
-    .gradio-container button:not(.label-wrap):not(.interruptor-tema) { transition: none; }
-    .gradio-container button:not(.label-wrap):not(.interruptor-tema):active:not(:disabled) { transform: none; }
+  .resultado > *, .ventana[open], .hueso, .estado-cargando .punto { animation: none; }
+  .interruptor-tema .indicador, .gradio-container button { transition: none !important; }
 }
 """
 
-_CSS = _CSS_COLORES + _CSS_COMPARTIDO + _CSS_APP
+_CSS = ("@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@500;700&display=swap');\n"
+        + _CSS_COLORES + _CSS_BASE)
 
 
 # --- Páginas de inicio, uso y avisos -----------------------------------------
@@ -1011,39 +1040,43 @@ _EQUIPO = "Camilo Salazar, Juan Esteban Alzate, Isabella Idárraga y María Alej
 _REPO = "https://github.com/Isa-Idarraga/triage-dermatologico-ia"
 
 _HTML_INICIO = f"""
-<section class="pagina inicio">
-  <p class="sobretitulo">Prototipo académico · Universidad EAFIT · curso SI4006</p>
-  <h2>Apoyo para priorizar lesiones de piel en el triage</h2>
-  <p class="entrada-texto">Usted describe la lesión y, si puede, adjunta una foto. La herramienta sugiere si el caso
-  conviene <strong>referirlo con prioridad a dermatología</strong> o puede ir a <strong>cita de rutina</strong>,
-  y muestra qué dijo cada señal y por qué. No diagnostica: la decisión es del profesional.</p>
-
-  <ol class="pasos">
-    <li><strong>Describa la lesión</strong> como se la cuenta el paciente: cuánto tiempo lleva, si cambió de tamaño,
-    color o forma, si sangra, pica o no sana.</li>
-    <li><strong>Adjunte una foto</strong> si la tiene (opcional): enfocada, con buena luz y la lesión centrada.</li>
-    <li><strong>Lea la sugerencia y el porqué.</strong> Si cualquier señal indica urgencia, la herramienta sugiere
-    referir. Si ninguna señal responde, pide revisión manual, nunca «puede esperar».</li>
-  </ol>
-
-  <div class="aviso-legal" role="note">
-    <h3>Antes de usarla</h3>
-    <ul>
-      <li><strong>No es un dispositivo médico.</strong> No tiene registro sanitario del INVIMA ni validación
-      clínica. Es un trabajo de estudiantes para un curso.</li>
-      <li><strong>Se equivoca.</strong> En 37 casos de prueba detectó 14 de 20 urgentes (70 %). En fotos clínicas
-      de un hospital que no vio al entrenar detectó el 71 % de los casos urgentes y 25 de 59 melanomas.</li>
-      <li><strong>No la use para decidir la atención de un paciente real.</strong> Úsela con casos de ejemplo o
-      descripciones inventadas.</li>
-      <li><strong>No escriba datos que identifiquen al paciente</strong> (nombre, documento, historia clínica,
-      teléfono, dirección) ni suba fotos con la cara, tatuajes u otros rasgos que lo identifiquen.</li>
-    </ul>
+<section class="inicio">
+  <div class="logo-marco"><img src="{_LOGO}" alt="Logo de Triaje dermatológico EAFIT: una ardilla con estetoscopio dentro de un escudo"></div>
+  <div class="texto">
+    <h1>Apoyo para priorizar lesiones de piel en el triaje</h1>
+    <p>Usted describe la lesión y, si puede, adjunta una foto. La herramienta sugiere si el caso conviene
+    referirlo con prioridad a dermatología o puede ir a cita de rutina, y muestra qué dijo cada señal y por qué.
+    No diagnostica: la decisión es del profesional.</p>
+    <ol class="pasos">
+      <li><strong>Describa la lesión</strong> como la cuenta el paciente: cuánto tiempo lleva y si cambió de
+      tamaño, color o forma, sangra, pica o no sana.</li>
+      <li><strong>Adjunte una foto</strong> si la tiene: enfocada, con buena luz y la lesión centrada.</li>
+      <li><strong>Lea la sugerencia y el porqué.</strong> Si cualquier señal indica urgencia, sugiere referir. Si
+      ninguna responde, pide revisión manual, nunca «puede esperar».</li>
+    </ol>
   </div>
-</section>"""
+</section>
+<section class="antes" role="note" aria-labelledby="antes-titulo">
+  <h2 id="antes-titulo">Antes de usarla</h2>
+  <ul>
+    <li><strong>No es un dispositivo médico.</strong> No tiene registro sanitario del INVIMA ni validación clínica.
+    Es un trabajo de estudiantes para un curso.</li>
+    <li><strong>Se equivoca.</strong> En 37 casos de prueba detectó 14 de 20 urgentes. En fotos clínicas de un
+    hospital que no vio al entrenar detectó el 71 % de los casos urgentes y 25 de 59 melanomas.</li>
+    <li><strong>No la use para decidir la atención de un paciente real.</strong> Úsela con casos de ejemplo o
+    descripciones inventadas.</li>
+    <li><strong>No escriba datos que identifiquen al paciente</strong> (nombre, documento, historia clínica,
+    teléfono, dirección) ni suba fotos con la cara, tatuajes u otros rasgos.</li>
+  </ul>
+</section>
+<div class="leer">
+  <p>Antes de aceptar, puede leer:</p>
+  <button type="button" class="boton-ventana" data-abrir="como">Cómo funciona</button>
+  <button type="button" class="boton-ventana" data-abrir="terminos">Términos de uso</button>
+  <button type="button" class="boton-ventana" data-abrir="privacidad">Privacidad y datos</button>
+</div>"""
 
 _HTML_COMO_FUNCIONA = """
-<section class="pagina">
-  <h2>Cómo funciona</h2>
   <p>Un agente (un modelo de lenguaje, Qwen2.5-3B) decide qué herramientas consultar. Hay tres, y cada una da su
   propia señal, <em>urgente</em> o <em>no urgente</em>:</p>
   <ul>
@@ -1075,16 +1108,15 @@ _HTML_COMO_FUNCIONA = """
     <li>Un melanoma descrito por el paciente como «un lunar de siempre, no pica ni sangra» no lo detecta ninguna
     de las tres señales.</li>
   </ul>
-</section>"""
+"""
 
 _HTML_TERMINOS = f"""
-<section class="pagina">
-  <h2>Términos de uso</h2>
   <p class="nota">Versión del {_VERSION_TERMINOS}. Al entrar a la herramienta usted acepta estos términos.</p>
   <h3>1. Qué es</h3>
   <p>Un prototipo académico hecho por estudiantes de Ingeniería de Sistemas de la Universidad EAFIT ({_EQUIPO})
   para el curso SI4006. No es un producto, no es un dispositivo médico y no tiene registro sanitario del INVIMA
-  ni validación clínica.</p>
+  ni validación clínica. El logo y el nombre identifican el proyecto del curso: no es un servicio oficial de la
+  Universidad EAFIT.</p>
   <h3>2. Para qué se puede usar</h3>
   <p>Para demostración, enseñanza y evaluación académica, con casos de ejemplo o descripciones inventadas. No se
   debe usar para decidir la atención de pacientes reales.</p>
@@ -1106,11 +1138,9 @@ _HTML_TERMINOS = f"""
   <h3>7. Cambios</h3>
   <p>Si estos términos cambian, la herramienta le pedirá aceptarlos de nuevo. El código y el historial de cambios
   están en <a href="{_REPO}" target="_blank" rel="noopener">el repositorio del proyecto</a>.</p>
-</section>"""
+"""
 
 _HTML_PRIVACIDAD = f"""
-<section class="pagina">
-  <h2>Privacidad y datos</h2>
   <h3>Lo que le pedimos</h3>
   <p>No escriba datos que identifiquen al paciente: nombre, documento, número de historia clínica, fecha de
   nacimiento, teléfono o dirección. No suba fotos donde se vea la cara, tatuajes u otros rasgos que lo
@@ -1128,7 +1158,18 @@ _HTML_PRIVACIDAD = f"""
   mientras la sesión está encendida y se borra al apagarla.</p>
   <h3>Preguntas</h3>
   <p>Escríbale al equipo a través del <a href="{_REPO}" target="_blank" rel="noopener">repositorio del proyecto</a>.</p>
-</section>"""
+"""
+
+def _ventana(clave, titulo, cuerpo):
+    return (f'<dialog class="ventana" id="dlg-{clave}" aria-labelledby="dlg-{clave}-t">'
+            f'<div class="ventana-barra"><h2 id="dlg-{clave}-t">{titulo}</h2>'
+            f'<button type="button" class="ventana-cerrar" data-cerrar>Cerrar</button></div>'
+            f'<div class="ventana-cuerpo">{cuerpo}</div></dialog>')
+
+
+_HTML_VENTANAS = (_ventana("como", "Cómo funciona", _HTML_COMO_FUNCIONA)
+                  + _ventana("terminos", "Términos de uso", _HTML_TERMINOS)
+                  + _ventana("privacidad", "Privacidad y datos", _HTML_PRIVACIDAD))
 
 _TEXTO_ACEPTO = ("Entiendo que es un prototipo académico que no diagnostica, que no debo usarlo para decidir la "
                  "atención de pacientes reales ni escribir datos que los identifiquen, y acepto los términos de uso.")
@@ -1156,97 +1197,81 @@ def _limpiar():
 
 
 def construir_app():
-    with gr.Blocks(title="Triage dermatológico", theme=_TEMA, css=_CSS, js=_JS_TEMA) as demo:
-        # La clase de entrada va en el bloque (que persiste), no en el <header>:
-        # demo.load lo vuelve a pintar y la animación arrancaría dos veces.
-        encabezado = gr.HTML(_html_encabezado(), padding=False, elem_classes=["entrada"])
+    with gr.Blocks(title="Triaje dermatológico", theme=_TEMA, css=_CSS, js=_JS_TEMA) as demo:
+        encabezado = gr.HTML(_html_encabezado(), padding=False)
+        gr.HTML(_HTML_VENTANAS, padding=False)  # ventanas superpuestas; se abren con data-abrir
 
-        # Qué versión de los términos aceptó este navegador (localStorage, vía
-        # Gradio). Solo guarda la fecha de la versión, nada del paciente.
-        aceptado = gr.BrowserState(None, storage_key="triage_terminos")
+        # Qué versión de los términos aceptó este navegador (localStorage, vía Gradio). Solo
+        # guarda la fecha de la versión, nada del paciente.
+        aceptado = gr.BrowserState(None, storage_key="triaje_terminos")
 
-        # --- Inicio: qué es, cómo se usa, avisos y aceptación -----------------
-        with gr.Column(visible=True, elem_classes=["entrada", "entrada-2"]) as inicio:
+        # --- Inicio: qué es, cómo se usa, avisos y aceptación -----------------------
+        with gr.Column(visible=True) as inicio:
             gr.HTML(_HTML_INICIO, padding=False)
-            with gr.Accordion("Leer los términos de uso completos", open=False):
-                gr.HTML(_HTML_TERMINOS, padding=False)
-            with gr.Accordion("Privacidad y datos", open=False):
-                gr.HTML(_HTML_PRIVACIDAD, padding=False)
-            acepto = gr.Checkbox(label=_TEXTO_ACEPTO, value=False, elem_id="acepto")
-            entrar = gr.Button("Entrar a la herramienta", variant="primary", size="lg", interactive=False)
+            with gr.Row(equal_height=True):
+                acepto = gr.Checkbox(label=_TEXTO_ACEPTO, value=False, elem_id="acepto", scale=3)
+                entrar = gr.Button("Entrar a la herramienta", variant="primary", size="lg", interactive=False,
+                                   scale=1, min_width=240)
 
-        # --- Herramienta ------------------------------------------------------
-        with gr.Column(visible=False, elem_classes=["entrada", "entrada-2"]) as herramienta:
-            with gr.Tabs():
-                with gr.Tab("Consulta"):
-                    # render=False: se crean aquí para poder referenciarlos en
-                    # gr.Examples (columna izquierda) y se ubican en la derecha.
-                    resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
-                    detalle_md = gr.Markdown(render=False)
+        # --- Herramienta ---------------------------------------------------------------
+        with gr.Column(visible=False) as herramienta:
+            # render=False: se crean aquí para referenciarlos en gr.Examples (izquierda) y se
+            # ubican en la columna derecha con .render().
+            resultado_html = gr.HTML(_html_vacio(), padding=False, render=False)
+            detalle_md = gr.Markdown(render=False)
+            with gr.Row(equal_height=False):
+                with gr.Column(scale=5, min_width=320, elem_classes=["panel-caso"]):
+                    gr.HTML("<h2>El caso</h2>", padding=False, elem_classes=["titulo-panel"])
+                    sintoma = gr.Textbox(
+                        label="1. ¿Qué le pasa a la lesión?", lines=5,
+                        placeholder=("Ej.: lunar en la espalda que en los últimos tres meses creció, "
+                                     "tiene bordes irregulares y varios tonos de café y negro."),
+                        info=("Cuánto tiempo lleva y si cambió de tamaño, color o forma, sangra, pica o no "
+                              "sana. Sin nombre, documento ni datos que identifiquen al paciente."),
+                    )
+                    foto = gr.Image(label="2. Foto de la lesión (opcional)", type="filepath", height=240)
+                    gr.Markdown("Enfocada, con buena luz, la lesión centrada y sin la cara del paciente.",
+                                elem_classes=["nota-espera"])
+                    with gr.Row():
+                        boton = gr.Button("Consultar", variant="primary", size="lg", scale=3)
+                        limpiar = gr.Button("Nueva consulta", variant="secondary", size="lg", scale=2)
+                    gr.Markdown("Con foto, la consulta tarda unos 15 segundos.", elem_classes=["nota-espera"])
+                    gr.Examples(
+                        examples=[
+                            [_EJEMPLO_URGENTE_SINTOMA, None],
+                            [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
+                            [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
+                        ],
+                        inputs=[sintoma, foto],
+                        outputs=[resultado_html, detalle_md],
+                        fn=_consultar_evento,
+                        run_on_click=True,
+                        cache_examples=False,
+                        label="Probar con un caso de ejemplo",
+                        elem_id="ejemplos",
+                        example_labels=[
+                            "Cambios en un lunar (sin foto)",
+                            "Lesión estable (con foto)",
+                            "Foto borrosa (no evaluable)",
+                        ],
+                    )
+                with gr.Column(scale=7, min_width=320):
+                    resultado_html.render()
+                    with gr.Accordion("Detalle técnico (para auditar)", open=False):
+                        detalle_md.render()
+            with gr.Accordion("Estado del sistema", open=False):
+                estado_md = gr.Markdown()
+                gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
 
-                    # Dos columnas en escritorio (consulta | resultado); en el
-                    # celular Gradio las apila.
-                    with gr.Row(equal_height=False):
-                        with gr.Column(scale=5, min_width=320):
-                            sintoma = gr.Textbox(
-                                label="1. ¿Qué le pasa a la lesión?", lines=5,
-                                placeholder=("Ej.: lunar en la espalda que en los últimos tres meses creció, "
-                                             "tiene bordes irregulares y varios tonos de café y negro."),
-                                info=("Incluya cuánto tiempo lleva y si cambió de tamaño, color o forma, sangra, "
-                                      "pica o no sana. Sin nombre, documento ni datos que identifiquen al paciente."),
-                            )
-                            foto = gr.Image(label="2. Foto de la lesión (opcional)", type="filepath", height=240)
-                            gr.Markdown("Enfocada, con buena luz, la lesión centrada y sin la cara del paciente.",
-                                        elem_classes=["nota-espera"])
-                            with gr.Row():
-                                boton = gr.Button("3. Consultar", variant="primary", size="lg", scale=3)
-                                limpiar = gr.Button("Nueva consulta", variant="secondary", size="lg", scale=2)
-                            gr.Markdown("Con foto, la consulta tarda unos 15 segundos.", elem_classes=["nota-espera"])
-                            gr.Examples(
-                                examples=[
-                                    [_EJEMPLO_URGENTE_SINTOMA, None],
-                                    [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
-                                    [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
-                                ],
-                                inputs=[sintoma, foto],
-                                outputs=[resultado_html, detalle_md],
-                                fn=_consultar_evento,
-                                run_on_click=True,
-                                cache_examples=False,
-                                label="Casos de ejemplo",
-                                elem_id="ejemplos",
-                                example_labels=[
-                                    "Cambios en un lunar (sin foto)",
-                                    "Lesión estable (con foto)",
-                                    "Foto borrosa (no evaluable)",
-                                ],
-                            )
-                        with gr.Column(scale=7, min_width=320):
-                            resultado_html.render()
-                            with gr.Accordion("Detalle técnico (para auditar)", open=False):
-                                detalle_md.render()
-                with gr.Tab("Cómo funciona"):
-                    gr.HTML(_HTML_COMO_FUNCIONA, padding=False)
-                with gr.Tab("Términos de uso"):
-                    gr.HTML(_HTML_TERMINOS, padding=False)
-                with gr.Tab("Privacidad y datos"):
-                    gr.HTML(_HTML_PRIVACIDAD, padding=False)
+        # El ícono de la cabecera lleva al inicio: el JS hace clic en este botón oculto.
+        volver = gr.Button("Inicio", elem_id="btn-inicio", elem_classes=["oculto"])
 
-            with gr.Row():
-                with gr.Column(scale=4):
-                    with gr.Accordion("Estado del sistema", open=False):
-                        estado_md = gr.Markdown()
-                        gr.Button("Actualizar estado", variant="secondary").click(_resumen_estado, outputs=estado_md)
-                with gr.Column(scale=1, min_width=200):
-                    volver = gr.Button("Ver la página de inicio", variant="secondary")
-
-        # --- Eventos ----------------------------------------------------------
+        # --- Eventos -------------------------------------------------------------------
         acepto.change(lambda v: gr.update(interactive=bool(v)), inputs=acepto, outputs=entrar, queue=False)
         entrar.click(_entrar, inputs=acepto, outputs=[aceptado, inicio, herramienta], queue=False)
         volver.click(_volver_al_inicio, outputs=[inicio, herramienta], queue=False)
 
-        # show_progress="hidden": la tarjeta ya muestra su propio esqueleto de
-        # carga; el velo y el cronómetro de Gradio encima lo taparían.
+        # show_progress="hidden": la tarjeta ya muestra su propio esqueleto de carga.
         boton.click(_iniciar_consulta, outputs=[boton, resultado_html], queue=False).then(
             _consultar_evento, inputs=[sintoma, foto], outputs=[resultado_html, detalle_md],
             show_progress="hidden",
@@ -1266,4 +1291,4 @@ if __name__ == "__main__":
     _calentar()
     print("health() después de calentar:", health())
     app = construir_app()
-    app.launch(share=True)
+    app.launch(share=True, favicon_path=FAVICON)

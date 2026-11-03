@@ -89,4 +89,4 @@ app._html_encabezado = lambda estado=None: (
 
 if __name__ == "__main__":
     os.chdir(_RAIZ)  # Gradio solo sirve archivos de la carpeta desde donde arranca (imágenes de ejemplo)
-    app.construir_app().launch()
+    app.construir_app().launch(favicon_path=app.FAVICON)
