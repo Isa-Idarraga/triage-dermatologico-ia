@@ -191,10 +191,14 @@ Son consultas de prueba del 2 de noviembre; se regeneran con `python m5/observab
 - **Falsos positivos por la regla OR:** img_02, img_03 e img_09 son benignas; `ver()` acertó
   (con C0 y con F2),
   pero BETO dijo urgente y la regla escaló.
-- **La válvula no detecta «esto no es piel»:** una hoja de papel (img_07) pasó como lesión (con
-  F2, `ver()` incluso la marca urgente) y el
-  RAG describió una «lesión rosada con grietas». Por eso la tarjeta rotula la evidencia como
-  texto de guías que no describe la foto.
+- **«Esto no es piel» solo se avisa, no se bloquea:** una hoja de papel (img_07) pasaba como
+  lesión (con F2, `ver()` incluso la marca urgente) y el RAG describió una «lesión rosada con
+  grietas». La válvula V4 ([experimentos/valvula_piel/](experimentos/valvula_piel/RESULTADOS.md))
+  rechaza el 100 % de los objetos de prueba, pero no pasó la regla para bloquear: deja fuera 7 de
+  60 dermatoscopias de piel oscura (1 de 120 en piel clara). Por eso, por decisión tomada después
+  de ver los resultados, solo **avisa** en la tarjeta («esta foto no parece mostrar piel») y la
+  foto vota igual. La tarjeta también rotula la evidencia como texto de guías que no describe la
+  foto.
 - **Bugs que encontró la medición y se corrigieron:** la capa `pooler` de BETO no se guardaba
   (M1), `torchao` dejaba a BETO sin cargar en silencio (M4), y el cierre por `responder_final`
   podía contradecir la regla de seguridad (M4-01, corregido con el PR #22 y validado en `m5/harness/`).
@@ -216,8 +220,8 @@ Son consultas de prueba del 2 de noviembre; se regeneran con `python m5/observab
   no tienen EXIF ni rostros. img_07 está marcada como generada por el equipo. Los logs no
   guardan texto del paciente.
 - **Con más tiempo:** más melanomas en foto clínica para entrenar; probar en un conjunto nuevo
-  (DDI, de Stanford) un umbral más bajo; un detector de «esto no es piel» que no rechace más piel
-  oscura que clara; más casos reales y más casos malignos en piel oscura.
+  (DDI, de Stanford) un umbral más bajo; dermatoscopias de piel oscura para que la válvula de piel
+  pueda bloquear sin sesgo; más casos reales y más casos malignos en piel oscura.
 
 ## Estructura del repo
 
