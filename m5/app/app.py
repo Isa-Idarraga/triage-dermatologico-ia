@@ -57,17 +57,23 @@ _IMAGEN_CALENTAMIENTO = os.path.join(
     _RAIZ, "m4", "pipeline", "eval_tool", "imagenes", "ISIC_0024876.jpg"
 )
 
-# Ejemplos de un clic (gr.Examples, abajo en construir_app()): reusan imágenes
-# que ya existen en el repo, del eval set de M4 -- no se agrega ningún archivo.
-_EJEMPLO_URGENTE_SINTOMA = "Tengo un lunar que me cambió de color y de forma en los últimos meses."
-_EJEMPLO_ESTABLE_SINTOMA = (
-    "Lunar redondo, de un solo color café, en el brazo. El paciente dice que lo "
-    "tiene desde niño y que no ha cambiado. Adjunto la foto. ¿Puede esperar a una "
-    "cita de rutina?"
-)
-_EJEMPLO_BORROSA_SINTOMA = "Tengo una mancha rara en la espalda, no se si es grave."
-_IMAGEN_EJEMPLO_ESTABLE = os.path.join(_RAIZ, "m4", "eval_set", "imagenes", "img_02.jpg")
-_IMAGEN_EJEMPLO_BORROSA = os.path.join(_RAIZ, "m4", "eval_set", "imagenes", "img_06.jpg")
+# Ejemplos de un clic (gr.Examples, abajo en construir_app()): los casos de la demo
+# del Demo Day, con las fotos originales del eval set de M4 y el mismo texto del
+# guion -- así en vivo no hay que escribir ni buscar archivos.
+def _img_eval(nombre):
+    return os.path.join(_RAIZ, "m4", "eval_set", "imagenes", nombre)
+
+
+_EJEMPLOS_DEMO = [
+    ("Fácil · img_10", "Paciente con lesión en la piel. Adjunto la foto de la lesión. ¿Es urgente?",
+     _img_eval("img_10.jpg")),
+    ("Difícil · img_03", "Le adjunto una foto de la lesión, ¿debería verla pronto?", _img_eval("img_03.jpg")),
+    ("Foto borrosa · img_06", "Adjunto la foto de la lesión del cuero cabelludo. ¿Es urgente?",
+     _img_eval("img_06.jpg")),
+    ("No es piel · img_07", "Adjunto la foto de la lesión. ¿La remito?", _img_eval("img_07.jpg")),
+    ("Peor caso · img_05", "Es un lunar de siempre en el hombro, no pica ni sangra. Adjunto foto por si acaso.",
+     _img_eval("img_05.jpg")),
+]
 
 
 def _version_tag():
@@ -1277,11 +1283,7 @@ def construir_app():
                         gr.Markdown("Con foto tarda unos 15 segundos. La foto: enfocada, con buena luz y sin la "
                                     "cara del paciente.", elem_classes=["nota-espera"])
                 gr.Examples(
-                    examples=[
-                        [_EJEMPLO_URGENTE_SINTOMA, None],
-                        [_EJEMPLO_ESTABLE_SINTOMA, _IMAGEN_EJEMPLO_ESTABLE],
-                        [_EJEMPLO_BORROSA_SINTOMA, _IMAGEN_EJEMPLO_BORROSA],
-                    ],
+                    examples=[[texto, imagen] for _, texto, imagen in _EJEMPLOS_DEMO],
                     inputs=[sintoma, foto],
                     outputs=[resultado_html, detalle_md],
                     fn=_consultar_evento,
@@ -1289,11 +1291,7 @@ def construir_app():
                     cache_examples=False,
                     label="O pruebe con un caso de ejemplo",
                     elem_id="ejemplos",
-                    example_labels=[
-                        "Cambios en un lunar (sin foto)",
-                        "Lesión estable (con foto)",
-                        "Foto borrosa (no evaluable)",
-                    ],
+                    example_labels=[rotulo for rotulo, _, _ in _EJEMPLOS_DEMO],
                 )
                 resultado_html.render()
                 with gr.Accordion("Detalle técnico (para auditar)", open=False):
